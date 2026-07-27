@@ -1,0 +1,14 @@
+{
+  "Normal": 0,
+  "Antenna Failure": 1,
+  "Buffer Overflow (Gradual Buildup)": 2,
+  "Co-Channel Interference (Mild)": 3,
+  "Co-Channel Interference (Severe)": 4,
+  "Doppler Shift (Severe)": 5,
+  "Faulty Handover Algorithm (Too Frequent)": 6,
+  "Faulty RF Filters (Temporal)": 7,
+  "High Network Congestion (Gradual Buildup)": 8,
+  "High Network Congestion (Sudden Spike)": 9,
+  "Jamming": 10,
+  "Resource Allocation Bugs": 11
+}
