@@ -1,0 +1,10 @@
+data/raw/
+data/chroma_db/
+data/indices/
+.env
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+dist/
+.streamlit/secrets.toml
