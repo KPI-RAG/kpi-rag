@@ -1,0 +1,106 @@
+{
+  "version": "1.0-DRAFT",
+  "note": "DRAFT — requires validation against primary 3GPP spec text by two team members before evaluation",
+  "entries": [
+    {
+      "fault_type": "Co-Channel Interference (Mild)",
+      "3gpp_ts": "TS 38.300",
+      "release": "Rel-17",
+      "clause": "9.2.2",
+      "evidence_span": "Mechanisms for interference mitigation in NR deployments",
+      "oran_component": "WG3 near-RT RIC",
+      "relation_type": "interference",
+      "validated_by": ["DRAFT"]
+    },
+    {
+      "fault_type": "Buffer Overflow (Gradual Buildup)",
+      "3gpp_ts": "TS 38.323",
+      "release": "Rel-17",
+      "clause": "5.2.1",
+      "evidence_span": "Procedures for PDCP data transfer and buffer management",
+      "oran_component": "WG3 near-RT RIC",
+      "relation_type": "performance",
+      "validated_by": ["DRAFT"]
+    },
+    {
+      "fault_type": "Co-Channel Interference (Severe)",
+      "3gpp_ts": "TS 38.104",
+      "release": "Rel-17",
+      "clause": "7.4.2",
+      "evidence_span": "Receiver adjacent channel selectivity and interference blocking requirements",
+      "oran_component": "WG4 Open Fronthaul",
+      "relation_type": "interference",
+      "validated_by": ["DRAFT"]
+    },
+    {
+      "fault_type": "Antenna Failure",
+      "3gpp_ts": "TS 38.104",
+      "release": "Rel-17",
+      "clause": "6.2.1",
+      "evidence_span": "Base station transmit power and antenna array requirements",
+      "oran_component": "WG4 Open Fronthaul",
+      "relation_type": "diagnostic",
+      "validated_by": ["DRAFT"]
+    },
+    {
+      "fault_type": "Faulty RF Filters (Temporal)",
+      "3gpp_ts": "TS 38.104",
+      "release": "Rel-17",
+      "clause": "6.6.3",
+      "evidence_span": "Spurious emissions and RF filter characteristics",
+      "oran_component": "WG4 Open Fronthaul",
+      "relation_type": "diagnostic",
+      "validated_by": ["DRAFT"]
+    },
+    {
+      "fault_type": "High Network Congestion (Gradual Buildup)",
+      "3gpp_ts": "TS 38.331",
+      "release": "Rel-17",
+      "clause": "5.3.3",
+      "evidence_span": "RRC connection establishment and load balancing procedures",
+      "oran_component": "WG3 near-RT RIC",
+      "relation_type": "performance",
+      "validated_by": ["DRAFT"]
+    },
+    {
+      "fault_type": "Doppler Shift (Severe)",
+      "3gpp_ts": "TS 38.104",
+      "release": "Rel-17",
+      "clause": "6.5.1",
+      "evidence_span": "Frequency error requirements for base station transmission under high mobility",
+      "oran_component": "WG8 O-DU",
+      "relation_type": "performance",
+      "validated_by": ["DRAFT"]
+    },
+    {
+      "fault_type": "Faulty Handover Algorithm (Too Frequent)",
+      "3gpp_ts": "TS 38.331",
+      "release": "Rel-17",
+      "clause": "5.5.4",
+      "evidence_span": "Measurement report triggering for handover (Event A3 thresholds)",
+      "oran_component": "WG3 near-RT RIC",
+      "relation_type": "diagnostic",
+      "validated_by": ["DRAFT"]
+    },
+    {
+      "fault_type": "Resource Allocation Bugs",
+      "3gpp_ts": "TS 38.214",
+      "release": "Rel-17",
+      "clause": "5.1.2",
+      "evidence_span": "Physical layer resource block allocation and scheduling",
+      "oran_component": "WG8 O-DU",
+      "relation_type": "diagnostic",
+      "validated_by": ["DRAFT"]
+    },
+    {
+      "fault_type": "High Network Congestion (Sudden Spike)",
+      "3gpp_ts": "TS 38.300",
+      "release": "Rel-17",
+      "clause": "10.3.1",
+      "evidence_span": "Admission control and sudden load spike management",
+      "oran_component": "WG3 near-RT RIC",
+      "relation_type": "performance",
+      "validated_by": ["DRAFT"]
+    }
+  ]
+}
