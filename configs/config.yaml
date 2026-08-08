@@ -3,7 +3,7 @@ rag:
   chroma_db_path: "data/chroma_db"
   collection_name: "telecomts_tickets"
   top_k: 5
-  cosine_threshold: 0.45
+  cosine_threshold: 0.35
 
 llm:
   backend: "ollama"
