@@ -122,3 +122,17 @@ def test_save_results(tmp_path, synth_scores):
     assert "track_c" in data
     assert data["track_b"]["n"] == 9
     assert data["track_c"]["delta_3v2"] == 1.0
+
+def test_save_results_none_track_c(tmp_path, synth_scores):
+    path = tmp_path / "results_b_only.json"
+    tb = compute_track_b(synth_scores)
+    
+    save_results(tb, None, str(path))
+    
+    with open(path, "r") as f:
+        data = json.load(f)
+        
+    assert "track_b" in data
+    assert data["track_b"]["n"] == 9
+    assert data["track_c"] is None
+

@@ -157,13 +157,13 @@ def load_scores_from_jsonl(path: str) -> list[GEvalScore]:
     return scores
 
 def save_results(
-    track_b: TrackBResults,
-    track_c: TrackCResults,
+    track_b: TrackBResults | None,
+    track_c: TrackCResults | None,
     path: str
 ) -> None:
     output = {
-        "track_b": asdict(track_b),
-        "track_c": asdict(track_c)
+        "track_b": asdict(track_b) if track_b is not None else None,
+        "track_c": asdict(track_c) if track_c is not None else None
     }
     with open(path, "w") as f:
         json.dump(output, f, indent=2)
