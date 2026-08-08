@@ -33,7 +33,7 @@ def extract_tickets(records: list[dict]) -> list[dict]:
     tickets = []
     for i, r in enumerate(records):
         ticket_id = r.get("ticket_id", str(i))
-        anomaly_type = r.get("labels", "Unknown")
+        anomaly_type = r.get("anomalies", {}).get("type", "Unknown")
         ticket_text = r.get("anomalies", {}).get("troubleshooting_tickets", "")
         qna_trace = r.get("QnA", {}).get("anomalies", "")
         description = r.get("description", "")

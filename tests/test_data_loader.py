@@ -15,14 +15,14 @@ def fake_data():
         },
         {
             "ticket_id": "1",
-            "anomalies": {"exists": True, "troubleshooting_tickets": "Fix X"},
+            "anomalies": {"exists": True, "type": "Antenna Failure", "troubleshooting_tickets": "Fix X"},
             "labels": "Antenna Failure",
             "description": "desc 1",
             "QnA": {"anomalies": "trace 1"}
         },
         {
             "ticket_id": "2",
-            "anomalies": {"exists": True, "troubleshooting_tickets": "Fix Y"},
+            "anomalies": {"exists": True, "type": "Jamming", "troubleshooting_tickets": "Fix Y"},
             "labels": "Jamming",
             "description": "desc 2",
             "QnA": {"anomalies": "trace 2"}
@@ -60,6 +60,7 @@ def test_extract_tickets(fake_data):
         assert "qna_trace" in t
         assert "description" in t
         
+    assert isinstance(tickets[0]["anomaly_type"], str)
     assert tickets[0]["anomaly_type"] == "Antenna Failure"
     assert tickets[0]["ticket_text"] == "Fix X"
 
