@@ -42,7 +42,7 @@ def main() -> None:
     parser.add_argument("--config", type=str, default="configs/config.yaml", help="Path to config.yaml")
     args = parser.parse_args()
     
-    setup_logging()
+    setup_logging(__name__)
     
     cfg = load_config(args.config)
     indexed_count = build_index(cfg)
