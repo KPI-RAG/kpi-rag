@@ -15,12 +15,12 @@ def run_track_c(scores_path: str, output_path: str, cfg: dict) -> None:
     track_b = compute_track_b(scores)
     track_c = compute_track_c(scores)
     
-    print("Track C Ablation Results")
-    print(f"  Condition 1 (label only)       : {track_c.condition1_mean:.2f} | citation rate: {track_c.condition1_citation_rate:.1%}")
-    print(f"  Condition 2 (+ tickets)        : {track_c.condition2_mean:.2f} | citation rate: {track_c.condition2_citation_rate:.1%}")
-    print(f"  Condition 3 (full system)      : {track_c.condition3_mean:.2f} | citation rate: {track_c.condition3_citation_rate:.1%}")
-    print(f"  Delta 3v2 (grounding effect)   : {track_c.delta_3v2:+.2f}")
-    print(f"  Delta 3v1 (full improvement)   : {track_c.delta_3v1:+.2f}")
+    logger.info("Track C Ablation Results")
+    logger.info("  Condition 1 (label only)       : %.2f | citation rate: %.1f%%", track_c.condition1_mean, track_c.condition1_citation_rate * 100)
+    logger.info("  Condition 2 (+ tickets)        : %.2f | citation rate: %.1f%%", track_c.condition2_mean, track_c.condition2_citation_rate * 100)
+    logger.info("  Condition 3 (full system)      : %.2f | citation rate: %.1f%%", track_c.condition3_mean, track_c.condition3_citation_rate * 100)
+    logger.info("  Delta 3v2 (grounding effect)   : %+.2f", track_c.delta_3v2)
+    logger.info("  Delta 3v1 (full improvement)   : %+.2f", track_c.delta_3v1)
     
     save_results(track_b, track_c, output_path)
     logger.info("Track C results saved to %s", output_path)

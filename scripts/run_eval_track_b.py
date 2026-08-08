@@ -13,10 +13,10 @@ def run_track_b(scores_path: str, output_path: str, cfg: dict) -> None:
     scores = load_scores_from_jsonl(scores_path)
     results = compute_track_b(scores)
     
-    print(f"Track B Results — n={results.n}")
-    print(f"  Citation Validity Rate : {results.citation_validity_rate:.1%}")
-    print(f"  Mean Overall Score     : {results.mean_overall:.2f}/5.0")
-    print(f"  Meets 70% threshold   : {results.meets_threshold}")
+    logger.info("Track B Results — n=%d", results.n)
+    logger.info("  Citation Validity Rate : %.1f%%", results.citation_validity_rate * 100)
+    logger.info("  Mean Overall Score     : %.2f/5.0", results.mean_overall)
+    logger.info("  Meets 70%% threshold   : %s", results.meets_threshold)
     
     save_results(results, None, output_path)
     logger.info("Track B results saved to %s", output_path)

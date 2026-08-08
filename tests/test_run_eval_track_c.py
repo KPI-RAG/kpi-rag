@@ -36,7 +36,7 @@ def mock_track_c():
 @patch("scripts.run_eval_track_c.load_scores_from_jsonl")
 @patch("scripts.run_eval_track_c.compute_track_b")
 @patch("scripts.run_eval_track_c.compute_track_c")
-def test_run_track_c(mock_compute_c, mock_compute_b, mock_load, mock_track_b, mock_track_c, tmp_path, capsys):
+def test_run_track_c(mock_compute_c, mock_compute_b, mock_load, mock_track_b, mock_track_c, tmp_path, caplog):
     mock_load.return_value = ["fake_score"]
     mock_compute_b.return_value = mock_track_b
     mock_compute_c.return_value = mock_track_c
@@ -44,14 +44,14 @@ def test_run_track_c(mock_compute_c, mock_compute_b, mock_load, mock_track_b, mo
     out_file = tmp_path / "out.json"
     cfg = {"fake": "config"}
     
-    run_track_c("fake.jsonl", str(out_file), cfg)
+    with caplog.at_level(logging.INFO):
+        run_track_c("fake.jsonl", str(out_file), cfg)
     
     mock_load.assert_called_once_with("fake.jsonl")
     mock_compute_b.assert_called_once_with(["fake_score"])
     mock_compute_c.assert_called_once_with(["fake_score"])
     
-    out, err = capsys.readouterr()
-    assert "Delta 3v2 (grounding effect)   : +1.00" in out
+    assert "Delta 3v2 (grounding effect)   : +1.00" in caplog.text
     
     assert out_file.exists()
     with open(out_file, "r") as f:
