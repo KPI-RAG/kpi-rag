@@ -12,7 +12,7 @@ def load_jsonl_files(raw_path: str) -> list[dict]:
         logger.warning("Path %s does not exist", raw_path)
         return records
         
-    for file_path in path.glob("*.jsonl"):
+    for file_path in path.rglob("*.jsonl"):
         with open(file_path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
@@ -68,3 +68,4 @@ def apply_train_split(tickets: list[dict], idx_path: str) -> list[dict]:
             
     logger.info("Retained %d out of %d tickets after train split", len(retained), len(tickets))
     return retained
+
