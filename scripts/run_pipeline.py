@@ -16,7 +16,7 @@ def run(payload: ClassifierOutput, cfg: dict) -> LLMExplanation:
                 payload.anomaly_type.value, len(tickets), low_conf)
                 
     if low_conf:
-        logger.warning(f"Low retrieval confidence for {payload.anomaly_type.value}")
+        logger.warning("Low retrieval confidence for %s", payload.anomaly_type.value)
         
     alignment = load_alignment_table("configs/alignment_table.json")
     result = explain(payload, tickets, cfg, alignment)
