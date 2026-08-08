@@ -111,16 +111,21 @@ def parse_response(raw: str) -> dict:
         json_str = match.group(1)
     else:
         json_str = raw
-        
+
     try:
         parsed = json.loads(json_str)
     except json.JSONDecodeError:
         raise ValueError("No valid JSON found in response")
-        
+
     required_keys = {"root_cause", "3gpp_reference", "oran_component", "recommended_action", "reasoning_trace"}
     if not required_keys.issubset(parsed.keys()):
         raise ValueError("Missing required keys in JSON response")
-        
+
+    ref = parsed.get("3gpp_reference", "")
+    ts_match = re.search(r'TS\s+\d{2}\.\d{3}', ref)
+    if ts_match:
+        parsed["3gpp_reference"] = ts_match.group()
+
     return parsed
 
 def validate_citation(ref: str, alignment: dict[str, dict]) -> bool:
