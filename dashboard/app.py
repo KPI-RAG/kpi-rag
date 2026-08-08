@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
 import streamlit as st
 import json, logging
 from src.config_loader import load_config
@@ -63,7 +67,6 @@ st.sidebar.caption("Model: all-MiniLM-L6-v2 | DB: ChromaDB")
 if payload is None:
     st.info("👈 Upload a ClassifierOutput JSON or select example")
     st.stop()
-    import sys; sys.exit(0)
 
 col1, col2 = st.columns([1, 2])
 
