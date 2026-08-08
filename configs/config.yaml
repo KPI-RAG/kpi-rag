@@ -6,7 +6,7 @@ rag:
   cosine_threshold: 0.35
 
 llm:
-  backend: "ollama"
+  backend: "groq"
   ollama_model: "llama3.1:8b"
   ollama_base_url: "http://localhost:11434"
   groq_model: "llama-3.1-8b-instant"
