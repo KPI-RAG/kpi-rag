@@ -31,7 +31,7 @@ def main() -> None:
     
     args = parser.parse_args()
     
-    setup_logging()
+    setup_logging(__name__)
     
     try:
         cfg = load_config(args.config)
