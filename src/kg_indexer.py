@@ -8,7 +8,7 @@ def get_collection(cfg: dict) -> chromadb.Collection:
     path = cfg["rag"]["chroma_db_path"]
     name = cfg["rag"]["collection_name"]
     client = chromadb.PersistentClient(path=path)
-    collection = client.get_or_create_collection(name=name)
+    collection = client.get_or_create_collection(name=name, metadata={"hnsw:space": "cosine"})
     logger.info("Loaded collection %s with %d documents", name, collection.count())
     return collection
 
