@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 from src.config_loader import load_config
 from src.data_loader import (
     load_jsonl_files,
@@ -26,7 +27,9 @@ def build_index(cfg: dict) -> int:
     tickets = extract_tickets(anomalous)
     logger.info("Extracted %d tickets", len(tickets))
     
-    train_tickets = apply_train_split(tickets, indices_path)
+    
+    train_idx_path = os.path.join(indices_path, cfg["data"]["train_idx_file"])
+    train_tickets = apply_train_split(tickets, train_idx_path)
     logger.info("Applied train split, %d tickets remaining", len(train_tickets))
     
     collection = get_collection(cfg)
