@@ -1,4 +1,5 @@
 import pytest
+import os
 from unittest.mock import patch, MagicMock
 from scripts.build_index import build_index, main
 
@@ -7,7 +8,8 @@ def fake_cfg():
     return {
         "data": {
             "raw_path": "fake/raw/path",
-            "indices_path": "fake/indices/path"
+            "indices_path": "fake/indices/path",
+            "train_idx_file": "train_idx.npy"
         },
         "rag": {
             "embedding_model": "fake-model"
@@ -39,7 +41,8 @@ def test_build_index(
     mock_load.assert_called_once_with("fake/raw/path")
     mock_filter.assert_called_once_with(["raw1", "raw2"])
     mock_extract.assert_called_once_with(["anom1"])
-    mock_apply.assert_called_once_with([{"ticket_id": "1"}], "fake/indices/path")
+    expected_train_path = os.path.join("fake/indices/path", "train_idx.npy")
+    mock_apply.assert_called_once_with([{"ticket_id": "1"}], expected_train_path)
     mock_get_col.assert_called_once_with(fake_cfg)
     mock_index.assert_called_once_with([{"ticket_id": "1"}], mock_col, "fake-model")
     

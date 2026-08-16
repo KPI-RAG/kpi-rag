@@ -21,7 +21,7 @@ def test_render_kpi_signal_panel_valid(mock_line, mock_sub, mock_info):
     render_kpi_signal_panel(stats)
     
     mock_info.assert_not_called()
-    mock_sub.assert_called_once_with("KPI Signal Window (128 timesteps @ 100ms)")
+    mock_sub.assert_called_once_with("KPI Signal Window (128 timesteps @ 10ms)")
     mock_line.assert_called_once()
     
     df_called = mock_line.call_args[0][0]
