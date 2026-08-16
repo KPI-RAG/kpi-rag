@@ -5,10 +5,13 @@ from src.schema import ClassifierOutput, RetrievedTicket, LLMExplanation
 from src.llm_explainer import (
     load_alignment_table,
     build_prompt,
+    build_prompt_condition1,
+    build_prompt_condition2,
     call_llm,
     parse_response,
     validate_citation,
-    explain
+    explain,
+    explain_condition
 )
 
 @pytest.fixture
@@ -125,3 +128,68 @@ def test_explain_path3_hallucinated_reference(mock_call, sample_payload, alignme
     assert isinstance(res, LLMExplanation)
     assert res.template_generated is False
     assert res.reference_valid is False
+
+
+# ─── Track C condition tests ──────────────────────────────────────
+
+@patch("src.llm_explainer.call_llm")
+def test_explain_condition1_no_tickets(mock_call, sample_payload, alignment, cfg):
+    """Condition 1: label only — prompt has no tickets or standards section."""
+    mock_call.return_value = '''{
+        "root_cause": "Antenna degradation from physical damage",
+        "3gpp_reference": "TS 38.104",
+        "oran_component": "WG4 Open Fronthaul",
+        "recommended_action": "Check antenna connectors",
+        "reasoning_trace": "RSRP drop indicates antenna issue"
+    }'''
+
+    res = explain_condition(sample_payload, [], cfg, alignment, condition=1)
+    assert isinstance(res, LLMExplanation)
+    assert res.template_generated is False
+
+    # Verify prompt content: condition 1 must NOT contain standards or retrieval
+    prompt = build_prompt_condition1(sample_payload)
+    assert "3GPP" not in prompt
+    assert "Retrieved" not in prompt
+    assert "Standards reference" not in prompt
+    assert "Antenna Failure" in prompt
+    assert "RSRP" in prompt
+
+
+@patch("src.llm_explainer.call_llm")
+def test_explain_condition2_tickets_no_table(mock_call, sample_payload, alignment, cfg):
+    """Condition 2: label + tickets — prompt has tickets but no alignment table."""
+    mock_tickets = [
+        RetrievedTicket(
+            ticket_id="T1",
+            content="Antenna connector loose causing RSRP degradation",
+            anomaly_type="Antenna Failure",
+            similarity_score=0.42,
+        )
+    ]
+    mock_call.return_value = '''{
+        "root_cause": "Loose antenna connector",
+        "3gpp_reference": "TS 38.104",
+        "oran_component": "WG4",
+        "recommended_action": "Tighten connector",
+        "reasoning_trace": "Historical ticket confirms connector issue"
+    }'''
+
+    res = explain_condition(sample_payload, mock_tickets, cfg, alignment, condition=2)
+    assert isinstance(res, LLMExplanation)
+    assert res.template_generated is False
+
+    # Verify prompt content: condition 2 has tickets but NO alignment clause
+    prompt = build_prompt_condition2(sample_payload, mock_tickets)
+    assert "Antenna connector loose" in prompt  # ticket content present
+    assert "Retrieved similar incidents" in prompt
+    assert "Standards reference" not in prompt
+    assert "clause" not in prompt
+
+
+def test_explain_condition_invalid(sample_payload, alignment, cfg):
+    """Invalid condition number must raise ValueError."""
+    with pytest.raises(ValueError, match="condition must be 1, 2, or 3"):
+        explain_condition(sample_payload, [], cfg, alignment, condition=99)
+
+
