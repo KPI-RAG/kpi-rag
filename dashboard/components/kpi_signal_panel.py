@@ -6,7 +6,7 @@ def render_kpi_signal_panel(signal_statistics: dict[str, dict], window_length: i
         st.info("No signal data available")
         return
         
-    st.subheader("KPI Signal Window (128 timesteps @ 100ms)")
+    st.subheader("KPI Signal Window (128 timesteps @ 10ms)")
     
     data = {}
     for channel, stats in signal_statistics.items():
