@@ -15,11 +15,42 @@ from src.utils import validate_3gpp_ref
 logger = logging.getLogger(__name__)
 
 def load_alignment_table(path: str) -> dict[str, dict]:
-    with open(path, "r") as f:
+    with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
     alignment = {}
-    for entry in data.get("entries", []):
-        alignment[entry["fault_type"]] = entry
+    entries_list = data.get("entries", data.get("rows", []))
+    for entry in entries_list:
+        fault_type = entry.get("fault_type", entry.get("telecomts_fault"))
+        if not fault_type:
+            continue
+        
+        ts = entry.get("3gpp_ts")
+        if not ts and "3gpp_reference" in entry:
+            match = re.search(r'T[SR]\s+(2[1-9]|3[0-8])\.\d{3}(?:-\d+)?', entry["3gpp_reference"])
+            if match:
+                ts = match.group(0)
+                
+        clause = entry.get("clause")
+        if not clause and "3gpp_reference" in entry:
+            match = re.search(r'§(\d+(?:\.\d+)*)', entry["3gpp_reference"])
+            if match:
+                clause = match.group(1)
+                
+        evidence = entry.get("evidence_span")
+        if evidence is None:
+            if "clause_text" in entry:
+                evidence = entry["clause_text"][:300]
+            else:
+                evidence = ""
+                
+        normalized = dict(entry)
+        normalized["3gpp_ts"] = ts if ts else ""
+        normalized["clause"] = clause if clause else ""
+        normalized["evidence_span"] = evidence
+        normalized["oran_component"] = entry.get("oran_component", "")
+        
+        alignment[fault_type] = normalized
+        
     logger.info("Loaded %d entries from alignment table", len(alignment))
     return alignment
 
@@ -122,7 +153,7 @@ def parse_response(raw: str) -> dict:
         raise ValueError("Missing required keys in JSON response")
 
     ref = parsed.get("3gpp_reference", "")
-    ts_match = re.search(r'TS\s+\d{2}\.\d{3}', ref)
+    ts_match = re.search(r'T[SR]\s+\d{2}\.\d{3}(?:-\d+)?', ref)
     if ts_match:
         parsed["3gpp_reference"] = ts_match.group()
 

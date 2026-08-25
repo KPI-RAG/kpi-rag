@@ -12,7 +12,10 @@ def setup_logging(name: str, level=logging.INFO) -> logging.Logger:
     return logger
 
 def validate_3gpp_ref(ref: str) -> bool:
-    return bool(re.match(r"^TS (2[1-9]|3[0-8])\.\d{3}$", ref))
+    ts_pattern = r'^TS\s+(2[1-9]|3[0-8])\.\d{3}(?:-\d+)?$'
+    tr_pattern = r'^TR\s+(2[1-9]|3[0-8])\.\d{3}(?:-\d+)?$'
+    ref = ref.strip()
+    return bool(re.match(ts_pattern, ref) or re.match(tr_pattern, ref))
 
 def retry(max_attempts: int = 2):
     def decorator(func):
