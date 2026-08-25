@@ -12,7 +12,7 @@ from src.llm_explainer import (
 
 MOCK_RESPONSE = json.dumps({
     "root_cause": "Fault detected via KPI deviation",
-    "3gpp_reference": "TS 38.104",
+    "3gpp_reference": "TS 38.321",
     "oran_component": "WG4 Open Fronthaul",
     "recommended_action": "Inspect affected component",
     "reasoning_trace": "KPI patterns indicate fault",

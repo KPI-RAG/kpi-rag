@@ -2,8 +2,10 @@ import pytest
 from pydantic import ValidationError
 from src.schema import AnomalyType, ClassifierOutput, LLMExplanation
 
+
 def test_anomaly_type_length():
     assert len(AnomalyType) == 11
+
 
 @pytest.mark.parametrize("value", [
     "Jamming",
@@ -12,9 +14,11 @@ def test_anomaly_type_length():
 def test_anomaly_type_valid(value):
     assert AnomalyType(value) == value
 
+
 def test_anomaly_type_invalid():
     with pytest.raises(ValueError):
         AnomalyType("Normal")
+
 
 def test_classifier_output_valid():
     payload = {
@@ -33,6 +37,7 @@ def test_classifier_output_valid():
     obj = ClassifierOutput(**payload)
     assert obj.anomaly_type == "Antenna Failure"
 
+
 def test_classifier_output_invalid_confidence():
     payload = {
         "anomaly_type": "Antenna Failure",
@@ -47,6 +52,7 @@ def test_classifier_output_invalid_confidence():
     with pytest.raises(ValidationError):
         ClassifierOutput(**payload)
 
+
 def test_classifier_output_invalid_shap_len():
     payload = {
         "anomaly_type": "Antenna Failure",
@@ -60,6 +66,7 @@ def test_classifier_output_invalid_shap_len():
     with pytest.raises(ValidationError):
         ClassifierOutput(**payload)
 
+
 def test_llm_explanation_valid():
     payload = {
         "root_cause": "Test root cause",
@@ -72,3 +79,18 @@ def test_llm_explanation_valid():
     }
     obj = LLMExplanation(**payload)
     assert isinstance(obj.template_generated, bool)
+
+
+def test_validate_3gpp_ref():
+    from src.utils import validate_3gpp_ref
+    # Existing formats — must still pass
+    assert validate_3gpp_ref("TS 38.104") is True
+    assert validate_3gpp_ref("TS 39.999") is False
+    assert validate_3gpp_ref("38.104") is False
+    # Rodina's new reference formats — must now pass
+    assert validate_3gpp_ref("TS 38.141-1") is True
+    assert validate_3gpp_ref("TR 38.901") is True
+    assert validate_3gpp_ref("TS 28.552") is True
+    assert validate_3gpp_ref("TS 38.133") is True
+    assert validate_3gpp_ref("TS 38.321") is True
+    assert validate_3gpp_ref("TS 38.314") is True

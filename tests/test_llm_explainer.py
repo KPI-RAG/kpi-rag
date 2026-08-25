@@ -47,8 +47,26 @@ def cfg():
 
 def test_load_alignment_table(alignment):
     assert len(alignment) == 10
+    # All canonical fault names present
     assert "Antenna Failure" in alignment
+    assert "Buffer Overflow (Gradual Buildup)" in alignment
+    assert "Co-Channel Interference (Mild)" in alignment
+    assert "Co-Channel Interference (Severe)" in alignment
+    assert "Doppler Shift (Severe)" in alignment
+    assert "Faulty Handover Algorithm (Too Frequent)" in alignment
+    assert "Faulty RF Filters (Temporal)" in alignment
+    assert "High Network Congestion (Gradual Buildup)" in alignment
+    assert "High Network Congestion (Sudden Spike)" in alignment
+    assert "Resource Allocation Bugs" in alignment
     assert "Jamming" not in alignment
+    # Normalized fields (added by load_alignment_table)
+    entry = alignment["Antenna Failure"]
+    assert "3gpp_ts" in entry
+    assert "clause" in entry
+    assert "oran_component" in entry
+    # Rodina's rich field must be preserved
+    assert "causal_mechanism" in entry
+    assert entry["3gpp_ts"] == "TS 38.141-1"
 
 def test_build_prompt(sample_payload, alignment):
     # With tickets
@@ -58,7 +76,7 @@ def test_build_prompt(sample_payload, alignment):
     prompt = build_prompt(sample_payload, tickets, alignment)
     assert isinstance(prompt, str)
     assert "Antenna Failure" in prompt
-    assert "3GPP TS 38.104" in prompt
+    assert "TS 38.141-1" in prompt
     assert "RSRP: below normal" in prompt
     assert "DL_BLER: above normal" in prompt
     
@@ -79,20 +97,36 @@ def test_parse_response():
         parse_response("just some text")
 
 def test_validate_citation(alignment):
-    # True case: matches regex AND in table
-    assert validate_citation("TS 38.104", alignment) is True
-    
-    # False case: fails regex
-    assert validate_citation("TS 39.999", alignment) is False
-    
-    # False case: passes regex but not in table
+    from src.utils import validate_3gpp_ref
+
+    # --- validate_3gpp_ref format checks ---
+    assert validate_3gpp_ref("TS 38.104") is True      # old format still valid
+    assert validate_3gpp_ref("TS 38.141-1") is True    # Rodina: Antenna Failure / CCI / RF Filters
+    assert validate_3gpp_ref("TR 38.901") is True       # Rodina: Doppler Shift
+    assert validate_3gpp_ref("TS 28.552") is True       # Rodina: Congestion rows
+    assert validate_3gpp_ref("TS 38.133") is True       # Rodina: Faulty Handover
+    assert validate_3gpp_ref("TS 38.321") is True       # Rodina: Buffer Overflow / Resource Bugs
+    assert validate_3gpp_ref("TS 39.999") is False      # series out of range
+    assert validate_3gpp_ref("38.104") is False         # missing prefix
+
+    # --- validate_citation: ref must pass format AND be in alignment table ---
+    # Known valid (all in new alignment table)
+    assert validate_citation("TS 38.141-1", alignment) is True
+    assert validate_citation("TS 38.321", alignment) is True
+    assert validate_citation("TR 38.901", alignment) is True
+    assert validate_citation("TS 38.133", alignment) is True
+    assert validate_citation("TS 28.552", alignment) is True
+    # Invalid: format ok but not in table
+    assert validate_citation("TS 38.104", alignment) is False
     assert validate_citation("TS 38.999", alignment) is False
+    # Invalid: format fails
+    assert validate_citation("TS 39.999", alignment) is False
 
 @patch("src.llm_explainer.call_llm")
 def test_explain_path1_success(mock_call, sample_payload, alignment, cfg):
     mock_call.return_value = '''{
         "root_cause": "Physical antenna failure causing RSRP degradation",
-        "3gpp_reference": "TS 38.104",
+        "3gpp_reference": "TS 38.321",
         "oran_component": "O-RAN WG4 Open Fronthaul",
         "recommended_action": "Inspect antenna connector and RF cable",
         "reasoning_trace": "RSRP below threshold indicates antenna issue"
@@ -112,7 +146,8 @@ def test_explain_path2_fallback(mock_call, sample_payload, alignment, cfg):
     assert res.template_generated is True
     assert res.reference_valid is False
     assert res.root_cause == "Antenna Failure detected via KPI deviation"
-    assert res.gpp_reference == "TS 38.104"
+    # Template fallback uses entry["3gpp_ts"] from alignment (Rodina's table)
+    assert res.gpp_reference == "TS 38.141-1"
 
 @patch("src.llm_explainer.call_llm")
 def test_explain_path3_hallucinated_reference(mock_call, sample_payload, alignment, cfg):
