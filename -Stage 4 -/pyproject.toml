@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kpi-rag"
+version = "0.1.0"
+description = "KPI-RAG project"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "scikit-learn",
+    "shap",
+    "sentence-transformers",
+    "chromadb",
+    "streamlit",
+    "jsonschema",
+    "pytest",
+    "pyyaml"
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+markers = [
+    "unit",
+    "integration",
+    "slow",
+    "contract"
+]

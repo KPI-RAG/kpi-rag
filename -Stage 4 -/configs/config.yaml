@@ -1,0 +1,39 @@
+rag:
+  embedding_model: "all-MiniLM-L6-v2"
+  chroma_db_path: "data/chroma_db"
+  collection_name: "telecomts_tickets"
+  top_k: 5
+  cosine_threshold: 0.35
+
+llm:
+  backend: "groq"
+  ollama_model: "llama3.1:8b"
+  ollama_base_url: "http://localhost:11434"
+  groq_model: "openai/gpt-oss-20b"
+  max_retries: 2
+  temperature: 0.1
+
+data:
+  raw_path: "data/raw"
+  processed_path: "data/processed"
+  indices_path: "data/indices"
+  train_idx_file: "train_idx.npy"
+  test_idx_file: "test_idx.npy"
+  window_length: 128
+  n_channels: 18
+  n_anomalous: 1235
+  random_state: 42
+
+evaluation:
+  n_eval_samples: 30
+  samples_per_fault: 3
+  citation_validity_threshold: 0.70
+  g_eval_dimensions:
+    - "Citation Validity"
+    - "Fault Specificity"
+    - "Actionability"
+    - "Causal Soundness"
+
+dashboard:
+  title: "KPI-RAG: 5G Fault Diagnosis"
+  hf_space: true
