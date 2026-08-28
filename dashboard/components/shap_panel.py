@@ -9,8 +9,10 @@ def render_shap_panel(shap_top3: list[dict]) -> None:
     st.subheader("Top KPI Contributors (SHAP)")
     
     df = pd.DataFrame(shap_top3)
-    df["channel_label"] = df["channel"] + " (" + df["direction"] + ")"
-    df["color"] = df["direction"].apply(lambda d: "#FF4B4B" if d == "above_normal" else "#4B8BFF")
+    df["channel_label"] = df["channel"] + " (" + df["feature_vs_normal"] + ")"
+    df["color"] = df["feature_vs_normal"].apply(
+        lambda d: "#FF4B4B" if "above" in d else "#4B8BFF"
+    )
     
     try:
         st.bar_chart(
