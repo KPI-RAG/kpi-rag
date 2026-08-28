@@ -16,10 +16,12 @@ def build_query(payload: ClassifierOutput) -> str:
         dirs.append(f"{x.channel}: {direction}")
     directions = ", ".join(dirs)
     
+    # signal_statistics is now flat: {"RSRP_mean": -77.6, "DL_BLER_mean": 0.35, ...}
     proto_states = []
     for k, v in payload.signal_statistics.items():
-        if "UL" in k or "DL" in k:
-            proto_states.append(f"{k}: {v.mean:.2f}")
+        if k.endswith("_mean") and ("UL" in k or "DL" in k):
+            channel = k[: -len("_mean")]
+            proto_states.append(f"{channel}: {v:.2f}")
             
     protocol_state = ", ".join(proto_states) if proto_states else "N/A"
     
