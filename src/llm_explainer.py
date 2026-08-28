@@ -157,6 +157,9 @@ def parse_response(raw: str) -> dict:
     if ts_match:
         parsed["3gpp_reference"] = ts_match.group()
 
+    if "3gpp_reference" in parsed:
+        parsed["gpp_reference"] = parsed.pop("3gpp_reference")
+
     return parsed
 
 def validate_citation(ref: str, alignment: dict[str, dict]) -> bool:
@@ -207,11 +210,11 @@ def explain(
         
     return LLMExplanation(
         root_cause=parsed["root_cause"],
-        gpp_reference=parsed["3gpp_reference"],
+        gpp_reference=parsed["gpp_reference"],
         oran_component=parsed["oran_component"],
         recommended_action=parsed["recommended_action"],
         reasoning_trace=parsed["reasoning_trace"],
-        reference_valid=validate_citation(parsed["3gpp_reference"], alignment),
+        reference_valid=validate_citation(parsed["gpp_reference"], alignment),
         template_generated=False
     )
 
@@ -337,11 +340,11 @@ def explain_condition(
 
     return LLMExplanation(
         root_cause=parsed["root_cause"],
-        gpp_reference=parsed["3gpp_reference"],
+        gpp_reference=parsed["gpp_reference"],
         oran_component=parsed["oran_component"],
         recommended_action=parsed["recommended_action"],
         reasoning_trace=parsed["reasoning_trace"],
-        reference_valid=validate_citation(parsed["3gpp_reference"], alignment),
+        reference_valid=validate_citation(parsed["gpp_reference"], alignment),
         template_generated=False
     )
 
