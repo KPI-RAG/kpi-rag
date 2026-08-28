@@ -18,19 +18,22 @@ class AnomalyType(str, Enum):
 class SHAPEntry(BaseModel):
     channel: str
     shap_value: float
-    direction: Literal["above_normal", "below_normal"]
-
-class SignalStats(BaseModel):
-    mean: float
-    std: float
-    min: float
-    max: float
+    feature: str = ""
+    feature_vs_normal: Literal["above_normal_mean", "below_normal_mean"]
 
 class ClassifierOutput(BaseModel):
     anomaly_type: AnomalyType
     confidence: float = Field(ge=0.0, le=1.0)
     shap_top3: list[SHAPEntry]
-    signal_statistics: dict[str, SignalStats]
+    signal_statistics: dict[str, float]
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_field_aliases(cls, data):
+        if isinstance(data, dict):
+            if "predicted_fault_type" in data and "anomaly_type" not in data:
+                data["anomaly_type"] = data.pop("predicted_fault_type")
+        return data
 
     @model_validator(mode="after")
     def validate_shap_len(self):
