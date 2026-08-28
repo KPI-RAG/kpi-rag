@@ -20,15 +20,16 @@ EXAMPLE_PAYLOAD = {
   "anomaly_type": "Antenna Failure",
   "confidence": 0.87,
   "shap_top3": [
-    {"channel": "RSRP",    "shap_value": -0.42, "direction": "below_normal"},
-    {"channel": "DL_BLER", "shap_value":  0.28, "direction": "above_normal"},
-    {"channel": "DL_MCS",  "shap_value": -0.19, "direction": "below_normal"}
+    {"channel": "RSRP",    "shap_value": -0.42, "feature_vs_normal": "below_normal_mean"},
+    {"channel": "DL_BLER", "shap_value":  0.28, "feature_vs_normal": "above_normal_mean"},
+    {"channel": "DL_MCS",  "shap_value": -0.19, "feature_vs_normal": "below_normal_mean"}
   ],
   "signal_statistics": {
-    "RSRP":    {"mean": -105.0, "std": 3.2, "min": -112.0, "max": -98.0},
-    "DL_BLER": {"mean": 0.35, "std": 0.08, "min": 0.21, "max": 0.51}
+    "RSRP_mean": -105.0, "RSRP_std": 3.2, "RSRP_min": -112.0, "RSRP_max": -98.0,
+    "DL_BLER_mean": 0.35, "DL_BLER_std": 0.08, "DL_BLER_min": 0.21, "DL_BLER_max": 0.51,
   }
 }
+
 
 st.set_page_config(
     page_title="KPI-RAG: 5G Fault Diagnosis",
@@ -80,10 +81,8 @@ with col1:
     render_shap_panel([s.model_dump() for s in payload.shap_top3])
 
 with col2:
-    render_kpi_signal_panel(
-        {k: v.model_dump() for k, v in
-         payload.signal_statistics.items()}
-    )
+    render_kpi_signal_panel(payload.signal_statistics)
+
 
 st.divider()
 
