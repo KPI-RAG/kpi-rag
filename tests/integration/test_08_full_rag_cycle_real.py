@@ -89,13 +89,13 @@ def test_full_explain_antenna_failure(collection, cfg, alignment):
         "anomaly_type": "Antenna Failure",
         "confidence": 0.87,
         "shap_top3": [
-            {"channel": "RSRP",    "shap_value": -0.42, "direction": "below_normal"},
-            {"channel": "DL_BLER", "shap_value":  0.28, "direction": "above_normal"},
-            {"channel": "DL_MCS",  "shap_value": -0.19, "direction": "below_normal"},
+            {"channel": "RSRP",    "shap_value": -0.42, "feature_vs_normal": "below_normal_mean"},
+            {"channel": "DL_BLER", "shap_value":  0.28, "feature_vs_normal": "above_normal_mean"},
+            {"channel": "DL_MCS",  "shap_value": -0.19, "feature_vs_normal": "below_normal_mean"},
         ],
         "signal_statistics": {
-            "RSRP":    {"mean": -108, "std": 4.2, "min": -115, "max": -98},
-            "DL_BLER": {"mean": 0.38, "std": 0.09, "min": 0.22, "max": 0.54},
+            "RSRP_mean": -108, "RSRP_std": 4.2, "RSRP_min": -115, "RSRP_max": -98,
+            "DL_BLER_mean": 0.38, "DL_BLER_std": 0.09, "DL_BLER_min": 0.22, "DL_BLER_max": 0.54,
         },
     })
 

@@ -15,8 +15,9 @@ def test_render_kpi_signal_panel_empty(mock_line, mock_sub, mock_info):
 @patch("dashboard.components.kpi_signal_panel.st.subheader")
 @patch("dashboard.components.kpi_signal_panel.st.line_chart")
 def test_render_kpi_signal_panel_valid(mock_line, mock_sub, mock_info):
+    # signal_statistics is now flat
     stats = {
-        "RSRP": {"mean": -105, "std": 3.2, "min": -112, "max": -98}
+        "RSRP_mean": -105.0, "RSRP_std": 3.2, "RSRP_min": -112.0, "RSRP_max": -98.0
     }
     render_kpi_signal_panel(stats)
     
@@ -26,4 +27,4 @@ def test_render_kpi_signal_panel_valid(mock_line, mock_sub, mock_info):
     
     df_called = mock_line.call_args[0][0]
     assert df_called.shape == (128, 3)
-    assert df_called.iloc[0]["RSRP (mean)"] == -105
+    assert df_called.iloc[0]["RSRP (mean)"] == -105.0

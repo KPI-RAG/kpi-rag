@@ -13,7 +13,7 @@ def test_all_fault_types_valid_schema(all_payloads):
         assert 0.0 <= payload.confidence <= 1.0
         assert len(payload.shap_top3) == 3
         for s in payload.shap_top3:
-            assert s.direction in ("above_normal", "below_normal")
+            assert s.feature_vs_normal in ("above_normal_mean", "below_normal_mean")
             assert isinstance(s.shap_value, float)
 
 
@@ -23,18 +23,18 @@ def test_jamming_is_valid_anomaly_type():
     assert jt.value == "Jamming"
 
 
-def test_shap_sign_matches_direction(all_payloads):
-    """Positive shap_value → above_normal, negative → below_normal."""
+def test_shap_sign_matches_feature_vs_normal(all_payloads):
+    """Positive shap_value → above_normal_mean, negative → below_normal_mean."""
     for fault_name, data in all_payloads.items():
         payload = ClassifierOutput(**data)
         for s in payload.shap_top3:
             if s.shap_value > 0:
-                assert s.direction == "above_normal", (
+                assert s.feature_vs_normal == "above_normal_mean", (
                     f"{fault_name}: {s.channel} has positive SHAP "
-                    f"({s.shap_value}) but direction={s.direction}"
+                    f"({s.shap_value}) but feature_vs_normal={s.feature_vs_normal}"
                 )
             elif s.shap_value < 0:
-                assert s.direction == "below_normal", (
+                assert s.feature_vs_normal == "below_normal_mean", (
                     f"{fault_name}: {s.channel} has negative SHAP "
-                    f"({s.shap_value}) but direction={s.direction}"
+                    f"({s.shap_value}) but feature_vs_normal={s.feature_vs_normal}"
                 )

@@ -16,8 +16,8 @@ def test_render_shap_panel_empty(mock_bar, mock_sub, mock_info):
 @patch("dashboard.components.shap_panel.st.bar_chart")
 def test_render_shap_panel_valid(mock_bar, mock_sub, mock_info):
     data = [
-        {"channel": "RSRP", "shap_value": -0.42, "direction": "below_normal"},
-        {"channel": "DL_BLER", "shap_value": 0.28, "direction": "above_normal"}
+        {"channel": "RSRP",    "shap_value": -0.42, "feature_vs_normal": "below_normal_mean"},
+        {"channel": "DL_BLER", "shap_value":  0.28, "feature_vs_normal": "above_normal_mean"}
     ]
     render_shap_panel(data)
     
