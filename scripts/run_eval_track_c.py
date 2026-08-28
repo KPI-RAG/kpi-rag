@@ -5,7 +5,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from src.config_loader import load_config
-from src.schema import AnomalyType, ClassifierOutput, SignalStats, SHAPEntry
+from src.schema import AnomalyType, ClassifierOutput, SHAPEntry
 from src.utils import setup_logging, validate_3gpp_ref
 from src.kg_indexer import get_collection
 from src.rag_query import query_from_classifier_output
@@ -18,111 +18,113 @@ logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Realistic per-fault signal profiles for synthetic test payloads
+# signal_statistics is flat: {"RSRP_mean": -102, "RSRP_std": 5.1, ...}
 # ---------------------------------------------------------------------------
-FAULT_SIGNAL_PROFILES: dict[str, dict[str, dict]] = {
+FAULT_SIGNAL_PROFILES: dict[str, dict[str, float]] = {
     "Co-Channel Interference (Mild)": {
-        "RSRP":    {"mean": -102, "std": 5.1, "min": -112, "max": -91},
-        "DL_SINR": {"mean": 4.2,  "std": 2.3, "min": 0.8,  "max": 8.9},
-        "DL_BLER": {"mean": 0.22, "std": 0.07, "min": 0.11, "max": 0.35},
+        "RSRP_mean": -102, "RSRP_std": 5.1, "RSRP_min": -112, "RSRP_max": -91,
+        "DL_SINR_mean": 4.2,  "DL_SINR_std": 2.3, "DL_SINR_min": 0.8,  "DL_SINR_max": 8.9,
+        "DL_BLER_mean": 0.22, "DL_BLER_std": 0.07, "DL_BLER_min": 0.11, "DL_BLER_max": 0.35,
     },
     "Buffer Overflow (Gradual Buildup)": {
-        "UL_BLER":     {"mean": 0.44, "std": 0.11, "min": 0.29, "max": 0.63},
-        "DL_PRB_UTIL": {"mean": 0.91, "std": 0.04, "min": 0.82, "max": 0.98},
-        "DL_BLER":     {"mean": 0.31, "std": 0.08, "min": 0.19, "max": 0.47},
+        "UL_BLER_mean": 0.44,     "UL_BLER_std": 0.11,  "UL_BLER_min": 0.29,  "UL_BLER_max": 0.63,
+        "DL_PRB_UTIL_mean": 0.91, "DL_PRB_UTIL_std": 0.04, "DL_PRB_UTIL_min": 0.82, "DL_PRB_UTIL_max": 0.98,
+        "DL_BLER_mean": 0.31,     "DL_BLER_std": 0.08,  "DL_BLER_min": 0.19,  "DL_BLER_max": 0.47,
     },
     "Co-Channel Interference (Severe)": {
-        "RSRP":    {"mean": -115, "std": 6.2, "min": -124, "max": -103},
-        "DL_SINR": {"mean": -1.8, "std": 3.1, "min": -8.2, "max": 3.4},
-        "DL_BLER": {"mean": 0.58, "std": 0.12, "min": 0.38, "max": 0.74},
+        "RSRP_mean": -115, "RSRP_std": 6.2, "RSRP_min": -124, "RSRP_max": -103,
+        "DL_SINR_mean": -1.8, "DL_SINR_std": 3.1, "DL_SINR_min": -8.2, "DL_SINR_max": 3.4,
+        "DL_BLER_mean": 0.58, "DL_BLER_std": 0.12, "DL_BLER_min": 0.38, "DL_BLER_max": 0.74,
     },
     "Antenna Failure": {
-        "RSRP":    {"mean": -108, "std": 4.2, "min": -115, "max": -98},
-        "DL_BLER": {"mean": 0.38, "std": 0.09, "min": 0.22, "max": 0.54},
-        "DL_MCS":  {"mean": 8.2,  "std": 2.1, "min": 4.0,  "max": 13.0},
+        "RSRP_mean": -108, "RSRP_std": 4.2, "RSRP_min": -115, "RSRP_max": -98,
+        "DL_BLER_mean": 0.38, "DL_BLER_std": 0.09, "DL_BLER_min": 0.22, "DL_BLER_max": 0.54,
+        "DL_MCS_mean": 8.2,  "DL_MCS_std": 2.1, "DL_MCS_min": 4.0,  "DL_MCS_max": 13.0,
     },
     "Faulty RF Filters (Temporal)": {
-        "RSRP":    {"mean": -106, "std": 3.8, "min": -113, "max": -97},
-        "UL_SNR":  {"mean": 6.1,  "std": 2.9, "min": 1.8,  "max": 11.4},
-        "DL_BLER": {"mean": 0.41, "std": 0.10, "min": 0.25, "max": 0.58},
+        "RSRP_mean": -106, "RSRP_std": 3.8, "RSRP_min": -113, "RSRP_max": -97,
+        "UL_SNR_mean": 6.1,  "UL_SNR_std": 2.9, "UL_SNR_min": 1.8,  "UL_SNR_max": 11.4,
+        "DL_BLER_mean": 0.41, "DL_BLER_std": 0.10, "DL_BLER_min": 0.25, "DL_BLER_max": 0.58,
     },
     "High Network Congestion (Gradual Buildup)": {
-        "DL_PRB_UTIL": {"mean": 0.93, "std": 0.03, "min": 0.86, "max": 0.99},
-        "UL_PRB_UTIL": {"mean": 0.88, "std": 0.05, "min": 0.78, "max": 0.96},
-        "DL_BLER":     {"mean": 0.29, "std": 0.07, "min": 0.17, "max": 0.42},
+        "DL_PRB_UTIL_mean": 0.93, "DL_PRB_UTIL_std": 0.03, "DL_PRB_UTIL_min": 0.86, "DL_PRB_UTIL_max": 0.99,
+        "UL_PRB_UTIL_mean": 0.88, "UL_PRB_UTIL_std": 0.05, "UL_PRB_UTIL_min": 0.78, "UL_PRB_UTIL_max": 0.96,
+        "DL_BLER_mean": 0.29, "DL_BLER_std": 0.07, "DL_BLER_min": 0.17, "DL_BLER_max": 0.42,
     },
     "Doppler Shift (Severe)": {
-        "RSRP":   {"mean": -104, "std": 7.3, "min": -118, "max": -89},
-        "DL_MCS": {"mean": 6.8,  "std": 3.2, "min": 2.0,  "max": 14.0},
-        "UL_MCS": {"mean": 5.9,  "std": 2.8, "min": 1.0,  "max": 12.0},
+        "RSRP_mean": -104, "RSRP_std": 7.3, "RSRP_min": -118, "RSRP_max": -89,
+        "DL_MCS_mean": 6.8,  "DL_MCS_std": 3.2, "DL_MCS_min": 2.0,  "DL_MCS_max": 14.0,
+        "UL_MCS_mean": 5.9,  "UL_MCS_std": 2.8, "UL_MCS_min": 1.0,  "UL_MCS_max": 12.0,
     },
     "Faulty Handover Algorithm (Too Frequent)": {
-        "RSRP":    {"mean": -99,  "std": 4.4, "min": -109, "max": -88},
-        "DL_MCS":  {"mean": 11.2, "std": 2.6, "min": 6.0,  "max": 17.0},
-        "UL_BLER": {"mean": 0.28, "std": 0.08, "min": 0.15, "max": 0.41},
+        "RSRP_mean": -99,  "RSRP_std": 4.4, "RSRP_min": -109, "RSRP_max": -88,
+        "DL_MCS_mean": 11.2, "DL_MCS_std": 2.6, "DL_MCS_min": 6.0,  "DL_MCS_max": 17.0,
+        "UL_BLER_mean": 0.28, "UL_BLER_std": 0.08, "UL_BLER_min": 0.15, "UL_BLER_max": 0.41,
     },
     "Resource Allocation Bugs": {
-        "DL_PRB_UTIL": {"mean": 0.45, "std": 0.18, "min": 0.18, "max": 0.79},
-        "UL_PRB_UTIL": {"mean": 0.41, "std": 0.16, "min": 0.14, "max": 0.72},
-        "DL_MCS":      {"mean": 9.1,  "std": 4.2,  "min": 2.0,  "max": 18.0},
+        "DL_PRB_UTIL_mean": 0.45, "DL_PRB_UTIL_std": 0.18, "DL_PRB_UTIL_min": 0.18, "DL_PRB_UTIL_max": 0.79,
+        "UL_PRB_UTIL_mean": 0.41, "UL_PRB_UTIL_std": 0.16, "UL_PRB_UTIL_min": 0.14, "UL_PRB_UTIL_max": 0.72,
+        "DL_MCS_mean": 9.1,       "DL_MCS_std": 4.2,       "DL_MCS_min": 2.0,       "DL_MCS_max": 18.0,
     },
     "High Network Congestion (Sudden Spike)": {
-        "DL_PRB_UTIL": {"mean": 0.97, "std": 0.02, "min": 0.93, "max": 1.00},
-        "UL_BLER":     {"mean": 0.51, "std": 0.13, "min": 0.31, "max": 0.69},
-        "DL_BLER":     {"mean": 0.45, "std": 0.11, "min": 0.28, "max": 0.61},
+        "DL_PRB_UTIL_mean": 0.97, "DL_PRB_UTIL_std": 0.02, "DL_PRB_UTIL_min": 0.93, "DL_PRB_UTIL_max": 1.00,
+        "UL_BLER_mean": 0.51,     "UL_BLER_std": 0.13,     "UL_BLER_min": 0.31,     "UL_BLER_max": 0.69,
+        "DL_BLER_mean": 0.45,     "DL_BLER_std": 0.11,     "DL_BLER_min": 0.28,     "DL_BLER_max": 0.61,
     },
 }
+
 
 # SHAP profiles: top 3 channels per fault with realistic shap values
 FAULT_SHAP_PROFILES: dict[str, list[dict]] = {
     "Co-Channel Interference (Mild)": [
-        {"channel": "DL_SINR", "shap_value": -0.38, "direction": "below_normal"},
-        {"channel": "RSRP",    "shap_value": -0.24, "direction": "below_normal"},
-        {"channel": "DL_BLER", "shap_value":  0.18, "direction": "above_normal"},
+        {"channel": "DL_SINR", "shap_value": -0.38, "feature_vs_normal": "below_normal_mean"},
+        {"channel": "RSRP",    "shap_value": -0.24, "feature_vs_normal": "below_normal_mean"},
+        {"channel": "DL_BLER", "shap_value":  0.18, "feature_vs_normal": "above_normal_mean"},
     ],
     "Buffer Overflow (Gradual Buildup)": [
-        {"channel": "DL_PRB_UTIL", "shap_value":  0.45, "direction": "above_normal"},
-        {"channel": "UL_BLER",     "shap_value":  0.31, "direction": "above_normal"},
-        {"channel": "DL_BLER",     "shap_value":  0.22, "direction": "above_normal"},
+        {"channel": "DL_PRB_UTIL", "shap_value":  0.45, "feature_vs_normal": "above_normal_mean"},
+        {"channel": "UL_BLER",     "shap_value":  0.31, "feature_vs_normal": "above_normal_mean"},
+        {"channel": "DL_BLER",     "shap_value":  0.22, "feature_vs_normal": "above_normal_mean"},
     ],
     "Co-Channel Interference (Severe)": [
-        {"channel": "DL_SINR", "shap_value": -0.52, "direction": "below_normal"},
-        {"channel": "DL_BLER", "shap_value":  0.41, "direction": "above_normal"},
-        {"channel": "RSRP",    "shap_value": -0.33, "direction": "below_normal"},
+        {"channel": "DL_SINR", "shap_value": -0.52, "feature_vs_normal": "below_normal_mean"},
+        {"channel": "DL_BLER", "shap_value":  0.41, "feature_vs_normal": "above_normal_mean"},
+        {"channel": "RSRP",    "shap_value": -0.33, "feature_vs_normal": "below_normal_mean"},
     ],
     "Antenna Failure": [
-        {"channel": "RSRP",    "shap_value": -0.42, "direction": "below_normal"},
-        {"channel": "DL_BLER", "shap_value":  0.28, "direction": "above_normal"},
-        {"channel": "DL_MCS",  "shap_value": -0.19, "direction": "below_normal"},
+        {"channel": "RSRP",    "shap_value": -0.42, "feature_vs_normal": "below_normal_mean"},
+        {"channel": "DL_BLER", "shap_value":  0.28, "feature_vs_normal": "above_normal_mean"},
+        {"channel": "DL_MCS",  "shap_value": -0.19, "feature_vs_normal": "below_normal_mean"},
     ],
     "Faulty RF Filters (Temporal)": [
-        {"channel": "UL_SNR",  "shap_value": -0.36, "direction": "below_normal"},
-        {"channel": "DL_BLER", "shap_value":  0.29, "direction": "above_normal"},
-        {"channel": "RSRP",    "shap_value": -0.21, "direction": "below_normal"},
+        {"channel": "UL_SNR",  "shap_value": -0.36, "feature_vs_normal": "below_normal_mean"},
+        {"channel": "DL_BLER", "shap_value":  0.29, "feature_vs_normal": "above_normal_mean"},
+        {"channel": "RSRP",    "shap_value": -0.21, "feature_vs_normal": "below_normal_mean"},
     ],
     "High Network Congestion (Gradual Buildup)": [
-        {"channel": "DL_PRB_UTIL", "shap_value":  0.48, "direction": "above_normal"},
-        {"channel": "UL_PRB_UTIL", "shap_value":  0.35, "direction": "above_normal"},
-        {"channel": "DL_BLER",     "shap_value":  0.19, "direction": "above_normal"},
+        {"channel": "DL_PRB_UTIL", "shap_value":  0.48, "feature_vs_normal": "above_normal_mean"},
+        {"channel": "UL_PRB_UTIL", "shap_value":  0.35, "feature_vs_normal": "above_normal_mean"},
+        {"channel": "DL_BLER",     "shap_value":  0.19, "feature_vs_normal": "above_normal_mean"},
     ],
     "Doppler Shift (Severe)": [
-        {"channel": "DL_MCS",  "shap_value": -0.39, "direction": "below_normal"},
-        {"channel": "UL_MCS",  "shap_value": -0.30, "direction": "below_normal"},
-        {"channel": "RSRP",    "shap_value": -0.25, "direction": "below_normal"},
+        {"channel": "DL_MCS",  "shap_value": -0.39, "feature_vs_normal": "below_normal_mean"},
+        {"channel": "UL_MCS",  "shap_value": -0.30, "feature_vs_normal": "below_normal_mean"},
+        {"channel": "RSRP",    "shap_value": -0.25, "feature_vs_normal": "below_normal_mean"},
     ],
     "Faulty Handover Algorithm (Too Frequent)": [
-        {"channel": "RSRP",    "shap_value": -0.33, "direction": "below_normal"},
-        {"channel": "DL_MCS",  "shap_value": -0.27, "direction": "below_normal"},
-        {"channel": "UL_BLER", "shap_value":  0.20, "direction": "above_normal"},
+        {"channel": "RSRP",    "shap_value": -0.33, "feature_vs_normal": "below_normal_mean"},
+        {"channel": "DL_MCS",  "shap_value": -0.27, "feature_vs_normal": "below_normal_mean"},
+        {"channel": "UL_BLER", "shap_value":  0.20, "feature_vs_normal": "above_normal_mean"},
     ],
     "Resource Allocation Bugs": [
-        {"channel": "DL_PRB_UTIL", "shap_value": -0.40, "direction": "below_normal"},
-        {"channel": "UL_PRB_UTIL", "shap_value": -0.32, "direction": "below_normal"},
-        {"channel": "DL_MCS",      "shap_value": -0.18, "direction": "below_normal"},
+        {"channel": "DL_PRB_UTIL", "shap_value": -0.40, "feature_vs_normal": "below_normal_mean"},
+        {"channel": "UL_PRB_UTIL", "shap_value": -0.32, "feature_vs_normal": "below_normal_mean"},
+        {"channel": "DL_MCS",      "shap_value": -0.18, "feature_vs_normal": "below_normal_mean"},
     ],
     "High Network Congestion (Sudden Spike)": [
-        {"channel": "DL_PRB_UTIL", "shap_value":  0.51, "direction": "above_normal"},
-        {"channel": "UL_BLER",     "shap_value":  0.38, "direction": "above_normal"},
-        {"channel": "DL_BLER",     "shap_value":  0.30, "direction": "above_normal"},
+        {"channel": "DL_PRB_UTIL", "shap_value":  0.51, "feature_vs_normal": "above_normal_mean"},
+        {"channel": "UL_BLER",     "shap_value":  0.38, "feature_vs_normal": "above_normal_mean"},
+        {"channel": "DL_BLER",     "shap_value":  0.30, "feature_vs_normal": "above_normal_mean"},
     ],
 }
 
@@ -135,16 +137,11 @@ def build_synthetic_payload(fault_type: AnomalyType) -> ClassifierOutput:
     signals = FAULT_SIGNAL_PROFILES[fault_type.value]
     shap_entries = FAULT_SHAP_PROFILES[fault_type.value]
 
-    signal_statistics = {
-        k: SignalStats(**v)
-        for k, v in signals.items()
-    }
-
     return ClassifierOutput(
         anomaly_type=fault_type,
         confidence=0.85,
         shap_top3=[SHAPEntry(**s) for s in shap_entries],
-        signal_statistics=signal_statistics,
+        signal_statistics=signals,
     )
 
 
