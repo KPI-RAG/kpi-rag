@@ -1,12 +1,35 @@
+# ── Secrets & credentials ────────────────────────────────────────────────────
+.env
+.streamlit/secrets.toml
+
+# ── Python runtime ────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.venv/
+
+# ── Data files (large / generated) ───────────────────────────────────────────
 data/raw/
 data/chroma_db/
 data/indices/
-.env
-__pycache__/
-*.pyc
-.venv/
-*.egg-info/
-dist/
-.streamlit/secrets.toml
-
 data/processed/*.npy
+
+# ── Local tooling ─────────────────────────────────────────────────────────────
+graphify-out/
+.agents/
+.omagy/
+.pytest_cache/
+.agent/
+
+# ── Temp / scratch files ──────────────────────────────────────────────────────
+test_results.txt
+plan_input.json
+context.md
+
+# ── OS / editor ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
