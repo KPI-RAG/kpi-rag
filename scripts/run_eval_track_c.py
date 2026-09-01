@@ -1,8 +1,13 @@
 import json
 import logging
 import sys
-from collections import defaultdict
+import os
+import argparse
 from pathlib import Path
+from collections import defaultdict
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from src.config_loader import load_config
 from src.schema import AnomalyType, ClassifierOutput, SHAPEntry
@@ -165,11 +170,36 @@ def run_track_c(
     collection = get_collection(cfg)
     alignment = load_alignment_table("configs/alignment_table.json")
 
-    # Build sample set: n_per_fault identical payloads per fault type
+    # Build sample set using real windows from dataset
+    import json
+    import random
+    from src.schema import ClassifierOutput
+
+    with open("data/processed/layer2_output_sessionsplit.json", "r") as f:
+        all_windows_raw = json.load(f)
+
+    parsed_windows = []
+    for w in all_windows_raw:
+        try:
+            parsed_windows.append(ClassifierOutput(**w))
+        except Exception:
+            pass
+
+    random.seed(cfg.get("eval", {}).get("track_c", {}).get("random_state", 42))
+
+    by_fault = {}
+    for w in parsed_windows:
+        if w.anomaly_type in TRACK_C_FAULTS:
+            by_fault.setdefault(w.anomaly_type, []).append(w)
+
     samples: list[tuple[AnomalyType, ClassifierOutput]] = []
     for ft in TRACK_C_FAULTS:
-        for _ in range(n_per_fault):
-            samples.append((ft, build_synthetic_payload(ft)))
+        pool = by_fault.get(ft, [])
+        n = min(n_per_fault, len(pool))
+        if n > 0:
+            chosen = random.sample(pool, n)
+            for w in chosen:
+                samples.append((ft, w))
 
     logger.info(
         "Track C: %d fault types × %d samples × 3 conditions = %d LLM calls",
