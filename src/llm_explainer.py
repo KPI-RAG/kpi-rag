@@ -242,12 +242,10 @@ Confidence: {payload.confidence:.0%}
 Top contributing KPIs (SHAP):
 {shap_summary}
 
-Use TR (Technical Report) instead of TS when the standard is a TR — for example, channel models use TR 38.901.
-
 Return ONLY a JSON object with exactly these fields:
 {{
   "root_cause": "one sentence physical explanation",
-  "3gpp_reference": "TS/TR XX.XXX (e.g., TS 38.321 or TR 38.901)",
+  "3gpp_reference": "TS XX.XXX or TR XX.XXX",
   "oran_component": "component name",
   "recommended_action": "one actionable step",
   "reasoning_trace": "2-3 sentence causal chain"
@@ -282,12 +280,10 @@ Top contributing KPIs (SHAP):
 Retrieved similar incidents:
 {tickets_summary}
 
-Use TR (Technical Report) instead of TS when the standard is a TR — for example, channel models use TR 38.901.
-
 Return ONLY a JSON object with exactly these fields:
 {{
   "root_cause": "one sentence physical explanation",
-  "3gpp_reference": "TS/TR XX.XXX (e.g., TS 38.321 or TR 38.901)",
+  "3gpp_reference": "TS XX.XXX or TR XX.XXX",
   "oran_component": "component name",
   "recommended_action": "one actionable step",
   "reasoning_trace": "2-3 sentence causal chain"
