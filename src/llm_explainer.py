@@ -164,14 +164,18 @@ def parse_response(raw: str) -> dict:
 
     return parsed
 
-def validate_citation(ref: str, alignment: dict[str, dict]) -> bool:
+def validate_citation(ref: str, alignment: dict[str, dict], fault_type: str = None) -> bool:
     try:
         check1 = bool(validate_3gpp_ref(ref))
     except Exception:
         check1 = False
     
-    all_ts = {entry.get("3gpp_ts") for entry in alignment.values() if entry.get("3gpp_ts")}
-    check2 = ref in all_ts
+    if fault_type and fault_type in alignment:
+        expected = alignment[fault_type].get("3gpp_ts", "")
+        check2 = bool(expected) and ref == expected
+    else:
+        all_ts = {entry.get("3gpp_ts") for entry in alignment.values() if entry.get("3gpp_ts")}
+        check2 = ref in all_ts
     
     if not check1:
         logger.warning("Citation validation failed Check 1 (format regex): %s", ref)
@@ -216,7 +220,7 @@ def explain(
         oran_component=parsed["oran_component"],
         recommended_action=parsed["recommended_action"],
         reasoning_trace=parsed["reasoning_trace"],
-        reference_valid=validate_citation(parsed["gpp_reference"], alignment),
+        reference_valid=validate_citation(parsed["gpp_reference"], alignment, fault_type=payload.anomaly_type.value),
         template_generated=False
     )
 
@@ -346,7 +350,7 @@ def explain_condition(
         oran_component=parsed["oran_component"],
         recommended_action=parsed["recommended_action"],
         reasoning_trace=parsed["reasoning_trace"],
-        reference_valid=validate_citation(parsed["gpp_reference"], alignment),
+        reference_valid=validate_citation(parsed["gpp_reference"], alignment, fault_type=payload.anomaly_type.value),
         template_generated=False
     )
 
