@@ -33,3 +33,7 @@ context.md
 # ── OS / editor ───────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+
+.omagy/
+.agent/
+plan_input.json
