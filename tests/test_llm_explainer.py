@@ -127,7 +127,7 @@ def test_validate_citation(alignment):
 def test_explain_path1_success(mock_call, sample_payload, alignment, cfg):
     mock_call.return_value = '''{
         "root_cause": "Physical antenna failure causing RSRP degradation",
-        "3gpp_reference": "TS 38.321",
+        "3gpp_reference": "TS 38.141-1",
         "oran_component": "O-RAN WG4 Open Fronthaul",
         "recommended_action": "Inspect antenna connector and RF cable",
         "reasoning_trace": "RSRP below threshold indicates antenna issue"
