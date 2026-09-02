@@ -1,6 +1,8 @@
 import json
 import logging
 import os
+import time
+from groq import RateLimitError
 import re
 import requests
 
@@ -199,6 +201,13 @@ def explain(
             raw = call_llm(prompt, cfg)
             parsed = parse_response(raw)
             break
+        except RateLimitError:
+            wait = 60 * (attempt + 1)
+            logger.warning("Rate limit hit (attempt %d/%d), waiting %ds before retry...", attempt + 1, max_retries, wait)
+            if attempt < max_retries - 1:
+                time.sleep(wait)
+            else:
+                logger.error("Rate limit exceeded after all retries, using template")
         except Exception as e:
             logger.error("Attempt %d failed: %s", attempt + 1, e)
             
@@ -329,6 +338,13 @@ def explain_condition(
             raw = call_llm(prompt, cfg)
             parsed = parse_response(raw)
             break
+        except RateLimitError:
+            wait = 60 * (attempt + 1)
+            logger.warning("Rate limit hit (attempt %d/%d), waiting %ds before retry...", attempt + 1, max_retries, wait)
+            if attempt < max_retries - 1:
+                time.sleep(wait)
+            else:
+                logger.error("Rate limit exceeded after all retries, using template")
         except Exception as e:
             logger.error("Attempt %d (condition %d) failed: %s", attempt + 1, condition, e)
 
@@ -353,4 +369,6 @@ def explain_condition(
         reference_valid=validate_citation(parsed["gpp_reference"], alignment, fault_type=payload.anomaly_type.value),
         template_generated=False
     )
+
+
 

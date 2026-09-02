@@ -10,7 +10,7 @@ llm:
   ollama_model: "llama3.1:8b"
   ollama_base_url: "http://localhost:11434"
   groq_model: "openai/gpt-oss-20b"
-  max_retries: 2
+  max_retries: 3
   temperature: 0.1
 
 data:
