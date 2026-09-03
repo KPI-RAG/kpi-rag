@@ -6,7 +6,8 @@ rag:
   cosine_threshold: 0.35
 
 llm:
-  backend: "groq"
+  backend: "gemini"
+  gemini_model: "gemini-3.5-flash-lite"
   ollama_model: "llama3.1:8b"
   ollama_base_url: "http://localhost:11434"
   groq_model: "openai/gpt-oss-20b"
