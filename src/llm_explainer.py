@@ -1,4 +1,4 @@
-﻿import json
+import json
 import logging
 import os
 import time
@@ -118,7 +118,7 @@ def call_gemini(prompt: str, cfg: dict) -> str:
     if not api_key:
         raise ValueError("GEMINI_API_KEY environment variable is not set")
     client = google_genai.Client(api_key=api_key)
-    model_name = cfg["llm"].get("gemini_model", "gemini-2.5-flash-lite-preview-06-17")
+    model_name = cfg["llm"].get("gemini_model", "gemini-3.5-flash-lite")
     temperature = cfg["llm"].get("temperature", 0.1)
     max_retries = cfg["llm"].get("max_retries", 3)
     for attempt in range(max_retries):
@@ -133,24 +133,26 @@ def call_gemini(prompt: str, cfg: dict) -> str:
             result = response.text or ""
             logger.info("Called gemini (%s), response len: %d", model_name, len(result))
             return result
-        except GeminiClientError as e:
-            if hasattr(e, "status_code") and e.status_code == 429:
-                wait = 60 * (attempt + 1)
-                logger.warning(
-                    "Gemini rate limit (attempt %d/%d), waiting %ds...",
-                    attempt + 1, max_retries, wait,
-                )
+        except Exception as e:
+            is_rate_limit = (
+                (hasattr(e, "status_code") and e.status_code == 429)
+                or "429" in str(e)
+                or "RESOURCE_EXHAUSTED" in str(e)
+            )
+            if is_rate_limit:
                 if attempt < max_retries - 1:
+                    wait = 30 * (attempt + 1)  # 30s, 60s, 90s
+                    logger.warning(
+                        "Gemini rate limit (attempt %d/%d), waiting %ds...",
+                        attempt + 1, max_retries, wait,
+                    )
                     time.sleep(wait)
                 else:
-                    logger.error("Gemini rate limit exceeded after all retries")
+                    logger.error("Gemini rate limit: all retries exhausted")
                     raise
             else:
-                logger.error("Gemini ClientError (attempt %d): %s", attempt + 1, e)
+                logger.error("Gemini call failed (attempt %d): %s", attempt + 1, e)
                 raise
-        except Exception as e:
-            logger.error("Gemini call failed (attempt %d): %s", attempt + 1, e)
-            raise
     raise RuntimeError("call_gemini: exhausted all retries without returning")
 
 
