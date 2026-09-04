@@ -93,3 +93,33 @@ def test_query_from_classifier_output(collection, sample_payload):
     assert isinstance(low_conf, bool)
     assert len(tickets) > 0
     assert low_conf is False
+
+
+# ─── P2-B Negative retrieval test ────────────────────────────────────────────
+
+def test_retrieval_low_similarity_for_unrelated_query(collection):
+    """An off-topic query must return low cosine similarity against the telecom DB.
+
+    The test collection contains only 5G/4G/3G/2G network fault descriptions.
+    A food-domain query should land far from all indexed embeddings, so every
+    returned similarity score must be well below 0.5.
+    """
+    from src.rag_query import retrieve
+    tickets, low_conf = retrieve(
+        "recipes for chocolate cake baking temperature and butter ratio",
+        collection,
+        model_name="all-MiniLM-L6-v2",
+        k=3,
+        threshold=0.45,
+    )
+    # The retriever should flag this as low-confidence
+    assert low_conf is True, (
+        "An off-topic query should trigger low_confidence=True"
+    )
+    # Every individual score must be below 0.5 — no spurious high-similarity hits
+    for t in tickets:
+        assert t.similarity_score < 0.5, (
+            f"Unrelated query returned suspiciously high similarity "
+            f"{t.similarity_score:.3f} for ticket '{t.ticket_id}'. "
+            "Retriever may not be discriminating correctly."
+        )

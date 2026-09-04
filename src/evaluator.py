@@ -77,7 +77,7 @@ def score_explanation(
         reference_valid=ref_valid
     )
 
-def compute_track_b(scores: list[GEvalScore]) -> TrackBResults:
+def compute_track_b(scores: list[GEvalScore], cfg: dict | None = None) -> TrackBResults:
     if not scores:
         raise ValueError("Scores list is empty")
         
@@ -90,10 +90,17 @@ def compute_track_b(scores: list[GEvalScore]) -> TrackBResults:
     
     valid_count = sum(1 for s in scores if s.reference_valid)
     citation_validity_rate = valid_count / n
-    meets_threshold = citation_validity_rate >= 0.70
+    # Read threshold from config; fall back to 0.70 if cfg not provided.
+    threshold = (
+        cfg.get("evaluation", {}).get("citation_validity_threshold", 0.70)
+        if cfg is not None
+        else 0.70
+    )
+    meets_threshold = citation_validity_rate >= threshold
     
     logger.info("Track B computed for n=%d samples", n)
-    logger.info("Citation validity rate: %.3f (meets_threshold=%s)", citation_validity_rate, meets_threshold)
+    logger.info("Citation validity rate: %.3f (threshold=%.2f, meets_threshold=%s)",
+                citation_validity_rate, threshold, meets_threshold)
     
     return TrackBResults(
         scores=scores,

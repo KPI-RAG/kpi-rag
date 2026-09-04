@@ -7,6 +7,12 @@ rag:
 
 llm:
   backend: "gemini"
+  # P1-B AUDIT NOTE: "gemini-3.5-flash-lite" is not listed in Google's public
+  # model catalogue (as of 2026-09). However, the API accepted this name and
+  # completed 90 calls successfully during Track C evaluation. The internal
+  # resolved model identity is unknown without model.get() introspection.
+  # Verified alternatives if this stops working: gemini-2.5-flash-lite,
+  # gemini-1.5-flash-8b, gemini-2.0-flash-lite.
   gemini_model: "gemini-3.5-flash-lite"
   ollama_model: "llama3.1:8b"
   ollama_base_url: "http://localhost:11434"
@@ -20,15 +26,22 @@ data:
   indices_path: "data/indices"
   train_idx_file: "train_idx_sessionsplit.npy"
   test_idx_file: "test_idx_sessionsplit.npy"
+  rca_evidence_path: "data/processed/rca_evidence.json"
   window_length: 128
   n_channels: 18
   n_anomalous: 1235
-  random_state: 42
+  random_state: 42  # used by run_eval_track_c.py for reproducible sampling
 
 evaluation:
+  # P1-C: citation_validity_threshold is read by src/evaluator.py compute_track_b().
+  citation_validity_threshold: 0.70
+  # P1-C: n_eval_samples is used as the default for --n-per-fault in
+  # scripts/run_eval_track_c.py (samples_per_fault × 10 fault types).
   n_eval_samples: 30
   samples_per_fault: 3
-  citation_validity_threshold: 0.70
+  # P1-C: g_eval_dimensions is reserved for future automated G-Eval scoring
+  # integration. Currently human annotation drives these scores. Not yet wired
+  # to any script; kept here for forward-compatibility planning.
   g_eval_dimensions:
     - "Citation Validity"
     - "Fault Specificity"

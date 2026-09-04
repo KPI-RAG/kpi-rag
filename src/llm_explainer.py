@@ -98,6 +98,13 @@ def build_prompt(
     if rca_context:
         rca_block = f"\n[EVIDENCE FROM RCA PIPELINE]\n{rca_context}\n"
 
+    # P0-1 AUDIT NOTE: The alignment entry (3gpp_ts, clause, evidence_span) is
+    # injected here and also used by validate_citation() to check the LLM output.
+    # This means C3's citation_valid metric measures: "given the correct standard,
+    # does the LLM incorporate it correctly?" — NOT independent citation retrieval.
+    # The 90% C3 rate quantifies alignment-guided prompting compliance, not the
+    # LLM's intrinsic 3GPP knowledge. C1 (no context) establishes the true
+    # baseline; the C1→C3 delta (~83pp) is the contribution of the full system.
     prompt = f"""You are a 5G network fault diagnosis expert.
 
 [FAULT DETECTED]
@@ -402,18 +409,30 @@ def explain(
     prompt = build_prompt(payload, tickets, alignment)
     max_retries = cfg["llm"]["max_retries"]
     parsed = None
+    backend = cfg.get("llm", {}).get("backend", "")
     for attempt in range(max_retries):
         try:
             raw = call_llm(prompt, cfg)
             parsed = parse_response(raw)
             break
         except RateLimitError:
+            # RateLimitError is a groq-library exception; it is only reachable
+            # when backend == "groq". For Gemini, 429s are caught inside
+            # call_gemini() as generic Exception and retried there.
+            if backend != "groq":
+                logger.error(
+                    "Unexpected RateLimitError for backend=%s — re-raising", backend
+                )
+                raise
             wait = 60 * (attempt + 1)
-            logger.warning("Rate limit hit (attempt %d/%d), waiting %ds before retry...", attempt + 1, max_retries, wait)
+            logger.warning(
+                "Groq rate limit hit (attempt %d/%d), waiting %ds before retry...",
+                attempt + 1, max_retries, wait,
+            )
             if attempt < max_retries - 1:
                 time.sleep(wait)
             else:
-                logger.error("Rate limit exceeded after all retries, using template")
+                logger.error("Groq rate limit exceeded after all retries, using template")
         except Exception as e:
             logger.error("Attempt %d failed: %s", attempt + 1, e)
     if parsed is None:
@@ -539,18 +558,30 @@ def explain_condition(
         prompt = build_prompt(payload, tickets, alignment, rca_context=rca_context)
     max_retries = cfg["llm"]["max_retries"]
     parsed = None
+    backend = cfg.get("llm", {}).get("backend", "")
     for attempt in range(max_retries):
         try:
             raw = call_llm(prompt, cfg)
             parsed = parse_response(raw)
             break
         except RateLimitError:
+            # RateLimitError is a groq-library exception; it is only reachable
+            # when backend == "groq". For Gemini, 429s are caught inside
+            # call_gemini() as generic Exception and retried there.
+            if backend != "groq":
+                logger.error(
+                    "Unexpected RateLimitError for backend=%s — re-raising", backend
+                )
+                raise
             wait = 60 * (attempt + 1)
-            logger.warning("Rate limit hit (attempt %d/%d), waiting %ds before retry...", attempt + 1, max_retries, wait)
+            logger.warning(
+                "Groq rate limit hit (attempt %d/%d), waiting %ds before retry...",
+                attempt + 1, max_retries, wait,
+            )
             if attempt < max_retries - 1:
                 time.sleep(wait)
             else:
-                logger.error("Rate limit exceeded after all retries, using template")
+                logger.error("Groq rate limit exceeded after all retries, using template")
         except Exception as e:
             logger.error("Attempt %d (condition %d) failed: %s", attempt + 1, condition, e)
     if parsed is None:

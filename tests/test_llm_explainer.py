@@ -223,9 +223,55 @@ def test_explain_condition2_tickets_no_table(mock_call, sample_payload, alignmen
     assert "clause" not in prompt
 
 
+
 def test_explain_condition_invalid(sample_payload, alignment, cfg):
     """Invalid condition number must raise ValueError."""
     with pytest.raises(ValueError, match="condition must be 1, 2, or 3"):
         explain_condition(sample_payload, [], cfg, alignment, condition=99)
 
 
+# ─── P2-A Negative test cases for validate_citation() ────────────────────────
+
+def test_validate_citation_rejects_wrong_fault_reference(alignment):
+    """A reference valid for a different fault must fail for CCI Mild.
+
+    Co-Channel Interference (Mild) expects TS 38.141-1.
+    Doppler Shift (Severe) expects TR 38.901.
+    Giving Doppler's reference for CCI should fail check2 (fault-type lookup).
+    """
+    result = validate_citation(
+        "TR 38.901",
+        alignment,
+        fault_type="Co-Channel Interference (Mild)",
+    )
+    assert result is False, "Wrong fault reference must fail validate_citation()"
+
+
+def test_validate_citation_rejects_hallucinated_ts_series(alignment):
+    """A hallucinated TS in a non-existent series must fail both checks."""
+    result = validate_citation(
+        "TS 99.999",
+        alignment,
+        fault_type="Co-Channel Interference (Mild)",
+    )
+    assert result is False, "Non-existent TS series must fail validate_citation()"
+
+
+def test_validate_citation_rejects_empty_string(alignment):
+    """An empty reference string must fail."""
+    result = validate_citation("", alignment, fault_type="Antenna Failure")
+    assert result is False, "Empty reference must fail validate_citation()"
+
+
+def test_validate_citation_rejects_real_but_wrong_ts(alignment):
+    """A real 3GPP TS not in the alignment table must fail check2.
+
+    TS 38.331 (RRC specification) is a valid format but not mapped to any
+    fault type in the alignment table, so it must fail table-lookup check.
+    """
+    result = validate_citation(
+        "TS 38.331",
+        alignment,
+        fault_type="Co-Channel Interference (Mild)",
+    )
+    assert result is False, "Real-but-unrelated TS must fail validate_citation()"

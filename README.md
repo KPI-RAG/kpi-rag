@@ -92,6 +92,18 @@ uv run python scripts/run_eval_track_b.py --output data/processed/ --n-samples 3
 | C2 | Label + SHAP + retrieved tickets |
 | C3 | Full system (tickets + alignment table) |
 
+> **What the C3 citation validity metric measures:**
+> C3 demonstrates that providing structured 3GPP standards context enables the
+> LLM to correctly incorporate domain references in ~90% of cases. C1 (~7%) and
+> C2 (~10%) establish the baselines without this context. The delta C2→C3 (~+80pp)
+> quantifies the contribution of the alignment-guided prompting strategy.
+>
+> **Important framing:** `validate_citation()` checks the LLM's output against
+> the same alignment table injected into the C3 prompt. This measures
+> *prompt-compliance* (given the correct standard, does the LLM use it?) rather
+> than *independent citation retrieval* (does the LLM know the standard from
+> training data alone?). C1 provides the true baseline for intrinsic knowledge.
+
 ```bash
 # Dry run (1 sample per fault = 30 LLM calls)
 uv run python scripts/run_eval_track_c.py --output data/processed/ --dry-run

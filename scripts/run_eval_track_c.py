@@ -194,7 +194,7 @@ def run_track_c(
         except Exception:
             pass
 
-    random.seed(cfg.get("eval", {}).get("track_c", {}).get("random_state", 42))
+    random.seed(cfg.get("data", {}).get("random_state", 42))
 
     by_fault: dict[AnomalyType, list[tuple[ClassifierOutput, int | None]]] = {}
     for payload_obj, window_idx in parsed_windows:
@@ -233,8 +233,14 @@ def run_track_c(
                 sample_idx, ft.value, condition, window_index,
             )
 
-            # C3 only: inject window-specific RCA evidence into the prompt
-            # C1 and C2 receive "" to preserve the ablation experimental design
+            # C3: ChromaDB context + 3GPP alignment table injected into prompt.
+            # P0-1 AUDIT NOTE: validate_citation() checks against the same alignment
+            # table used to build the C3 prompt. The metric measures the LLM's
+            # ability to correctly incorporate provided standards context, NOT
+            # independent citation retrieval. This is an intentional design choice:
+            # the system guides the LLM with domain knowledge and measures compliance.
+            # C1 (no context) and C2 (tickets only) establish the baselines.
+            # The C2→C3 delta quantifies the alignment-table prompting contribution.
             rca_context = ""
             if condition == 3 and window_index is not None:
                 rca_context = rca_loader.get_prompt_context(window_index)
