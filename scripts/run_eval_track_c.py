@@ -15,6 +15,7 @@ from src.utils import setup_logging, validate_3gpp_ref
 from src.kg_indexer import get_collection
 from src.rag_query import query_from_classifier_output
 from src.llm_explainer import load_alignment_table, explain_condition
+from src.rca_loader import RCALoader
 from src.evaluator import GEvalScore
 
 import argparse
@@ -170,6 +171,12 @@ def run_track_c(
     collection = get_collection(cfg)
     alignment = load_alignment_table("configs/alignment_table.json")
 
+    # Initialize RCALoader once — O(1) lookup per window during the eval loop
+    rca_evidence_path = cfg.get("data", {}).get(
+        "rca_evidence_path", "data/processed/rca_evidence.json"
+    )
+    rca_loader = RCALoader(rca_evidence_path)
+
     # Build sample set using real windows from dataset
     import json
     import random
@@ -181,25 +188,30 @@ def run_track_c(
     parsed_windows = []
     for w in all_windows_raw:
         try:
-            parsed_windows.append(ClassifierOutput(**w))
+            payload_obj = ClassifierOutput(**w)
+            window_idx = w.get("window_index")  # carry the join key for RCALoader
+            parsed_windows.append((payload_obj, window_idx))
         except Exception:
             pass
 
     random.seed(cfg.get("eval", {}).get("track_c", {}).get("random_state", 42))
 
-    by_fault = {}
-    for w in parsed_windows:
-        if w.anomaly_type in TRACK_C_FAULTS:
-            by_fault.setdefault(w.anomaly_type, []).append(w)
+    by_fault: dict[AnomalyType, list[tuple[ClassifierOutput, int | None]]] = {}
+    for payload_obj, window_idx in parsed_windows:
+        if payload_obj.anomaly_type in TRACK_C_FAULTS:
+            by_fault.setdefault(payload_obj.anomaly_type, []).append(
+                (payload_obj, window_idx)
+            )
 
-    samples: list[tuple[AnomalyType, ClassifierOutput]] = []
+    # samples: list of (fault_type, ClassifierOutput, window_index)
+    samples: list[tuple[AnomalyType, ClassifierOutput, int | None]] = []
     for ft in TRACK_C_FAULTS:
         pool = by_fault.get(ft, [])
         n = min(n_per_fault, len(pool))
         if n > 0:
             chosen = random.sample(pool, n)
-            for w in chosen:
-                samples.append((ft, w))
+            for payload_obj, window_idx in chosen:
+                samples.append((ft, payload_obj, window_idx))
 
     logger.info(
         "Track C: %d fault types × %d samples × 3 conditions = %d LLM calls",
@@ -210,24 +222,38 @@ def run_track_c(
     all_scores: list[dict] = []
     sample_idx = 0
 
-    for ft, payload in samples:
+    for ft, payload, window_index in samples:
         # Retrieve tickets once per sample (shared across conditions)
         tickets, _ = query_from_classifier_output(payload, collection, cfg)
 
         for condition in (1, 2, 3):
             sample_idx += 1
             logger.info(
-                "[%d] fault=%s condition=%d ...",
-                sample_idx, ft.value, condition,
+                "[%d] fault=%s condition=%d window=%s ...",
+                sample_idx, ft.value, condition, window_index,
             )
 
+            # C3 only: inject window-specific RCA evidence into the prompt
+            # C1 and C2 receive "" to preserve the ablation experimental design
+            rca_context = ""
+            if condition == 3 and window_index is not None:
+                rca_context = rca_loader.get_prompt_context(window_index)
+                if rca_context:
+                    logger.info(
+                        "  RCA evidence injected for window %s (%d chars)",
+                        window_index, len(rca_context),
+                    )
+
             explanation = explain_condition(
-                payload, tickets, cfg, alignment, condition=condition,
+                payload, tickets, cfg, alignment,
+                condition=condition,
+                rca_context=rca_context,
             )
 
             explanation_record = {
                 "condition": condition,
                 "fault_type": ft.value,
+                "window_index": window_index,
                 "explanation": explanation.model_dump(),
                 "n_tickets": len(tickets),
             }

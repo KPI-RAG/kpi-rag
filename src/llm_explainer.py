@@ -62,8 +62,19 @@ def load_alignment_table(path: str) -> dict[str, dict]:
 def build_prompt(
     payload: ClassifierOutput,
     tickets: list[RetrievedTicket],
-    alignment: dict[str, dict]
+    alignment: dict[str, dict],
+    rca_context: str = "",
 ) -> str:
+    """Build the full C3 prompt.
+
+    Parameters
+    ----------
+    rca_context : str
+        Optional pre-formatted string from RCALoader.get_prompt_context().
+        When non-empty it is injected between the SHAP summary and the
+        retrieved tickets, giving the LLM window-specific KPI evidence.
+        Pass "" (default) to reproduce the original C3 prompt exactly.
+    """
     shap_lines = []
     for x in payload.shap_top3:
         direction = "above" if x.shap_value > 0 else "below"
@@ -81,30 +92,38 @@ def build_prompt(
     clause = entry.get("clause", "")
     evidence_span = entry.get("evidence_span", "")
     oran_component = entry.get("oran_component", "")
+
+    # RCA evidence block — only present when rca_context is provided (C3 with evidence)
+    rca_block = ""
+    if rca_context:
+        rca_block = f"\n[EVIDENCE FROM RCA PIPELINE]\n{rca_context}\n"
+
     prompt = f"""You are a 5G network fault diagnosis expert.
 
+[FAULT DETECTED]
 Fault detected: {payload.anomaly_type.value}
 Confidence: {payload.confidence:.0%}
 
 Top contributing KPIs (SHAP):
 {shap_summary}
-
-Retrieved similar incidents:
+{rca_block}
+[RETRIEVED INCIDENTS]
 {tickets_summary}
 
-Standards reference for this fault type:
+[STANDARDS REFERENCE]
 3GPP {gpp_ts} clause {clause}: {evidence_span}
 O-RAN component: {oran_component}
 
 Use TR (Technical Report) instead of TS when the standard is a TR -- for example, channel models use TR 38.901.
+Ground your explanation in the specific KPI values and SHAP evidence provided above.
 
 Return ONLY a JSON object with exactly these fields:
 {{
-  "root_cause": "one sentence physical explanation",
+  "root_cause": "one sentence physical explanation referencing specific KPI values",
   "3gpp_reference": "TS/TR XX.XXX (e.g., TS 38.321 or TR 38.901)",
   "oran_component": "component name",
   "recommended_action": "one actionable step",
-  "reasoning_trace": "2-3 sentence causal chain"
+  "reasoning_trace": "2-3 sentence causal chain citing specific KPI values from the evidence above"
 }}
 """
     return prompt
@@ -227,12 +246,159 @@ def validate_citation(ref: str, alignment: dict[str, dict], fault_type: str = No
         logger.warning("Citation validation failed Check 2 (alignment table lookup): %s", ref)
     return check1 and check2
 
-def explain(
-    payload: ClassifierOutput,
-    tickets: list[RetrievedTicket],
+def explain_from_rca(
+    window_index: int,
+    fault_type: str,
+    condition: str | int,
     cfg: dict,
-    alignment: dict[str, dict]
+    rca_context: str = "",
 ) -> LLMExplanation:
+    """High-level convenience wrapper for demo / evaluation scripts.
+
+    Builds a ClassifierOutput from the rca_evidence record for *window_index*,
+    retrieves ChromaDB tickets, loads the alignment table, then delegates to
+    explain_condition().
+
+    Parameters
+    ----------
+    window_index : int
+        Window to explain.
+    fault_type : str
+        Predicted fault label (from rca_evidence['predicted_fault']).
+    condition : str | int
+        Ablation condition — 'C1'/'C2'/'C3' or 1/2/3.
+    cfg : dict
+        Loaded config dict.
+    rca_context : str
+        Pre-formatted RCA evidence string from RCALoader.get_prompt_context().
+        Only injected for condition 3/C3.
+    """
+    # Normalise condition to int
+    _cond_map = {"C1": 1, "C2": 2, "C3": 3}
+    if isinstance(condition, str):
+        cond_int = _cond_map.get(condition.upper(), int(condition.lstrip("Cc")))
+    else:
+        cond_int = int(condition)
+
+    # Build ClassifierOutput from rca_evidence data
+    from src.rca_loader import RCALoader
+    rca_evidence_path = cfg.get("data", {}).get(
+        "rca_evidence_path", "data/processed/rca_evidence.json"
+    )
+    loader = RCALoader(rca_evidence_path)
+    record = loader.get(window_index)
+    if record is None:
+        raise ValueError(f"window_index {window_index} not found in rca_evidence")
+
+    from src.schema import AnomalyType, ClassifierOutput, SHAPEntry
+    layer_b = record.get("layer_b_model_attribution", [])
+    # Top-3 SHAP entries (sorted by |shap_value| desc) → SHAPEntry objects
+    top3_raw = sorted(layer_b, key=lambda x: abs(x.get("shap_value", 0)), reverse=True)[:3]
+    # Pad to exactly 3 if fewer features are present
+    while len(top3_raw) < 3:
+        top3_raw.append(
+            {"channel": "N/A", "feature": "N/A", "shap_value": 0.0, "feature_vs_normal": "above_normal_mean"}
+        )
+    shap_top3 = [
+        SHAPEntry(
+            channel=e.get("channel", e.get("feature", "N/A")),
+            feature=e.get("feature", ""),
+            shap_value=float(e.get("shap_value", 0.0)),
+            feature_vs_normal=e.get("feature_vs_normal", "above_normal_mean"),
+        )
+        for e in top3_raw
+    ]
+    signal_statistics: dict[str, float] = {
+        k: float(v)
+        for k, v in record.get("layer_a_observational", {}).items()
+        if isinstance(v, (int, float))
+    }
+
+    try:
+        anomaly_type = AnomalyType(fault_type)
+    except ValueError:
+        # Fallback: match case-insensitively
+        matched = next(
+            (at for at in AnomalyType if at.value.lower() == fault_type.lower()), None
+        )
+        if matched is None:
+            raise ValueError(f"Unknown fault_type: {fault_type!r}")
+        anomaly_type = matched
+
+    payload = ClassifierOutput(
+        anomaly_type=anomaly_type,
+        confidence=float(record.get("confidence", 0.0)),
+        shap_top3=shap_top3,
+        signal_statistics=signal_statistics,
+    )
+
+    # Retrieve ChromaDB tickets (used for C2/C3)
+    tickets: list[RetrievedTicket] = []
+    if cond_int in (2, 3):
+        try:
+            from src.kg_indexer import get_collection
+            from src.rag_query import query_from_classifier_output
+            collection = get_collection(cfg)
+            tickets, _ = query_from_classifier_output(payload, collection, cfg)
+        except Exception as exc:
+            logger.warning("Ticket retrieval failed (window %d): %s", window_index, exc)
+
+    alignment = load_alignment_table("configs/alignment_table.json")
+
+    return explain_condition(
+        payload, tickets, cfg, alignment,
+        condition=cond_int,
+        rca_context=rca_context if cond_int == 3 else "",
+    )
+
+
+def explain(
+    payload: "ClassifierOutput | None" = None,
+    tickets: "list[RetrievedTicket] | None" = None,
+    cfg: dict | None = None,
+    alignment: "dict[str, dict] | None" = None,
+    *,
+    window_index: int | None = None,
+    fault_type: str | None = None,
+    condition: "str | int | None" = None,
+    rca_context: str = "",
+) -> LLMExplanation:
+    """Flexible entry-point for LLM explanation generation.
+
+    Supports two calling conventions:
+
+    **Legacy (positional) — used by existing tests and scripts:**
+        explain(payload, tickets, cfg, alignment)
+
+    **New-style (keyword) — used by Step 6 demo and evaluation scripts:**
+        explain(window_index=5, fault_type="Jamming", condition="C3",
+                cfg=cfg, rca_context=rca_context)
+
+    When ``window_index`` is provided the call is delegated to
+    ``explain_from_rca()`` which builds the full pipeline internally.
+    """
+    if window_index is not None:
+        # New-style call: delegate to explain_from_rca
+        if cfg is None:
+            raise ValueError("cfg is required when using window_index")
+        if fault_type is None:
+            raise ValueError("fault_type is required when using window_index")
+        if condition is None:
+            raise ValueError("condition is required when using window_index")
+        return explain_from_rca(
+            window_index=window_index,
+            fault_type=fault_type,
+            condition=condition,
+            cfg=cfg,
+            rca_context=rca_context,
+        )
+
+    # Legacy positional call
+    if payload is None or tickets is None or cfg is None or alignment is None:
+        raise ValueError(
+            "explain() requires either (payload, tickets, cfg, alignment) "
+            "or (window_index, fault_type, condition, cfg)"
+        )
     prompt = build_prompt(payload, tickets, alignment)
     max_retries = cfg["llm"]["max_retries"]
     parsed = None
@@ -345,13 +511,20 @@ def explain_condition(
     tickets: list[RetrievedTicket],
     cfg: dict,
     alignment: dict[str, dict],
-    condition: int
+    condition: int,
+    rca_context: str = "",
 ) -> LLMExplanation:
     """Generate explanation using one of 3 ablation conditions.
 
     condition 1 -> label + SHAP only (no tickets, no alignment table)
     condition 2 -> label + SHAP + tickets (no alignment table)
-    condition 3 -> full system (tickets + alignment table)
+    condition 3 -> full system (tickets + alignment table + rca_context)
+
+    Parameters
+    ----------
+    rca_context : str
+        Window-specific RCA evidence string from RCALoader.get_prompt_context().
+        Only used for condition 3; ignored for conditions 1 and 2.
 
     Raises ValueError if condition not in {1, 2, 3}.
     """
@@ -362,7 +535,8 @@ def explain_condition(
     elif condition == 2:
         prompt = build_prompt_condition2(payload, tickets)
     else:
-        prompt = build_prompt(payload, tickets, alignment)
+        # C3: full system including RCA evidence when available
+        prompt = build_prompt(payload, tickets, alignment, rca_context=rca_context)
     max_retries = cfg["llm"]["max_retries"]
     parsed = None
     for attempt in range(max_retries):
