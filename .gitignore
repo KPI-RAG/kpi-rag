@@ -37,3 +37,6 @@ Thumbs.db
 .omagy/
 .agent/
 plan_input.json
+
+chroma_db.zip
+pytest_out.txt
