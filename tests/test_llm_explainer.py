@@ -11,7 +11,10 @@ from src.llm_explainer import (
     parse_response,
     validate_citation,
     explain,
-    explain_condition
+    explain_condition,
+    RateLimiter,
+    _extract_retry_after,
+    call_gemini,
 )
 
 @pytest.fixture
@@ -275,3 +278,66 @@ def test_validate_citation_rejects_real_but_wrong_ts(alignment):
         fault_type="Co-Channel Interference (Mild)",
     )
     assert result is False, "Real-but-unrelated TS must fail validate_citation()"
+
+
+def test_rate_limiter_timing():
+    import time
+    limiter = RateLimiter(min_interval=0.1)
+    t0 = time.time()
+    limiter.wait()
+    t1 = time.time()
+    assert t1 - t0 < 0.05
+    limiter.wait()
+    t2 = time.time()
+    assert t2 - t1 >= 0.08
+
+
+def test_extract_retry_after():
+    class DummyErrorWithHeaders(Exception):
+        def __init__(self):
+            self.headers = {"Retry-After": "15"}
+
+    assert _extract_retry_after(DummyErrorWithHeaders()) == 15.0
+
+    class DummyErrorWithMessage(Exception):
+        pass
+
+    assert _extract_retry_after(DummyErrorWithMessage("Resource exhausted: retry after 8.5s")) == 8.5
+    assert _extract_retry_after(Exception("Generic error")) is None
+
+
+@patch("src.llm_explainer.google_genai")
+@patch("src.llm_explainer.time.sleep")
+def test_call_gemini_429_retry(mock_sleep, mock_google_genai, monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "dummy_key")
+    mock_client = MagicMock()
+    mock_google_genai.Client.return_value = mock_client
+
+    class RateLimitEx(Exception):
+        status_code = 429
+        headers = {"retry-after": "7"}
+
+    # First call raises 429, second call succeeds
+    mock_resp = MagicMock()
+    mock_resp.text = '{"test": "ok"}'
+    mock_client.models.generate_content.side_effect = [
+        RateLimitEx("429 RESOURCE_EXHAUSTED"),
+        mock_resp,
+    ]
+
+    cfg = {
+        "llm": {
+            "gemini_model": "gemini-3.5-flash-lite",
+            "temperature": 0.1,
+            "max_retries": 3,
+            "min_request_interval_s": 0.0,
+            "backoff_base_s": 5,
+            "backoff_max_s": 60,
+        }
+    }
+
+    result = call_gemini("test prompt", cfg)
+    assert result == '{"test": "ok"}'
+    assert mock_client.models.generate_content.call_count == 2
+    mock_sleep.assert_called_with(7.0)
+

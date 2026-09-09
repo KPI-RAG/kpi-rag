@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import random
 import time
 from groq import RateLimitError
 import re
@@ -136,6 +137,54 @@ Return ONLY a JSON object with exactly these fields:
     return prompt
 
 
+class RateLimiter:
+    """Pre-request rate limiter that enforces a minimum interval between requests."""
+
+    def __init__(self, min_interval: float = 2.0):
+        self.min_interval = float(min_interval)
+        self.last_call_time = 0.0
+
+    def wait(self) -> None:
+        """Sleep if necessary to ensure min_interval seconds since last call."""
+        now = time.time()
+        if self.last_call_time > 0:
+            elapsed = now - self.last_call_time
+            if elapsed < self.min_interval:
+                time.sleep(self.min_interval - elapsed)
+        self.last_call_time = time.time()
+
+
+_default_rate_limiter = RateLimiter(min_interval=2.0)
+
+
+def _extract_retry_after(e: Exception) -> float | None:
+    """Extract retry-after seconds from exception headers or message if available."""
+    headers = None
+    if hasattr(e, "response") and hasattr(e.response, "headers"):
+        headers = e.response.headers
+    elif hasattr(e, "headers"):
+        headers = e.headers
+
+    if headers:
+        for k, v in headers.items():
+            if k.lower() == "retry-after":
+                try:
+                    return float(v)
+                except (ValueError, TypeError):
+                    pass
+
+    # Check for text like 'retry after 12s' or 'retry in 12s' in error string
+    err_str = str(e)
+    match = re.search(r"retry\s+(?:after|in)\s+(\d+(?:\.\d+)?)\s*s?", err_str, re.IGNORECASE)
+    if match:
+        try:
+            return float(match.group(1))
+        except ValueError:
+            pass
+
+    return None
+
+
 def call_gemini(prompt: str, cfg: dict) -> str:
     """Call Gemini via the modern google-genai SDK (v2.x)."""
     if google_genai is None:
@@ -147,8 +196,15 @@ def call_gemini(prompt: str, cfg: dict) -> str:
     model_name = cfg["llm"].get("gemini_model", "gemini-3.5-flash-lite")
     temperature = cfg["llm"].get("temperature", 0.1)
     max_retries = cfg["llm"].get("max_retries", 3)
+    min_interval = cfg.get("llm", {}).get("min_request_interval_s", 2.0)
+    base = cfg.get("llm", {}).get("backoff_base_s", 5)
+    max_wait = cfg.get("llm", {}).get("backoff_max_s", 60)
+
+    _default_rate_limiter.min_interval = min_interval
+
     for attempt in range(max_retries):
         try:
+            _default_rate_limiter.wait()
             response = client.models.generate_content(
                 model=model_name,
                 contents=prompt,
@@ -167,11 +223,13 @@ def call_gemini(prompt: str, cfg: dict) -> str:
             )
             if is_rate_limit:
                 if attempt < max_retries - 1:
-                    wait = 30 * (attempt + 1)  # 30s, 60s, 90s
-                    logger.warning(
-                        "Gemini rate limit (attempt %d/%d), waiting %ds...",
-                        attempt + 1, max_retries, wait,
-                    )
+                    retry_after = _extract_retry_after(e)
+                    if retry_after is not None:
+                        wait = retry_after
+                    else:
+                        jitter = random.uniform(0, 2)
+                        wait = min(base * (2 ** attempt) + jitter, max_wait)
+                    logger.warning("429 hit. Waiting %.1fs (attempt %d/%d)", wait, attempt + 1, max_retries)
                     time.sleep(wait)
                 else:
                     logger.error("Gemini rate limit: all retries exhausted")

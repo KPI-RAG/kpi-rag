@@ -1,4 +1,29 @@
-# KPI-RAG: 5G Network Fault Diagnosis with Retrieval-Augmented Generation
+---
+title: KPI-RAG 5G Fault Diagnosis
+emoji: 📡
+colorFrom: blue
+colorTo: cyan
+sdk: streamlit
+sdk_version: 1.35.0
+app_file: dashboard/app.py
+pinned: false
+license: mit
+---
+
+# KPI-RAG: Explainable 5G Fault Diagnosis
+
+RAG-augmented LLM explanations with 3GPP alignment.
+
+## What it does
+Detects 5G network faults and generates structured explanations
+with root cause, KPI evidence, 3GPP standards reference,
+and recommended action.
+
+## How to use
+1. Select a fault type from the sidebar
+2. Choose a window index
+3. Click "Generate Explanation"
+4. View the structured diagnosis with 3GPP citation
 
 An explainability framework for 5G network fault classification that combines SHAP-based feature attribution, knowledge-graph retrieval, and LLM-generated explanations grounded in 3GPP standards.
 

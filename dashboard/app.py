@@ -1,10 +1,23 @@
-﻿import sys
+import sys
 import os
 import json
 import logging
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from dotenv import load_dotenv
+
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+
+load_dotenv()
 
 import streamlit as st
+
+st.set_page_config(
+    page_title="KPI-RAG: 5G Fault Diagnosis",
+    page_icon="📡",
+    layout="wide"
+)
+
 from src.config_loader import load_config
 from src.schema import ClassifierOutput, SHAPEntry
 from src.utils import setup_logging
@@ -35,12 +48,18 @@ EXAMPLE_PAYLOAD = {
 
 @st.cache_resource
 def get_cfg():
-    return load_config()
+    cfg = load_config()
+    chroma_path = cfg.get("rag", {}).get("chroma_db_path", "data/chroma_db")
+    if not os.path.isabs(chroma_path):
+        cfg["rag"]["chroma_db_path"] = os.path.join(REPO_ROOT, chroma_path)
+    return cfg
 
 
 @st.cache_data(show_spinner=False)
-def load_rca_evidence(path: str = "data/processed/rca_evidence.json") -> dict:
+def load_rca_evidence(path: str | None = None) -> dict:
     """Load rca_evidence.json and index by window_index (Rodina, P3)."""
+    if path is None:
+        path = os.path.join(REPO_ROOT, "data", "processed", "rca_evidence.json")
     if not os.path.exists(path):
         return {}
     with open(path, encoding="utf-8") as f:
@@ -49,8 +68,10 @@ def load_rca_evidence(path: str = "data/processed/rca_evidence.json") -> dict:
 
 
 @st.cache_data(show_spinner=False)
-def load_layer2_windows(path: str = "data/processed/layer2_rag_handoff_sessionsplit.json") -> list:
+def load_layer2_windows(path: str | None = None) -> list:
     """Load Raneem layer2 handoff windows as ClassifierOutput objects (P2)."""
+    if path is None:
+        path = os.path.join(REPO_ROOT, "data", "processed", "layer2_rag_handoff_sessionsplit.json")
     if not os.path.exists(path):
         return []
     with open(path, encoding="utf-8") as f:
@@ -77,19 +98,14 @@ cfg = get_cfg()
 rca_evidence = load_rca_evidence()
 layer2_windows = load_layer2_windows()
 
-st.set_page_config(
-    page_title="KPI-RAG: 5G Fault Diagnosis",
-    page_icon="📡",
-    layout="wide"
-)
-
 st.title("📡 KPI-RAG: 5G Network Fault Diagnosis")
 st.caption("Explainable root-cause analysis grounded in 3GPP standards")
 
 st.sidebar.header("Input")
 input_method = st.sidebar.radio(
     "Input source",
-    ["Upload JSON", "Use example", "Browse Raneem windows"]
+    ["Upload JSON", "Use example", "Browse Raneem windows"],
+    index=1
 )
 
 window_index = None
@@ -98,8 +114,10 @@ if input_method == "Upload JSON":
     uploaded = st.sidebar.file_uploader("ClassifierOutput JSON", type="json")
     if uploaded:
         payload = ClassifierOutput(**json.load(uploaded))
+        active_key = "uploaded"
     else:
         payload = None
+        active_key = "none"
 
 elif input_method == "Browse Raneem windows":
     if not layer2_windows:
@@ -118,6 +136,7 @@ elif input_method == "Browse Raneem windows":
     selected = filtered[idx_label]
     window_index = selected["window_index"]
     payload = selected["payload"]
+    active_key = f"window_{window_index}_{payload.anomaly_type.value}"
     st.sidebar.caption(
         f"window_index={window_index} | fault={payload.anomaly_type.value} | "
         f"conf={payload.confidence:.0%}"
@@ -125,6 +144,7 @@ elif input_method == "Browse Raneem windows":
 
 else:  # Use example
     payload = ClassifierOutput(**EXAMPLE_PAYLOAD)
+    active_key = "example_antenna_failure"
 
 st.sidebar.divider()
 st.sidebar.caption("Model: all-MiniLM-L6-v2 | DB: ChromaDB | LLM: Gemini 3.5 Flash Lite")
@@ -133,35 +153,57 @@ if payload is None:
     st.info("👈 Upload a ClassifierOutput JSON or select example")
     st.stop()
 
-col1, col2 = st.columns([1, 2])
+if payload is not None:
+    col1, col2 = st.columns([1, 2])
 
-with col1:
-    anomaly_val = payload.anomaly_type.value if hasattr(payload.anomaly_type, "value") else payload.anomaly_type
-    render_detection_panel(anomaly_val, payload.confidence)
-    st.divider()
-    render_shap_panel([s.model_dump() for s in payload.shap_top3])
+    with col1:
+        anomaly_val = payload.anomaly_type.value if hasattr(payload.anomaly_type, "value") else payload.anomaly_type
+        render_detection_panel(anomaly_val, payload.confidence)
+        st.divider()
+        render_shap_panel([s.model_dump() for s in payload.shap_top3])
 
-with col2:
-    render_kpi_signal_panel(payload.signal_statistics)
-
+    with col2:
+        render_kpi_signal_panel(payload.signal_statistics)
 
 st.divider()
 
-with st.spinner("Retrieving similar incidents..."):
-    collection = get_collection(cfg)
-    tickets, low_conf = query_from_classifier_output(payload, collection, cfg)
+col_btn, _ = st.columns([1, 3])
+with col_btn:
+    generate_clicked = st.button("🔍 Generate Explanation", type="primary", use_container_width=True)
 
-with st.spinner("Generating explanation..."):
-    alignment = load_alignment_table("configs/alignment_table.json")
-    explanation = explain(payload, tickets, cfg, alignment)
+if generate_clicked:
+    if not os.environ.get("GEMINI_API_KEY"):
+        st.error("GEMINI_API_KEY not set. Add it in Space Settings → Secrets.")
+        st.stop()
 
-col3, col4 = st.columns([2, 1])
+    with st.spinner("Retrieving similar incidents..."):
+        collection = get_collection(cfg)
+        tickets, low_conf = query_from_classifier_output(payload, collection, cfg)
 
-with col3:
-    render_explanation_panel(explanation, low_conf)
+    with st.spinner("Generating explanation..."):
+        alignment_path = os.path.join(REPO_ROOT, "configs", "alignment_table.json")
+        alignment = load_alignment_table(alignment_path)
+        explanation = explain(payload, tickets, cfg, alignment)
 
-with col4:
-    render_sources_panel(tickets, low_conf)
+    st.session_state["saved_explanation"] = explanation
+    st.session_state["saved_tickets"] = tickets
+    st.session_state["saved_low_conf"] = low_conf
+    st.session_state["saved_key"] = active_key
+
+if st.session_state.get("saved_key") == active_key and st.session_state.get("saved_explanation") is not None:
+    explanation = st.session_state["saved_explanation"]
+    tickets = st.session_state["saved_tickets"]
+    low_conf = st.session_state["saved_low_conf"]
+
+    col3, col4 = st.columns([2, 1])
+
+    with col3:
+        render_explanation_panel(explanation, low_conf)
+
+    with col4:
+        render_sources_panel(tickets, low_conf)
+else:
+    st.info("👆 Click **Generate Explanation** to retrieve 3GPP standards and generate diagnosis.")
 
 st.divider()
 
@@ -175,3 +217,4 @@ if rca_record is None and rca_evidence:
             rca_record = rec
             break
 render_rca_panel(rca_record)
+

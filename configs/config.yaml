@@ -19,6 +19,9 @@ llm:
   groq_model: "openai/gpt-oss-20b"
   max_retries: 3
   temperature: 0.1
+  min_request_interval_s: 2.0   # minimum seconds between LLM calls
+  backoff_base_s: 5             # base for exponential backoff
+  backoff_max_s: 60             # max wait per retry
 
 data:
   raw_path: "data/raw"
