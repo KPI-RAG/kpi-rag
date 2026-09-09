@@ -2,13 +2,16 @@ import sys
 import os
 import json
 import logging
-from dotenv import load_dotenv
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-load_dotenv()
+# On Streamlit Cloud, secrets come from environment directly.
+# load_dotenv() is only needed for local development.
+if os.path.exists(os.path.join(REPO_ROOT, ".env")):
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(REPO_ROOT, ".env"))
 
 import streamlit as st
 
@@ -17,6 +20,16 @@ st.set_page_config(
     page_icon="📡",
     layout="wide"
 )
+
+# ── API key guard (must come before any heavy resource loading) ────────────────
+_api_key = os.environ.get("GEMINI_API_KEY")
+if not _api_key:
+    st.error(
+        "⚠️ **GEMINI_API_KEY not configured.**  \n"
+        "Add it in **App Settings → Secrets** on Streamlit Community Cloud, "
+        "or set it in your local `.env` file."
+    )
+    st.stop()
 
 from src.config_loader import load_config
 from src.schema import ClassifierOutput, SHAPEntry
@@ -53,6 +66,23 @@ def get_cfg():
     if not os.path.isabs(chroma_path):
         cfg["rag"]["chroma_db_path"] = os.path.join(REPO_ROOT, chroma_path)
     return cfg
+
+
+@st.cache_resource(show_spinner="Loading ChromaDB collection…")
+def load_chromadb():
+    """Load ChromaDB collection once and cache for the entire app lifetime.
+    Critical for 1GB RAM limit — avoids reloading on every user interaction.
+    """
+    cfg = get_cfg()
+    return get_collection(cfg)
+
+
+@st.cache_data(show_spinner=False)
+def load_alignment():
+    """Load alignment table once from disk and cache."""
+    alignment_path = os.path.join(REPO_ROOT, "configs", "alignment_table.json")
+    return load_alignment_table(alignment_path)
+
 
 
 @st.cache_data(show_spinner=False)
@@ -172,17 +202,12 @@ with col_btn:
     generate_clicked = st.button("🔍 Generate Explanation", type="primary", use_container_width=True)
 
 if generate_clicked:
-    if not os.environ.get("GEMINI_API_KEY"):
-        st.error("GEMINI_API_KEY not set. Add it in Space Settings → Secrets.")
-        st.stop()
-
     with st.spinner("Retrieving similar incidents..."):
-        collection = get_collection(cfg)
+        collection = load_chromadb()
         tickets, low_conf = query_from_classifier_output(payload, collection, cfg)
 
     with st.spinner("Generating explanation..."):
-        alignment_path = os.path.join(REPO_ROOT, "configs", "alignment_table.json")
-        alignment = load_alignment_table(alignment_path)
+        alignment = load_alignment()
         explanation = explain(payload, tickets, cfg, alignment)
 
     st.session_state["saved_explanation"] = explanation
