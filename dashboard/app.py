@@ -87,7 +87,7 @@ def load_alignment():
 
 @st.cache_data(show_spinner=False)
 def load_rca_evidence(path: str | None = None) -> dict:
-    """Load rca_evidence.json and index by window_index (Rodina, P3)."""
+    """Load rca_evidence.json and index by window_index."""
     if path is None:
         path = os.path.join(REPO_ROOT, "data", "processed", "rca_evidence.json")
     if not os.path.exists(path):
@@ -99,7 +99,7 @@ def load_rca_evidence(path: str | None = None) -> dict:
 
 @st.cache_data(show_spinner=False)
 def load_layer2_windows(path: str | None = None) -> list:
-    """Load Raneem layer2 handoff windows as ClassifierOutput objects (P2)."""
+    """Load layer2 handoff windows as ClassifierOutput objects."""
     if path is None:
         path = os.path.join(REPO_ROOT, "data", "processed", "layer2_rag_handoff_sessionsplit.json")
     if not os.path.exists(path):
@@ -134,7 +134,7 @@ st.caption("Explainable root-cause analysis grounded in 3GPP standards")
 st.sidebar.header("Input")
 input_method = st.sidebar.radio(
     "Input source",
-    ["Upload JSON", "Use example", "Browse Raneem windows"],
+    ["Upload JSON", "Use example", "Browse Dataset Windows"],
     index=1
 )
 
@@ -149,7 +149,7 @@ if input_method == "Upload JSON":
         payload = None
         active_key = "none"
 
-elif input_method == "Browse Raneem windows":
+elif input_method == "Browse Dataset Windows":
     if not layer2_windows:
         st.warning("layer2_rag_handoff_sessionsplit.json not found — check data/processed/")
         st.stop()
@@ -232,7 +232,7 @@ else:
 
 st.divider()
 
-# RCA Evidence panel (Rodina, P3)
+# RCA Evidence panel
 rca_record = rca_evidence.get(window_index) if window_index is not None else None
 if rca_record is None and rca_evidence:
     # Fallback: match by fault type for example/upload modes

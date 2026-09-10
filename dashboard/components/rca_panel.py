@@ -1,9 +1,9 @@
-﻿"""RCA Evidence panel -- shows Rodina layer A/B/C RCA evidence."""
+"""RCA Evidence panel -- shows layer A/B/C RCA evidence."""
 import streamlit as st
 
 
 def render_rca_panel(rca_record: dict):
-    """Display 3-layer RCA evidence from rca_evidence.json (Rodina, P3).
+    """Display 3-layer RCA evidence from rca_evidence.json.
 
     Args:
         rca_record: One record from rca_evidence.json, or None / empty dict.
