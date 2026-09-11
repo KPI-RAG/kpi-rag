@@ -16,7 +16,7 @@ build/
 data/raw/
 data/indices/
 data/processed/*.npy
-data/chroma_db/
+
 
 # ── Local tooling ─────────────────────────────────────────────────────────────
 graphify-out/
