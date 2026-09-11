@@ -36,7 +36,7 @@ Classifier → SHAP top-3 KPIs
                  ↓
            Alignment table (3GPP TS → fault mapping)
                  ↓
-           LLM (Groq / Ollama) → structured explanation
+           LLM (Gemini / Groq / Ollama) → structured explanation
                  ↓
            Citation validation (TS XX.XXX format + table lookup)
                  ↓
@@ -85,7 +85,8 @@ data/raw/          # 33 JSONL files (nested structure supported)
 uv run python scripts/build_index.py
 ```
 
-This indexes ~1,235 anomaly tickets into ChromaDB at `data/chroma_db/`.
+This indexes ~935 anomaly tickets (train split only) into ChromaDB at `data/chroma_db/`.
+The full dataset contains 1,235 anomalous records; the remaining ~300 are held out as the test set and are never indexed, preventing data leakage.
 
 ### 5. Run the pipeline (single explanation)
 

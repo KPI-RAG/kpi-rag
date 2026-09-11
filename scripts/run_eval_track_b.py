@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def run_track_b(scores_path: str, output_path: str, cfg: dict) -> None:
     scores = load_scores_from_jsonl(scores_path)
-    results = compute_track_b(scores)
+    results = compute_track_b(scores, cfg)
     
     logger.info("Track B Results — n=%d", results.n)
     logger.info("  Citation Validity Rate : %.1f%%", results.citation_validity_rate * 100)

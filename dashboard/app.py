@@ -119,8 +119,8 @@ def load_layer2_windows(path: str | None = None) -> list:
                 "window_index": r.get("window_index", len(windows)),
                 "payload": payload,
             })
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Skipping malformed layer-2 window record: %s", e)
     return windows
 
 
@@ -193,7 +193,10 @@ if payload is not None:
         render_shap_panel([s.model_dump() for s in payload.shap_top3])
 
     with col2:
-        render_kpi_signal_panel(payload.signal_statistics)
+        render_kpi_signal_panel(
+            payload.signal_statistics,
+            window_length=cfg.get("data", {}).get("window_length", 128)
+        )
 
 st.divider()
 

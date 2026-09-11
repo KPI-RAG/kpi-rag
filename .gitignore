@@ -16,6 +16,7 @@ build/
 data/raw/
 data/indices/
 data/processed/*.npy
+data/chroma_db/
 
 # ── Local tooling ─────────────────────────────────────────────────────────────
 graphify-out/
@@ -28,14 +29,11 @@ graphify-out/
 test_results.txt
 plan_input.json
 context.md
+chroma_db.zip
+pytest_out.txt
+create_presentation.py
+test_colors.py
 
 # ── OS / editor ───────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
-
-.omagy/
-.agent/
-plan_input.json
-
-chroma_db.zip
-pytest_out.txt

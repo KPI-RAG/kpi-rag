@@ -15,36 +15,35 @@ llm:
   # gemini-1.5-flash-8b, gemini-2.0-flash-lite.
   gemini_model: "gemini-3.5-flash-lite"
   ollama_model: "llama3.1:8b"
-  ollama_base_url: "http://localhost:11434"
-  groq_model: "openai/gpt-oss-20b"
+  ollama_base_url: "http://localhost:11434"  # read by call_llm() for ollama backend
+  groq_model: "llama-3.1-8b-instant"         # free-tier Groq model (was openai/gpt-oss-20b)
   max_retries: 3
   temperature: 0.1
-  min_request_interval_s: 2.0   # minimum seconds between LLM calls
+  min_request_interval_s: 2.0   # minimum seconds between LLM calls (all backends)
   backoff_base_s: 5             # base for exponential backoff
   backoff_max_s: 60             # max wait per retry
 
 data:
   raw_path: "data/raw"
-  processed_path: "data/processed"
+  processed_path: "data/processed"   # NOTE: not yet wired to any script (reserved)
   indices_path: "data/indices"
   train_idx_file: "train_idx_sessionsplit.npy"
-  test_idx_file: "test_idx_sessionsplit.npy"
+  test_idx_file: "test_idx_sessionsplit.npy"   # NOTE: test set held out, not indexed
   rca_evidence_path: "data/processed/rca_evidence.json"
   window_length: 128
-  n_channels: 18
-  n_anomalous: 1235
-  random_state: 42  # used by run_eval_track_c.py for reproducible sampling
+  n_channels: 18          # NOTE: metadata only, not read by pipeline code
+  n_anomalous: 1235       # NOTE: total anomalous records; 935 are indexed (train split)
+  random_state: 42        # used by run_eval_track_c.py for reproducible sampling
 
 evaluation:
-  # P1-C: citation_validity_threshold is read by src/evaluator.py compute_track_b().
+  # citation_validity_threshold is read by src/evaluator.py compute_track_b().
   citation_validity_threshold: 0.70
-  # P1-C: n_eval_samples is used as the default for --n-per-fault in
-  # scripts/run_eval_track_c.py (samples_per_fault × 10 fault types).
+  # n_eval_samples / samples_per_fault are defaults documented for Track C runs.
+  # run_eval_track_c.py reads --n-per-fault CLI arg; these keys are informational.
   n_eval_samples: 30
   samples_per_fault: 3
-  # P1-C: g_eval_dimensions is reserved for future automated G-Eval scoring
-  # integration. Currently human annotation drives these scores. Not yet wired
-  # to any script; kept here for forward-compatibility planning.
+  # g_eval_dimensions reserved for future automated G-Eval integration.
+  # Currently human annotation drives these scores; not wired to any script.
   g_eval_dimensions:
     - "Citation Validity"
     - "Fault Specificity"
@@ -53,4 +52,4 @@ evaluation:
 
 dashboard:
   title: "KPI-RAG: 5G Fault Diagnosis"
-  hf_space: true
+

@@ -1,4 +1,4 @@
-﻿"""
+"""
 src/rca_loader.py
 
 RCA evidence loader for KPI-RAG pipeline.
@@ -7,7 +7,6 @@ formats a concise prompt context string for LLM injection (C3 condition).
 """
 import json
 import logging
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ class RCALoader:
     # Public API
     # ------------------------------------------------------------------
 
-    def get(self, window_index: int) -> Optional[dict]:
+    def get(self, window_index: int) -> dict | None:
         """Return the RCA record for *window_index*, or None if not found."""
         return self._index.get(int(window_index))
 

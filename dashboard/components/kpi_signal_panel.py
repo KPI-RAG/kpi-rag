@@ -1,7 +1,10 @@
 import streamlit as st
 import pandas as pd
 
-def render_kpi_signal_panel(signal_statistics: dict[str, float], window_length: int = 128) -> None:
+def render_kpi_signal_panel(
+    signal_statistics: dict[str, float],
+    window_length: int = 128,  # matches config.yaml data.window_length
+) -> None:
     if not signal_statistics:
         st.info("No signal data available")
         return

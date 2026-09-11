@@ -10,7 +10,7 @@ import requests
 try:
     from openai import OpenAI
 except ImportError:
-    pass
+    OpenAI = None  # type: ignore[assignment,misc]
 
 try:
     from google import genai as google_genai
@@ -27,6 +27,23 @@ from src.utils import validate_3gpp_ref
 logger = logging.getLogger(__name__)
 
 def load_alignment_table(path: str) -> dict[str, dict]:
+    """Load and normalise the 3GPP alignment table from a JSON file.
+
+    The table maps each fault type string (e.g. ``"Antenna Failure"``) to a
+    dict containing normalised fields: ``3gpp_ts``, ``clause``,
+    ``evidence_span``, and ``oran_component``.  Missing fields are extracted
+    from the raw ``3gpp_reference`` string where possible.
+
+    Parameters
+    ----------
+    path : str
+        Path to ``alignment_table.json``.
+
+    Returns
+    -------
+    dict[str, dict]
+        Mapping of fault_type → normalised alignment entry.
+    """
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
     alignment = {}
@@ -241,9 +258,28 @@ def call_gemini(prompt: str, cfg: dict) -> str:
 
 
 def call_llm(prompt: str, cfg: dict) -> str:
+    """Dispatch a prompt to the configured LLM backend and return raw text.
+
+    Backends: ``ollama`` (local), ``groq`` (cloud via OpenAI-compat API),
+    ``gemini`` (Google Generative AI).  Applies the shared rate limiter
+    before every call so that all backends respect ``min_request_interval_s``.
+
+    Raises
+    ------
+    RuntimeError
+        If the ``groq`` backend is selected but the ``openai`` package is not
+        installed, or if an unknown backend name is encountered.
+    """
+    # Apply the shared rate limiter for ALL backends (not only Gemini).
+    _default_rate_limiter.min_interval = cfg.get("llm", {}).get(
+        "min_request_interval_s", 2.0
+    )
+    _default_rate_limiter.wait()
+
     backend = cfg["llm"]["backend"]
     if backend == "ollama":
-        url = "http://localhost:11434/api/generate"
+        base_url = cfg["llm"].get("ollama_base_url", "http://localhost:11434")
+        url = f"{base_url.rstrip('/')}/api/generate"
         payload = {
             "model": cfg["llm"]["ollama_model"],
             "prompt": prompt,
@@ -256,6 +292,11 @@ def call_llm(prompt: str, cfg: dict) -> str:
         logger.info("Called ollama, response len: %d", len(result))
         return result
     elif backend == "groq":
+        if OpenAI is None:
+            raise RuntimeError(
+                "The 'openai' package is required for the groq backend. "
+                "Install it with: pip install 'openai>=1.0'"
+            )
         client = OpenAI(
             base_url="https://api.groq.com/openai/v1",
             api_key=os.environ.get("GROQ_API_KEY", "")
@@ -274,6 +315,23 @@ def call_llm(prompt: str, cfg: dict) -> str:
         raise RuntimeError(f"Unknown LLM backend: {backend}")
 
 def parse_response(raw: str) -> dict:
+    """Extract and validate the JSON payload from a raw LLM response string.
+
+    Handles two formats:
+    - Bare JSON string.
+    - JSON wrapped in a ``\`\`\`json ... \`\`\`` markdown code block.
+
+    Returns the parsed dict with ``3gpp_reference`` renamed to
+    ``gpp_reference`` (to match ``LLMExplanation`` field name) and the TS
+    number normalised to ``T[SR] XX.XXX`` format when detected.
+
+    Raises
+    ------
+    ValueError
+        If no valid JSON is found, or the JSON is missing any of the five
+        required keys: ``root_cause``, ``3gpp_reference``, ``oran_component``,
+        ``recommended_action``, ``reasoning_trace``.
+    """
     match = re.search(r'```json\s*(.*?)\s*```', raw, re.DOTALL)
     if match:
         json_str = match.group(1)
@@ -295,6 +353,34 @@ def parse_response(raw: str) -> dict:
     return parsed
 
 def validate_citation(ref: str, alignment: dict[str, dict], fault_type: str = None) -> bool:
+    """Check that a 3GPP reference string is both well-formed and in the alignment table.
+
+    Two checks are applied:
+    - **Check 1 (format):** ``ref`` matches the ``TS XX.XXX`` / ``TR XX.XXX``
+      regex defined in :func:`~src.utils.validate_3gpp_ref`.
+    - **Check 2 (table lookup):** When ``fault_type`` is provided, ``ref``
+      must exactly match the expected standard for that fault type.  When
+      ``fault_type`` is ``None``, ``ref`` must appear anywhere in the table.
+
+    Both checks must pass for ``True`` to be returned.
+
+    Parameters
+    ----------
+    ref : str
+        The reference string extracted from the LLM response (e.g.
+        ``"TS 38.141-1"``).
+    alignment : dict[str, dict]
+        Loaded alignment table (from :func:`load_alignment_table`).
+    fault_type : str or None
+        The predicted fault type; enables fault-specific lookup when provided.
+
+    Returns
+    -------
+    bool
+        ``True`` only if the reference passes both the format regex and the
+        alignment-table lookup.
+    """
+
     try:
         check1 = bool(validate_3gpp_ref(ref))
     except Exception:

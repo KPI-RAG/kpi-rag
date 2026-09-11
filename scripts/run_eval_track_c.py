@@ -5,9 +5,6 @@ import os
 import argparse
 from pathlib import Path
 from collections import defaultdict
-from dotenv import load_dotenv
-
-load_dotenv()
 
 from src.config_loader import load_config
 from src.schema import AnomalyType, ClassifierOutput, SHAPEntry
@@ -312,6 +309,23 @@ def run_track_c(
 
 
 def main() -> None:
+    # Load .env for local development; on Streamlit Cloud env vars come from secrets.
+    from dotenv import load_dotenv
+    if os.path.exists(".env"):
+        load_dotenv()
+
+    # Pre-load config to wire defaults
+    config_path = "configs/config.yaml"
+    for i, arg in enumerate(sys.argv):
+        if arg == "--config" and i + 1 < len(sys.argv):
+            config_path = sys.argv[i + 1]
+    
+    try:
+        cfg = load_config(config_path)
+    except FileNotFoundError as e:
+        logger.error("File not found: %s", e)
+        sys.exit(1)
+
     parser = argparse.ArgumentParser(
         description="Run Track C evaluation — generate explanations under 3 ablation conditions",
     )
@@ -324,8 +338,8 @@ def main() -> None:
         help="path to config.yaml",
     )
     parser.add_argument(
-        "--n-per-fault", type=int, default=3,
-        help="samples per fault type (default: 3)",
+        "--n-per-fault", type=int, default=cfg.get("evaluation", {}).get("samples_per_fault", 3),
+        help="samples per fault type (default: from config)",
     )
     parser.add_argument(
         "--dry-run", action="store_true",
@@ -338,7 +352,6 @@ def main() -> None:
     n = 1 if args.dry_run else args.n_per_fault
 
     try:
-        cfg = load_config(args.config)
         run_track_c(args.output, cfg, n_per_fault=n)
     except FileNotFoundError as e:
         logger.error("File not found: %s", e)

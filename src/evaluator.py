@@ -57,6 +57,52 @@ def score_explanation(
     actionability: float,
     causal_soundness: float
 ) -> GEvalScore:
+    """
+    Validate G-Eval dimension scores and construct a ``GEvalScore`` record.
+
+    Validates that every numeric score falls within the 1–5 scale, attempts to
+    verify the 3GPP reference string embedded in the explanation, and returns a
+    fully-populated :class:`GEvalScore` dataclass whose ``overall`` field is
+    computed automatically in ``__post_init__``.
+
+    Parameters
+    ----------
+    explanation : LLMExplanation
+        The LLM-generated explanation object whose ``gpp_reference`` field is
+        checked for validity against the 3GPP reference format.
+    explanation_id : str
+        Unique identifier for the explanation being scored (e.g. a UUID or
+        dataset row key).
+    condition : int
+        Experimental condition under which the explanation was generated
+        (1 = baseline, 2 = RAG, 3 = RAG + standards grounding).
+    fault_type : str
+        Category label for the network fault described in the explanation.
+    citation_validity : float
+        G-Eval score (1–5) measuring whether the cited 3GPP reference is
+        correctly identified and relevant.
+    fault_specificity : float
+        G-Eval score (1–5) measuring how precisely the explanation identifies
+        the specific fault rather than giving a generic answer.
+    actionability : float
+        G-Eval score (1–5) measuring whether the explanation provides concrete,
+        actionable remediation steps.
+    causal_soundness : float
+        G-Eval score (1–5) measuring the logical correctness of the causal
+        chain presented in the explanation.
+
+    Returns
+    -------
+    GEvalScore
+        A dataclass instance populated with all provided scores plus a
+        ``reference_valid`` flag derived from 3GPP reference validation and an
+        auto-computed ``overall`` mean across the four dimensions.
+
+    Raises
+    ------
+    ValueError
+        If any of the four numeric scores is outside the closed interval [1, 5].
+    """
     for val in [citation_validity, fault_specificity, actionability, causal_soundness]:
         if not (1.0 <= val <= 5.0):
             raise ValueError(f"Score {val} outside 1-5 range")
@@ -78,6 +124,21 @@ def score_explanation(
     )
 
 def compute_track_b(scores: list[GEvalScore], cfg: dict | None = None) -> TrackBResults:
+    """Compute overall metrics for Track B (Baseline).
+    
+    Parameters
+    ----------
+    scores : list[GEvalScore]
+        List of G-Eval scores for Track B explanations.
+    cfg : dict | None, optional
+        Application configuration. Used to read the threshold for
+        citation validity.
+        
+    Returns
+    -------
+    TrackBResults
+        The aggregated metrics for Track B.
+    """
     if not scores:
         raise ValueError("Scores list is empty")
         
@@ -115,6 +176,18 @@ def compute_track_b(scores: list[GEvalScore], cfg: dict | None = None) -> TrackB
     )
 
 def compute_track_c(scores: list[GEvalScore]) -> TrackCResults:
+    """Compute overall metrics for Track C (Ablation).
+    
+    Parameters
+    ----------
+    scores : list[GEvalScore]
+        List of G-Eval scores across all three ablation conditions.
+        
+    Returns
+    -------
+    TrackCResults
+        The aggregated ablation study metrics.
+    """
     cond1 = [s for s in scores if s.condition == 1]
     cond2 = [s for s in scores if s.condition == 2]
     cond3 = [s for s in scores if s.condition == 3]
@@ -149,6 +222,18 @@ def compute_track_c(scores: list[GEvalScore]) -> TrackCResults:
     )
 
 def load_scores_from_jsonl(path: str) -> list[GEvalScore]:
+    """Load GEvalScore records from a JSON Lines file.
+    
+    Parameters
+    ----------
+    path : str
+        Path to the JSONL file containing the scores.
+        
+    Returns
+    -------
+    list[GEvalScore]
+        List of parsed G-Eval score dataclasses.
+    """
     scores = []
     with open(path, "r") as f:
         for line in f:
@@ -168,6 +253,17 @@ def save_results(
     track_c: TrackCResults | None,
     path: str
 ) -> None:
+    """Save the aggregated evaluation results to a JSON file.
+    
+    Parameters
+    ----------
+    track_b : TrackBResults | None
+        Results from Track B, or None if skipped.
+    track_c : TrackCResults | None
+        Results from Track C, or None if skipped.
+    path : str
+        Output file path for the results JSON.
+    """
     output = {
         "track_b": asdict(track_b) if track_b is not None else None,
         "track_c": asdict(track_c) if track_c is not None else None

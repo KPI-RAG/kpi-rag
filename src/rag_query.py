@@ -6,6 +6,18 @@ from src.schema import ClassifierOutput, RetrievedTicket
 logger = logging.getLogger(__name__)
 
 def build_query(payload: ClassifierOutput) -> str:
+    """Build a text query for the RAG system from a ClassifierOutput payload.
+    
+    Parameters
+    ----------
+    payload : ClassifierOutput
+        The anomaly detection payload.
+        
+    Returns
+    -------
+    str
+        A formatted string describing the anomaly and KPIs.
+    """
     sorted_shap = sorted(payload.shap_top3, key=lambda x: abs(x.shap_value), reverse=True)
     
     top3_channels = ", ".join(x.channel for x in sorted_shap)
@@ -40,6 +52,27 @@ def retrieve(
     k: int = 5,
     threshold: float = 0.45
 ) -> tuple[list[RetrievedTicket], bool]:
+    """Retrieve similar tickets from ChromaDB using a text query.
+    
+    Parameters
+    ----------
+    query : str
+        The query text to embed and search.
+    collection : chromadb.Collection
+        The ChromaDB collection to search in.
+    model_name : str
+        The SentenceTransformer model name.
+    k : int, optional
+        Number of tickets to retrieve (default is 5).
+    threshold : float, optional
+        Minimum cosine similarity threshold to be considered high confidence (default is 0.45).
+        
+    Returns
+    -------
+    tuple[list[RetrievedTicket], bool]
+        A tuple containing the list of retrieved tickets and a boolean indicating
+        if the retrieval was low confidence (highest score < threshold).
+    """
     model = SentenceTransformer(model_name)
     query_emb = model.encode([query])[0].tolist()
     
@@ -93,6 +126,23 @@ def query_from_classifier_output(
     collection: chromadb.Collection,
     cfg: dict
 ) -> tuple[list[RetrievedTicket], bool]:
+    """Build a query from a classifier payload and retrieve matching tickets.
+    
+    Parameters
+    ----------
+    payload : ClassifierOutput
+        The anomaly detection payload.
+    collection : chromadb.Collection
+        The ChromaDB collection to search in.
+    cfg : dict
+        Application configuration containing RAG settings.
+        
+    Returns
+    -------
+    tuple[list[RetrievedTicket], bool]
+        A tuple containing the list of retrieved tickets and a boolean indicating
+        if the retrieval was low confidence.
+    """
     query_str = build_query(payload)
     model_name = cfg["rag"]["embedding_model"]
     k = cfg["rag"]["top_k"]
