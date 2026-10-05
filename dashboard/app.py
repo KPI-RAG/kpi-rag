@@ -45,6 +45,8 @@ from dashboard.components.explanation_panel import render_explanation_panel
 from dashboard.components.sources_panel import render_sources_panel
 from dashboard.components.rca_panel import render_rca_panel
 
+logger = logging.getLogger(__name__)
+
 EXAMPLE_PAYLOAD = {
   "anomaly_type": "Antenna Failure",
   "confidence": 0.87,
