@@ -30,7 +30,7 @@ def test_run_track_b(mock_compute, mock_load, mock_results, tmp_path):
     run_track_b("fake.jsonl", str(out_file), cfg)
     
     mock_load.assert_called_once_with("fake.jsonl")
-    mock_compute.assert_called_once_with(["fake_score"])
+    mock_compute.assert_called_once_with(["fake_score"], cfg)
     
     assert out_file.exists()
     with open(out_file, "r") as f:
