@@ -306,38 +306,36 @@ def test_extract_retry_after():
     assert _extract_retry_after(Exception("Generic error")) is None
 
 
+class RateLimitEx(Exception):
+    status_code = 429
+    headers = {"retry-after": "7"}
+
+
 @patch("src.llm_explainer.google_genai")
-@patch("src.llm_explainer.time.sleep")
-def test_call_gemini_429_retry(mock_sleep, mock_google_genai, monkeypatch):
+def test_call_gemini_single_call_raises_on_429(mock_google_genai, monkeypatch):
+    """call_gemini makes exactly one API call; retries live only in _run_with_retry."""
     monkeypatch.setenv("GEMINI_API_KEY", "dummy_key")
     mock_client = MagicMock()
     mock_google_genai.Client.return_value = mock_client
+    mock_client.models.generate_content.side_effect = RateLimitEx("429 RESOURCE_EXHAUSTED")
 
-    class RateLimitEx(Exception):
-        status_code = 429
-        headers = {"retry-after": "7"}
+    cfg = {"llm": {"gemini_model": "gemini-3.5-flash-lite", "temperature": 0.1, "max_retries": 3}}
+    with pytest.raises(RateLimitEx):
+        call_gemini("test prompt", cfg)
+    assert mock_client.models.generate_content.call_count == 1
 
-    # First call raises 429, second call succeeds
-    mock_resp = MagicMock()
-    mock_resp.text = '{"test": "ok"}'
-    mock_client.models.generate_content.side_effect = [
+
+@patch("src.llm_explainer.time.sleep")
+@patch("src.llm_explainer.call_llm")
+def test_retry_backs_off_on_429_then_succeeds(mock_call, mock_sleep, sample_payload, alignment, cfg):
+    mock_call.side_effect = [
         RateLimitEx("429 RESOURCE_EXHAUSTED"),
-        mock_resp,
+        '{"root_cause": "x", "3gpp_reference": "TS 38.141-1", "oran_component": "O-RU", '
+        '"recommended_action": "x", "reasoning_trace": "x"}',
     ]
-
-    cfg = {
-        "llm": {
-            "gemini_model": "gemini-3.5-flash-lite",
-            "temperature": 0.1,
-            "max_retries": 3,
-            "min_request_interval_s": 0.0,
-            "backoff_base_s": 5,
-            "backoff_max_s": 60,
-        }
-    }
-
-    result = call_gemini("test prompt", cfg)
-    assert result == '{"test": "ok"}'
-    assert mock_client.models.generate_content.call_count == 2
-    mock_sleep.assert_called_with(7.0)
+    res = explain_condition(sample_payload, [], cfg, alignment, condition=3)
+    assert res.template_generated is False
+    assert res.reference_valid is True
+    assert mock_call.call_count == 2
+    mock_sleep.assert_called_once_with(7.0)   # server Retry-After wins over exponential backoff
 

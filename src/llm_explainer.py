@@ -218,49 +218,38 @@ def call_gemini(prompt: str, cfg: dict) -> str:
     client = google_genai.Client(api_key=api_key)
     model_name = cfg["llm"].get("gemini_model", "gemini-3.5-flash-lite")
     temperature = cfg["llm"].get("temperature", 0.1)
-    max_retries = cfg["llm"].get("max_retries", 3)
-    min_interval = cfg.get("llm", {}).get("min_request_interval_s", 2.0)
+    # One API call only. Retry/backoff is handled by _run_with_retry(); the shared
+    # rate limiter is applied once per attempt in call_llm().
+    response = client.models.generate_content(
+        model=model_name,
+        contents=prompt,
+        config=google_genai_types.GenerateContentConfig(
+            temperature=temperature,
+        ),
+    )
+    result = response.text or ""
+    logger.info("Called gemini (%s), response len: %d", model_name, len(result))
+    return result
+
+
+def _is_rate_limit(e: Exception) -> bool:
+    """True if *e* is a 429 / quota error from any backend (groq, openai, gemini)."""
+    return (
+        isinstance(e, _RATE_LIMIT_ERRORS)
+        or getattr(e, "status_code", None) == 429
+        or "429" in str(e)
+        or "RESOURCE_EXHAUSTED" in str(e)
+    )
+
+
+def _backoff_wait(e: Exception, attempt: int, cfg: dict) -> float:
+    """Seconds to wait before retrying: server Retry-After if given, else exponential + jitter."""
+    retry_after = _extract_retry_after(e)
+    if retry_after is not None:
+        return retry_after
     base = cfg.get("llm", {}).get("backoff_base_s", 5)
     max_wait = cfg.get("llm", {}).get("backoff_max_s", 60)
-
-    _default_rate_limiter.min_interval = min_interval
-
-    for attempt in range(max_retries):
-        try:
-            _default_rate_limiter.wait()
-            response = client.models.generate_content(
-                model=model_name,
-                contents=prompt,
-                config=google_genai_types.GenerateContentConfig(
-                    temperature=temperature,
-                ),
-            )
-            result = response.text or ""
-            logger.info("Called gemini (%s), response len: %d", model_name, len(result))
-            return result
-        except Exception as e:
-            is_rate_limit = (
-                (hasattr(e, "status_code") and e.status_code == 429)
-                or "429" in str(e)
-                or "RESOURCE_EXHAUSTED" in str(e)
-            )
-            if is_rate_limit:
-                if attempt < max_retries - 1:
-                    retry_after = _extract_retry_after(e)
-                    if retry_after is not None:
-                        wait = retry_after
-                    else:
-                        jitter = random.uniform(0, 2)
-                        wait = min(base * (2 ** attempt) + jitter, max_wait)
-                    logger.warning("429 hit. Waiting %.1fs (attempt %d/%d)", wait, attempt + 1, max_retries)
-                    time.sleep(wait)
-                else:
-                    logger.error("Gemini rate limit: all retries exhausted")
-                    raise
-            else:
-                logger.error("Gemini call failed (attempt %d): %s", attempt + 1, e)
-                raise
-    raise RuntimeError("call_gemini: exhausted all retries without returning")
+    return min(base * (2 ** attempt) + random.uniform(0, 2), max_wait)
 
 
 def call_llm(prompt: str, cfg: dict) -> str:
@@ -402,6 +391,51 @@ def validate_citation(ref: str, alignment: dict[str, dict], fault_type: str = No
     if not check2:
         logger.warning("Citation validation failed Check 2 (alignment table lookup): %s", ref)
     return check1 and check2
+
+
+def _template_fallback(payload: ClassifierOutput, alignment: dict[str, dict]) -> LLMExplanation:
+    entry = alignment.get(payload.anomaly_type.value, {})
+    return LLMExplanation(
+        root_cause=f"{payload.anomaly_type.value} detected via KPI deviation",
+        gpp_reference=entry.get("3gpp_ts", ""),
+        oran_component=entry.get("oran_component", ""),
+        recommended_action="Refer to alignment table for diagnostic steps",
+        reasoning_trace=f"Template fallback. Top KPI: {payload.shap_top3[0].channel}",
+        reference_valid=False,
+        template_generated=True,
+    )
+
+
+def _run_with_retry(
+    prompt: str,
+    cfg: dict,
+    payload: ClassifierOutput,
+    alignment: dict[str, dict],
+) -> LLMExplanation:
+    """The single retry loop: up to max_retries LLM calls (backing off on 429s), then template fallback."""
+    max_retries = cfg["llm"]["max_retries"]
+    for attempt in range(max_retries):
+        try:
+            parsed = parse_response(call_llm(prompt, cfg))
+            ref = parsed["gpp_reference"]
+            return LLMExplanation(
+                root_cause=parsed["root_cause"],
+                gpp_reference=ref,
+                oran_component=parsed["oran_component"],
+                recommended_action=parsed["recommended_action"],
+                reasoning_trace=parsed["reasoning_trace"],
+                reference_valid=validate_citation(ref, alignment, fault_type=payload.anomaly_type.value),
+                template_generated=False,
+            )
+        except Exception as e:
+            logger.warning("LLM attempt %d/%d failed: %s", attempt + 1, max_retries, e)
+            if _is_rate_limit(e) and attempt < max_retries - 1:
+                wait = _backoff_wait(e, attempt, cfg)
+                logger.warning("Rate limited, waiting %.1fs before retry", wait)
+                time.sleep(wait)
+    logger.error("All %d LLM attempts failed, using template fallback", max_retries)
+    return _template_fallback(payload, alignment)
+
 
 def explain_from_rca(
     window_index: int,
@@ -557,54 +591,7 @@ def explain(
             "or (window_index, fault_type, condition, cfg)"
         )
     prompt = build_prompt(payload, tickets, alignment, rca_context=rca_context)
-    max_retries = cfg["llm"]["max_retries"]
-    parsed = None
-    backend = cfg.get("llm", {}).get("backend", "")
-    for attempt in range(max_retries):
-        try:
-            raw = call_llm(prompt, cfg)
-            parsed = parse_response(raw)
-            break
-        except _RATE_LIMIT_ERRORS:
-            # RateLimitError is a groq-library exception; it is only reachable
-            # when backend == "groq". For Gemini, 429s are caught inside
-            # call_gemini() as generic Exception and retried there.
-            if backend != "groq":
-                logger.error(
-                    "Unexpected RateLimitError for backend=%s — re-raising", backend
-                )
-                raise
-            wait = 60 * (attempt + 1)
-            logger.warning(
-                "Groq rate limit hit (attempt %d/%d), waiting %ds before retry...",
-                attempt + 1, max_retries, wait,
-            )
-            if attempt < max_retries - 1:
-                time.sleep(wait)
-            else:
-                logger.error("Groq rate limit exceeded after all retries, using template")
-        except Exception as e:
-            logger.error("Attempt %d failed: %s", attempt + 1, e)
-    if parsed is None:
-        entry = alignment.get(payload.anomaly_type.value, {})
-        return LLMExplanation(
-            root_cause=f"{payload.anomaly_type.value} detected via KPI deviation",
-            gpp_reference=entry.get("3gpp_ts", ""),
-            oran_component=entry.get("oran_component", ""),
-            recommended_action="Refer to alignment table for diagnostic steps",
-            reasoning_trace=f"Template fallback. Top KPI: {payload.shap_top3[0].channel}",
-            reference_valid=False,
-            template_generated=True
-        )
-    return LLMExplanation(
-        root_cause=parsed["root_cause"],
-        gpp_reference=parsed["gpp_reference"],
-        oran_component=parsed["oran_component"],
-        recommended_action=parsed["recommended_action"],
-        reasoning_trace=parsed["reasoning_trace"],
-        reference_valid=validate_citation(parsed["gpp_reference"], alignment, fault_type=payload.anomaly_type.value),
-        template_generated=False
-    )
+    return _run_with_retry(prompt, cfg, payload, alignment)
 
 
 def _build_shap_summary(payload: ClassifierOutput) -> str:
@@ -706,51 +693,4 @@ def explain_condition(
     else:
         # C3: full system including RCA evidence when available
         prompt = build_prompt(payload, tickets, alignment, rca_context=rca_context)
-    max_retries = cfg["llm"]["max_retries"]
-    parsed = None
-    backend = cfg.get("llm", {}).get("backend", "")
-    for attempt in range(max_retries):
-        try:
-            raw = call_llm(prompt, cfg)
-            parsed = parse_response(raw)
-            break
-        except _RATE_LIMIT_ERRORS:
-            # RateLimitError is a groq-library exception; it is only reachable
-            # when backend == "groq". For Gemini, 429s are caught inside
-            # call_gemini() as generic Exception and retried there.
-            if backend != "groq":
-                logger.error(
-                    "Unexpected RateLimitError for backend=%s — re-raising", backend
-                )
-                raise
-            wait = 60 * (attempt + 1)
-            logger.warning(
-                "Groq rate limit hit (attempt %d/%d), waiting %ds before retry...",
-                attempt + 1, max_retries, wait,
-            )
-            if attempt < max_retries - 1:
-                time.sleep(wait)
-            else:
-                logger.error("Groq rate limit exceeded after all retries, using template")
-        except Exception as e:
-            logger.error("Attempt %d (condition %d) failed: %s", attempt + 1, condition, e)
-    if parsed is None:
-        entry = alignment.get(payload.anomaly_type.value, {})
-        return LLMExplanation(
-            root_cause=f"{payload.anomaly_type.value} detected via KPI deviation",
-            gpp_reference=entry.get("3gpp_ts", ""),
-            oran_component=entry.get("oran_component", ""),
-            recommended_action="Refer to alignment table for diagnostic steps",
-            reasoning_trace=f"Template fallback. Top KPI: {payload.shap_top3[0].channel}",
-            reference_valid=False,
-            template_generated=True
-        )
-    return LLMExplanation(
-        root_cause=parsed["root_cause"],
-        gpp_reference=parsed["gpp_reference"],
-        oran_component=parsed["oran_component"],
-        recommended_action=parsed["recommended_action"],
-        reasoning_trace=parsed["reasoning_trace"],
-        reference_valid=validate_citation(parsed["gpp_reference"], alignment, fault_type=payload.anomaly_type.value),
-        template_generated=False
-    )
+    return _run_with_retry(prompt, cfg, payload, alignment)
