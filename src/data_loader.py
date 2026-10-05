@@ -32,7 +32,7 @@ def load_jsonl_files(raw_path: str) -> list[dict]:
         logger.warning("Path %s does not exist", raw_path)
         return records
         
-    for file_path in path.rglob("*.jsonl"):
+    for file_path in sorted(path.rglob("*.jsonl")):
         with open(file_path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()

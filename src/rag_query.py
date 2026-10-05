@@ -1,9 +1,14 @@
 import logging
+from functools import lru_cache
 import chromadb
 from sentence_transformers import SentenceTransformer
 from src.schema import ClassifierOutput, RetrievedTicket
 
 logger = logging.getLogger(__name__)
+
+@lru_cache(maxsize=4)
+def _get_model(model_name: str) -> SentenceTransformer:
+    return SentenceTransformer(model_name)
 
 def build_query(payload: ClassifierOutput) -> str:
     """Build a text query for the RAG system from a ClassifierOutput payload.
@@ -19,12 +24,21 @@ def build_query(payload: ClassifierOutput) -> str:
         A formatted string describing the anomaly and KPIs.
     """
     sorted_shap = sorted(payload.shap_top3, key=lambda x: abs(x.shap_value), reverse=True)
-    
-    top3_channels = ", ".join(x.channel for x in sorted_shap)
-    
-    dirs = []
+
+    # Several top SHAP features can belong to one channel (e.g. RSRP_max/mean/min);
+    # keep the strongest entry per channel so the query doesn't repeat it.
+    seen = set()
+    unique_shap = []
     for x in sorted_shap:
-        direction = "above normal" if x.shap_value > 0 else "below normal"
+        if x.channel not in seen:
+            seen.add(x.channel)
+            unique_shap.append(x)
+
+    top3_channels = ", ".join(x.channel for x in unique_shap)
+
+    dirs = []
+    for x in unique_shap:
+        direction = "above normal" if "above" in x.feature_vs_normal else "below normal"
         dirs.append(f"{x.channel}: {direction}")
     directions = ", ".join(dirs)
     
@@ -73,8 +87,7 @@ def retrieve(
         A tuple containing the list of retrieved tickets and a boolean indicating
         if the retrieval was low confidence (highest score < threshold).
     """
-    model = SentenceTransformer(model_name)
-    query_emb = model.encode([query])[0].tolist()
+    query_emb = _get_model(model_name).encode([query])[0].tolist()
     
     results = collection.query(
         query_embeddings=[query_emb],

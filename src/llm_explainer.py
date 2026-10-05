@@ -9,8 +9,14 @@ import requests
 
 try:
     from openai import OpenAI
+    from openai import RateLimitError as OpenAIRateLimitError
 except ImportError:
     OpenAI = None  # type: ignore[assignment,misc]
+    OpenAIRateLimitError = RateLimitError  # type: ignore[assignment,misc]
+
+# The groq backend goes through the openai client, which raises openai.RateLimitError,
+# a different class from groq.RateLimitError. Catch both.
+_RATE_LIMIT_ERRORS = (RateLimitError, OpenAIRateLimitError)
 
 try:
     from google import genai as google_genai
@@ -95,7 +101,7 @@ def build_prompt(
     """
     shap_lines = []
     for x in payload.shap_top3:
-        direction = "above" if x.shap_value > 0 else "below"
+        direction = "above" if "above" in x.feature_vs_normal else "below"
         shap_lines.append(f"  {x.channel}: {direction} normal (SHAP={x.shap_value:+.2f})")
     shap_summary = "\n".join(shap_lines)
     if tickets:
@@ -559,7 +565,7 @@ def explain(
             raw = call_llm(prompt, cfg)
             parsed = parse_response(raw)
             break
-        except RateLimitError:
+        except _RATE_LIMIT_ERRORS:
             # RateLimitError is a groq-library exception; it is only reachable
             # when backend == "groq". For Gemini, 429s are caught inside
             # call_gemini() as generic Exception and retried there.
@@ -605,7 +611,7 @@ def _build_shap_summary(payload: ClassifierOutput) -> str:
     """Shared helper to format SHAP lines for prompts."""
     shap_lines = []
     for x in payload.shap_top3:
-        direction = "above" if x.shap_value > 0 else "below"
+        direction = "above" if "above" in x.feature_vs_normal else "below"
         shap_lines.append(f"  {x.channel}: {direction} normal (SHAP={x.shap_value:+.2f})")
     return "\n".join(shap_lines)
 
@@ -708,7 +714,7 @@ def explain_condition(
             raw = call_llm(prompt, cfg)
             parsed = parse_response(raw)
             break
-        except RateLimitError:
+        except _RATE_LIMIT_ERRORS:
             # RateLimitError is a groq-library exception; it is only reachable
             # when backend == "groq". For Gemini, 429s are caught inside
             # call_gemini() as generic Exception and retried there.
