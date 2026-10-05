@@ -130,9 +130,9 @@ def build_prompt(
     # injected here and also used by validate_citation() to check the LLM output.
     # This means C3's citation_valid metric measures: "given the correct standard,
     # does the LLM incorporate it correctly?" — NOT independent citation retrieval.
-    # The 90% C3 rate quantifies alignment-guided prompting compliance, not the
-    # LLM's intrinsic 3GPP knowledge. C1 (no context) establishes the true
-    # baseline; the C1→C3 delta (~83pp) is the contribution of the full system.
+    # The 100% C3 rate quantifies alignment-guided prompting compliance, not the
+    # LLM's intrinsic 3GPP knowledge. C1 (no context, 40%) establishes the true
+    # baseline; the C1→C3 delta (+60pp) is the contribution of the full system.
     prompt = f"""You are a 5G network fault diagnosis expert.
 
 [FAULT DETECTED]

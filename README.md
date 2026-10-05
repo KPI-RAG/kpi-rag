@@ -112,17 +112,26 @@ uv run python scripts/run_eval_track_b.py --output data/processed/ --n-samples 3
 
 ### Track C — Ablation study (3 conditions)
 
-| Condition | Context provided |
-|-----------|-----------------|
-| C1 | Label + SHAP only |
-| C2 | Label + SHAP + retrieved tickets |
-| C3 | Full system (tickets + alignment table) |
+| Condition | Context provided | Citation validity |
+|-----------|-----------------|-------------------|
+| C1 | Label + SHAP only | 12/30 (40%) |
+| C2 | Label + SHAP + retrieved tickets | 10/30 (33%) |
+| C3 | Full system (tickets + alignment table + RCA evidence) | 30/30 (100%) |
+
+Gemini 3.5 Flash Lite, 10 fault types × 3 windows, `random_state=42`, same 30
+windows in every condition, 0 template fallbacks. RCA evidence was injected for
+17/30 C3 samples — `rca_evidence.json` covers `window_index` 0–1234 only.
 
 > **What the C3 citation validity metric measures:**
 > C3 demonstrates that providing structured 3GPP standards context enables the
-> LLM to correctly incorporate domain references in ~90% of cases. C1 (~7%) and
-> C2 (~10%) establish the baselines without this context. The delta C2→C3 (~+80pp)
+> LLM to correctly incorporate domain references in 100% of cases (30/30). C1 (40%)
+> and C2 (33%) establish the baselines without this context. The delta C2→C3 (+67pp)
 > quantifies the contribution of the alignment-guided prompting strategy.
+>
+> A citation is valid if it matches any standard cited in that fault's alignment
+> row (e.g. CCI Severe: TS 38.141-1 or TS 38.104). Earlier runs accepted only the
+> primary standard, which under-credited the baselines: without any context the LLM
+> already cites TS 38.104 for Faulty RF Filters and TS 38.331 for Faulty Handover.
 >
 > **Important framing:** `validate_citation()` checks the LLM's output against
 > the same alignment table injected into the C3 prompt. This measures
