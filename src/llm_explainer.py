@@ -556,7 +556,7 @@ def explain(
             "explain() requires either (payload, tickets, cfg, alignment) "
             "or (window_index, fault_type, condition, cfg)"
         )
-    prompt = build_prompt(payload, tickets, alignment)
+    prompt = build_prompt(payload, tickets, alignment, rca_context=rca_context)
     max_retries = cfg["llm"]["max_retries"]
     parsed = None
     backend = cfg.get("llm", {}).get("backend", "")

@@ -37,6 +37,7 @@ from src.utils import setup_logging
 from src.kg_indexer import get_collection
 from src.rag_query import query_from_classifier_output
 from src.llm_explainer import load_alignment_table, explain
+from src.rca_loader import RCALoader
 from dashboard.components.detection_panel import render_detection_panel
 from dashboard.components.shap_panel import render_shap_panel
 from dashboard.components.kpi_signal_panel import render_kpi_signal_panel
@@ -82,6 +83,15 @@ def load_alignment():
     """Load alignment table once from disk and cache."""
     alignment_path = os.path.join(REPO_ROOT, "configs", "alignment_table.json")
     return load_alignment_table(alignment_path)
+
+
+@st.cache_resource(show_spinner=False)
+def load_rca():
+    """Load the RCALoader once; returns None if rca_evidence.json is absent."""
+    rca_path = os.path.join(REPO_ROOT, "data", "processed", "rca_evidence.json")
+    if os.path.exists(rca_path):
+        return RCALoader(rca_path)
+    return None
 
 
 
@@ -183,6 +193,16 @@ if payload is None:
     st.info("👈 Upload a ClassifierOutput JSON or select example")
     st.stop()
 
+# RCA evidence is only available when a dataset window (window_index) is selected.
+rca_loader = load_rca()
+rca_context = ""
+if rca_loader is not None and window_index is not None:
+    rca_context = rca_loader.get_prompt_context(window_index)
+if rca_context:
+    st.sidebar.caption("✅ RCA evidence injected into prompt")
+else:
+    st.sidebar.caption("ℹ️ No RCA context (example/upload mode)")
+
 if payload is not None:
     col1, col2 = st.columns([1, 2])
 
@@ -211,7 +231,7 @@ if generate_clicked:
 
     with st.spinner("Generating explanation..."):
         alignment = load_alignment()
-        explanation = explain(payload, tickets, cfg, alignment)
+        explanation = explain(payload, tickets, cfg, alignment, rca_context=rca_context)
 
     st.session_state["saved_explanation"] = explanation
     st.session_state["saved_tickets"] = tickets
