@@ -280,6 +280,19 @@ def test_validate_citation_rejects_real_but_wrong_ts(alignment):
     assert result is False, "Real-but-unrelated TS must fail validate_citation()"
 
 
+def test_validate_citation_accepts_secondary_ts_in_same_row(alignment):
+    """CCI Severe cites TS 38.141-1 + TS 38.104; both pass, but only for rows that cite them."""
+    cci = "Co-Channel Interference (Severe)"
+    assert alignment[cci]["valid_refs"] == ["TS 38.141-1", "TS 38.104"]
+    assert alignment[cci]["3gpp_ts"] == "TS 38.141-1"          # primary unchanged
+    assert validate_citation("TS 38.141-1", alignment, fault_type=cci) is True
+    assert validate_citation("TS 38.104", alignment, fault_type=cci) is True
+    assert validate_citation("TS 99.999", alignment, fault_type=cci) is False
+    assert validate_citation("TS 38.141-1", alignment, fault_type="Antenna Failure") is True
+    assert validate_citation("TS 38.104", alignment, fault_type="Antenna Failure") is False
+    assert alignment["Doppler Shift (Severe)"]["valid_refs"] == ["TR 38.901"]   # deduplicated
+
+
 def test_rate_limiter_timing():
     import time
     limiter = RateLimiter(min_interval=0.1)
