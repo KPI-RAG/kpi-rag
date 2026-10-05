@@ -36,7 +36,8 @@ def load_alignment_table(path: str) -> dict[str, dict]:
     """Load and normalise the 3GPP alignment table from a JSON file.
 
     The table maps each fault type string (e.g. ``"Antenna Failure"``) to a
-    dict containing normalised fields: ``3gpp_ts``, ``clause``,
+    dict containing normalised fields: ``3gpp_ts`` (primary standard),
+    ``valid_refs`` (every TS/TR the row cites, primary first), ``clause``,
     ``evidence_span``, and ``oran_component``.  Missing fields are extracted
     from the raw ``3gpp_reference`` string where possible.
 
@@ -74,8 +75,11 @@ def load_alignment_table(path: str) -> dict[str, dict]:
                 evidence = entry["clause_text"][:300]
             else:
                 evidence = ""
+        # Every TS/TR the row cites (e.g. CCI Severe: TS 38.141-1 + TS 38.104), primary first.
+        cited = re.findall(r'T[SR]\s+(?:2[1-9]|3[0-8])\.\d{3}(?:-\d+)?', entry.get("3gpp_reference", ""))
         normalized = dict(entry)
         normalized["3gpp_ts"] = ts if ts else ""
+        normalized["valid_refs"] = list(dict.fromkeys(([ts] if ts else []) + cited))
         normalized["clause"] = clause if clause else ""
         normalized["evidence_span"] = evidence
         normalized["oran_component"] = entry.get("oran_component", "")
@@ -354,8 +358,9 @@ def validate_citation(ref: str, alignment: dict[str, dict], fault_type: str = No
     - **Check 1 (format):** ``ref`` matches the ``TS XX.XXX`` / ``TR XX.XXX``
       regex defined in :func:`~src.utils.validate_3gpp_ref`.
     - **Check 2 (table lookup):** When ``fault_type`` is provided, ``ref``
-      must exactly match the expected standard for that fault type.  When
-      ``fault_type`` is ``None``, ``ref`` must appear anywhere in the table.
+      must exactly match one of the standards cited in that fault's row
+      (``valid_refs``).  When ``fault_type`` is ``None``, ``ref`` must be
+      some row's primary standard.
 
     Both checks must pass for ``True`` to be returned.
 
@@ -381,8 +386,9 @@ def validate_citation(ref: str, alignment: dict[str, dict], fault_type: str = No
     except Exception:
         check1 = False
     if fault_type and fault_type in alignment:
-        expected = alignment[fault_type].get("3gpp_ts", "")
-        check2 = bool(expected) and ref == expected
+        entry = alignment[fault_type]
+        expected = entry.get("valid_refs") or [entry.get("3gpp_ts", "")]
+        check2 = bool(ref) and ref in expected
     else:
         all_ts = {entry.get("3gpp_ts") for entry in alignment.values() if entry.get("3gpp_ts")}
         check2 = ref in all_ts
