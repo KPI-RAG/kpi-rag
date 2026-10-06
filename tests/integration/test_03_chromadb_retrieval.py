@@ -61,6 +61,31 @@ def test_jamming_retrieval_no_crash(collection, cfg, all_payloads):
     assert isinstance(low_conf, bool)
 
 
+def test_index_is_train_split_only(collection, cfg):
+    """No test-split window may be in the index, and each stored ticket must be the
+    window its id claims (guards against the positional-id / file-order mismatch
+    that once put 245 test documents into the committed index)."""
+    import json, os
+    import numpy as np
+    idx_dir = cfg["data"]["indices_path"]
+    train_path = os.path.join(idx_dir, cfg["data"]["train_idx_file"])
+    test_path = os.path.join(idx_dir, cfg["data"]["test_idx_file"])
+    handoff = "data/processed/layer2_rag_handoff_sessionsplit.json"
+    if collection.count() == 0 or not (os.path.exists(train_path) and os.path.exists(test_path)):
+        pytest.skip("index or split files not available")
+    train = set(np.load(train_path).tolist())
+    test = set(np.load(test_path).tolist())
+    truth = {h["window_index"]: h["ground_truth_anomaly_type"]
+             for h in json.load(open(handoff, encoding="utf-8"))}
+    got = collection.get(include=["metadatas"])
+    ids = [int(i) for i in got["ids"]]
+    assert not (set(ids) & test), "test-split windows found in the index"
+    assert set(ids) <= train
+    assert set(ids) == {i for i in train if i in truth}, "index is not the full anomalous train split"
+    mismatched = [i for i, m in zip(ids, got["metadatas"]) if m["anomaly_type"] != truth[i]]
+    assert not mismatched, f"{len(mismatched)} tickets stored under the wrong window id, e.g. {mismatched[:5]}"
+
+
 def test_similarity_scores_in_valid_range(collection, cfg, all_payloads):
     """Similarity scores must be in a valid cosine similarity range."""
     if collection.count() == 0:
