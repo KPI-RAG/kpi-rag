@@ -38,6 +38,10 @@ class RCALoader:
         """Return the RCA record for *window_index*, or None if not found."""
         return self._index.get(int(window_index))
 
+    def find_by_fault(self, fault: str) -> dict | None:
+        """First record whose predicted_fault equals *fault* (a representative example), or None."""
+        return next((r for r in self._index.values() if r.get("predicted_fault") == fault), None)
+
     def get_prompt_context(self, window_index: int) -> str:
         """Return a formatted context string (<400 tokens) for C3 prompts.
 

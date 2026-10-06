@@ -98,18 +98,6 @@ def load_rca():
 
 
 @st.cache_data(show_spinner=False)
-def load_rca_evidence(path: str | None = None) -> dict:
-    """Load rca_evidence.json and index by window_index."""
-    if path is None:
-        path = os.path.join(REPO_ROOT, "data", "processed", "rca_evidence.json")
-    if not os.path.exists(path):
-        return {}
-    with open(path, encoding="utf-8") as f:
-        records = json.load(f)
-    return {r["window_index"]: r for r in records}
-
-
-@st.cache_data(show_spinner=False)
 def load_layer2_windows(path: str | None = None) -> list:
     """Load layer2 handoff windows as ClassifierOutput objects."""
     if path is None:
@@ -137,7 +125,7 @@ def load_layer2_windows(path: str | None = None) -> list:
 
 
 cfg = get_cfg()
-rca_evidence = load_rca_evidence()
+rca_loader = load_rca()
 layer2_windows = load_layer2_windows()
 
 st.title("📡 KPI-RAG: 5G Network Fault Diagnosis")
@@ -196,7 +184,6 @@ if payload is None:
     st.stop()
 
 # RCA evidence is only available when a dataset window (window_index) is selected.
-rca_loader = load_rca()
 rca_context = ""
 if rca_loader is not None and window_index is not None:
     rca_context = rca_loader.get_prompt_context(window_index)
@@ -257,14 +244,16 @@ else:
 
 st.divider()
 
-# RCA Evidence panel
-rca_record = rca_evidence.get(window_index) if window_index is not None else None
-if rca_record is None and rca_evidence:
-    # Fallback: match by fault type for example/upload modes
-    fault_val = payload.anomaly_type.value if hasattr(payload.anomaly_type, "value") else str(payload.anomaly_type)
-    for rec in rca_evidence.values():
-        if rec.get("predicted_fault") == fault_val:
-            rca_record = rec
-            break
+# RCA Evidence panel. rca_evidence.json only covers the 1,235 anomalous windows
+# (window_index 0..1234); for other inputs show a representative record and say so.
+rca_record = rca_loader.get(window_index) if (rca_loader and window_index is not None) else None
+if rca_record is None and rca_loader is not None:
+    fault_val = payload.anomaly_type.value
+    rca_record = rca_loader.find_by_fault(fault_val)
+    if rca_record is not None:
+        st.caption(
+            f"ℹ️ No RCA evidence exists for this exact window — showing a representative "
+            f"{fault_val} record (window {rca_record['window_index']}). It was not sent to the LLM."
+        )
 render_rca_panel(rca_record)
 
