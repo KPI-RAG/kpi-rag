@@ -119,8 +119,14 @@ def apply_train_split(tickets: list[dict], idx_path: str) -> list[dict]:
     """Filter tickets to include only those in the training split.
     
     Reads a numpy array of training indices from `idx_path` and retains
-    tickets whose integer `ticket_id` is present in that array. If the
-    index file does not exist, all tickets are returned.
+    tickets whose integer `ticket_id` is present in that array. Raises
+    FileNotFoundError if the index file does not exist.
+
+    ``ticket_id`` is the record's position in the sorted anomalous list,
+    which equals the global window index used by the split files only
+    because ``data/raw/anomalous/`` sorts before ``data/raw/normal/`` and
+    the loader reads files in sorted order. :func:`verify_ticket_order`
+    checks that invariant against the teammates' ground-truth file.
     
     Parameters
     ----------
@@ -136,9 +142,9 @@ def apply_train_split(tickets: list[dict], idx_path: str) -> list[dict]:
     """
     path = Path(idx_path)
     if not path.exists():
-        logger.warning("Train idx file %s not found, returning all tickets", idx_path)
-        return tickets
-        
+        # Never fail open here: indexing everything would put held-out windows in the corpus.
+        raise FileNotFoundError(f"Train split file not found: {idx_path}")
+
     train_indices = set(np.load(path).tolist())
     
     retained = []
@@ -154,4 +160,24 @@ def apply_train_split(tickets: list[dict], idx_path: str) -> list[dict]:
             
     logger.info("Retained %d out of %d tickets after train split", len(retained), len(tickets))
     return retained
+
+
+def verify_ticket_order(tickets: list[dict], handoff_path: str) -> None:
+    """Raise ValueError unless ticket k's label equals the ground truth for window k.
+
+    Raw TelecomTS records carry no identifier, so ticket ids are positional.
+    This checks that positional order against ``layer2_rag_handoff_sessionsplit.json``
+    (``window_index`` -> ``ground_truth_anomaly_type``) so a changed file order
+    fails loudly instead of silently indexing the wrong windows.
+    """
+    with open(handoff_path, "r", encoding="utf-8") as f:
+        truth = {int(r["window_index"]): r["ground_truth_anomaly_type"] for r in json.load(f)}
+    bad = [t["ticket_id"] for t in tickets
+           if int(t["ticket_id"]) in truth and truth[int(t["ticket_id"])] != t["anomaly_type"]]
+    if bad:
+        raise ValueError(
+            f"{len(bad)} tickets do not match the ground-truth label for their window index "
+            f"(e.g. {bad[:5]}); raw file order differs from the split files"
+        )
+    logger.info("Ticket order verified against %s (%d windows)", handoff_path, len(truth))
 

@@ -215,6 +215,25 @@ def run_track_c(
         len(TRACK_C_FAULTS), n_per_fault, len(samples) * 3,
     )
 
+    # Held-out guard: every sampled window must be in the test split (the index is train-only).
+    data_cfg = cfg.get("data", {})
+    test_idx_path = os.path.join(
+        data_cfg.get("indices_path", "data/indices"), data_cfg.get("test_idx_file", "test_idx_sessionsplit.npy")
+    )
+    if os.path.exists(test_idx_path):
+        import numpy as np
+        test_set = set(np.load(test_idx_path).tolist())
+        leaked = [w for _, _, w in samples if w is not None and w not in test_set]
+        if leaked:
+            raise ValueError(f"Track C sampled {len(leaked)} windows outside the test split: {leaked[:5]}")
+    n_without_rca = sum(1 for _, _, w in samples if w is None or rca_loader.get(w) is None)
+    if n_without_rca:
+        logger.warning(
+            "%d/%d sampled windows have no RCA record (window_index >= 1235 = normal windows "
+            "that Layer 2 flagged as faults); their C3 prompt will carry no RCA evidence",
+            n_without_rca, len(samples),
+        )
+
     all_explanations: list[dict] = []
     all_scores: list[dict] = []
     sample_idx = 0

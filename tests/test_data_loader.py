@@ -74,3 +74,27 @@ def test_apply_train_split(tmp_path, fake_data):
     retained = apply_train_split(tickets, str(idx_path))
     assert len(retained) == 1
     assert retained[0]["ticket_id"] == "1"
+
+
+def test_apply_train_split_missing_file_raises(fake_data, tmp_path):
+    """A missing split file must not fail open (that would index held-out windows)."""
+    tickets = extract_tickets(filter_anomalous(fake_data))
+    with pytest.raises(FileNotFoundError):
+        apply_train_split(tickets, str(tmp_path / "nope.npy"))
+
+
+def test_verify_ticket_order(tmp_path):
+    from src.data_loader import verify_ticket_order
+    tickets = [{"ticket_id": "0", "anomaly_type": "Jamming"}, {"ticket_id": "1", "anomaly_type": "Antenna Failure"}]
+    handoff = tmp_path / "handoff.json"
+    handoff.write_text(json.dumps([
+        {"window_index": 0, "ground_truth_anomaly_type": "Jamming"},
+        {"window_index": 1, "ground_truth_anomaly_type": "Antenna Failure"},
+    ]))
+    verify_ticket_order(tickets, str(handoff))          # matches: no error
+    handoff.write_text(json.dumps([
+        {"window_index": 0, "ground_truth_anomaly_type": "Antenna Failure"},
+        {"window_index": 1, "ground_truth_anomaly_type": "Jamming"},
+    ]))
+    with pytest.raises(ValueError, match="2 tickets do not match"):
+        verify_ticket_order(tickets, str(handoff))

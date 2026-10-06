@@ -6,7 +6,8 @@ from src.data_loader import (
     load_jsonl_files,
     filter_anomalous,
     extract_tickets,
-    apply_train_split
+    apply_train_split,
+    verify_ticket_order,
 )
 from src.kg_indexer import get_collection, index_tickets
 from src.utils import setup_logging
@@ -26,8 +27,13 @@ def build_index(cfg: dict) -> int:
     
     tickets = extract_tickets(anomalous)
     logger.info("Extracted %d tickets", len(tickets))
-    
-    
+
+    handoff_path = os.path.join(
+        cfg["data"].get("processed_path", "data/processed"), "layer2_rag_handoff_sessionsplit.json"
+    )
+    if os.path.exists(handoff_path):
+        verify_ticket_order(tickets, handoff_path)
+
     train_idx_path = os.path.join(indices_path, cfg["data"]["train_idx_file"])
     train_tickets = apply_train_split(tickets, train_idx_path)
     logger.info("Applied train split, %d tickets remaining", len(train_tickets))
