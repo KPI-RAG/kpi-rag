@@ -95,7 +95,7 @@ def test_query_from_classifier_output(collection, sample_payload):
     assert low_conf is False
 
 
-# ─── P2-B Negative retrieval test ────────────────────────────────────────────
+# unrelated query must come back low-confidence
 
 def test_retrieval_low_similarity_for_unrelated_query(collection):
     """An off-topic query must return low cosine similarity against the telecom DB.
