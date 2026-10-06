@@ -229,6 +229,7 @@ def call_gemini(prompt: str, cfg: dict) -> str:
         contents=prompt,
         config=google_genai_types.GenerateContentConfig(
             temperature=temperature,
+            response_mime_type="application/json",   # native JSON mode; parse_response still strips fences
         ),
     )
     result = response.text or ""
@@ -283,9 +284,10 @@ def call_llm(prompt: str, cfg: dict) -> str:
             "model": cfg["llm"]["ollama_model"],
             "prompt": prompt,
             "stream": False,
-            "temperature": cfg["llm"]["temperature"]
+            # Ollama only reads sampling params from "options"; a top-level key is ignored.
+            "options": {"temperature": cfg["llm"]["temperature"]},
         }
-        resp = requests.post(url, json=payload)
+        resp = requests.post(url, json=payload, timeout=120)
         resp.raise_for_status()
         result = resp.json().get("response", "")
         logger.info("Called ollama, response len: %d", len(result))
