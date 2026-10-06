@@ -165,7 +165,7 @@ uv run pytest tests/ -v
 project/
 ├── configs/
 │   ├── config.yaml              # RAG, LLM, data, eval settings
-│   └── alignment_table.json     # 10-row fault→3GPP mapping (v1.0)
+│   └── alignment_table.json     # 10-row fault→3GPP mapping (v1.0, status DRAFT — validation pending)
 ├── src/
 │   ├── schema.py                # Pydantic models (11 fault types)
 │   ├── config_loader.py         # YAML config loader
