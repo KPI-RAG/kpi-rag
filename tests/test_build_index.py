@@ -16,6 +16,7 @@ def fake_cfg():
         }
     }
 
+@patch("scripts.build_index.verify_ticket_order")
 @patch("scripts.build_index.load_jsonl_files")
 @patch("scripts.build_index.filter_anomalous")
 @patch("scripts.build_index.extract_tickets")
@@ -23,7 +24,7 @@ def fake_cfg():
 @patch("scripts.build_index.get_collection")
 @patch("scripts.build_index.index_tickets")
 def test_build_index(
-    mock_index, mock_get_col, mock_apply, mock_extract, mock_filter, mock_load, fake_cfg
+    mock_index, mock_get_col, mock_apply, mock_extract, mock_filter, mock_load, mock_verify, fake_cfg
 ):
     mock_load.return_value = ["raw1", "raw2"]
     mock_filter.return_value = ["anom1"]
