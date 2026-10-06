@@ -103,7 +103,7 @@ def test_validate_3gpp_ref():
     assert validate_3gpp_ref("TS 38.104") is True
     assert validate_3gpp_ref("TS 39.999") is False
     assert validate_3gpp_ref("38.104") is False
-    # Rodina's new reference formats — must now pass
+    # reference formats used by alignment_table v1.0
     assert validate_3gpp_ref("TS 38.141-1") is True
     assert validate_3gpp_ref("TR 38.901") is True
     assert validate_3gpp_ref("TS 28.552") is True

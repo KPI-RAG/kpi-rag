@@ -8,29 +8,11 @@ logger = logging.getLogger(__name__)
 
 @lru_cache(maxsize=4)
 def get_model(model_name: str) -> SentenceTransformer:
-    """One SentenceTransformer per model name for the whole process (indexing and querying)."""
+    """One model instance per name for the whole process."""
     return SentenceTransformer(model_name)
 
 def get_collection(cfg: dict) -> chromadb.Collection:
-    """Return (or create) the ChromaDB collection specified in the config.
-
-    Connects to a persistent ChromaDB instance at the path defined in ``cfg``
-    and either retrieves an existing collection or creates a new one with
-    cosine-distance HNSW indexing.
-
-    Parameters
-    ----------
-    cfg : dict
-        Application configuration dictionary.  Must contain the nested keys
-        ``cfg["rag"]["chroma_db_path"]`` (filesystem path to the ChromaDB
-        directory) and ``cfg["rag"]["collection_name"]`` (name of the target
-        collection).
-
-    Returns
-    -------
-    chromadb.Collection
-        The ChromaDB collection object, ready for querying or ingestion.
-    """
+    """Open (or create, with cosine distance) the collection named in cfg["rag"]."""
     path = cfg["rag"]["chroma_db_path"]
     name = cfg["rag"]["collection_name"]
     client = chromadb.PersistentClient(path=path)
@@ -39,34 +21,7 @@ def get_collection(cfg: dict) -> chromadb.Collection:
     return collection
 
 def embed_tickets(tickets: list[dict], model_name: str) -> tuple[list[str], list[list[float]], list[dict], list[str]]:
-    """Encode a list of support tickets into dense vector embeddings.
-
-    Concatenates each ticket's ``ticket_text`` and ``qna_trace`` fields into a
-    single document string, then encodes all documents in one batch using a
-    ``SentenceTransformer`` model.
-
-    Parameters
-    ----------
-    tickets : list[dict]
-        List of ticket dictionaries.  Each dict must contain the keys
-        ``"ticket_id"``, ``"ticket_text"``, ``"qna_trace"``, and
-        ``"anomaly_type"``.
-    model_name : str
-        Name or path of the ``SentenceTransformer`` model used to compute
-        embeddings (e.g. ``"all-MiniLM-L6-v2"``).
-
-    Returns
-    -------
-    documents : list[str]
-        Concatenated text strings, one per ticket.
-    embeddings : list[list[float]]
-        Dense embedding vectors corresponding to each document.
-    metadatas : list[dict]
-        Metadata dicts containing ``"ticket_id"`` and ``"anomaly_type"`` for
-        each ticket.
-    ids : list[str]
-        Ticket ID strings used as unique identifiers in ChromaDB.
-    """
+    """Embed ticket_text + qna_trace per ticket. Returns (documents, embeddings, metadatas, ids)."""
     logger.info("Embedding %d tickets using model %s", len(tickets), model_name)
     model = get_model(model_name)
 
@@ -89,24 +44,7 @@ def embed_tickets(tickets: list[dict], model_name: str) -> tuple[list[str], list
     return documents, embeddings, metadatas, ids
 
 def index_tickets(tickets: list[dict], collection: chromadb.Collection, model_name: str) -> int:
-    """Index a list of tickets into a ChromaDB collection.
-    
-    Filters out tickets that are already present in the collection by ID.
-    
-    Parameters
-    ----------
-    tickets : list[dict]
-        List of ticket dictionaries to index.
-    collection : chromadb.Collection
-        The ChromaDB collection to index into.
-    model_name : str
-        The SentenceTransformer model name to use for embedding.
-        
-    Returns
-    -------
-    int
-        The number of new tickets successfully indexed.
-    """
+    """Add tickets whose ids are not already in the collection. Returns how many were added."""
     if not tickets:
         return 0
         
@@ -136,13 +74,7 @@ def index_tickets(tickets: list[dict], collection: chromadb.Collection, model_na
     return len(new_ids)
 
 def clear_collection(collection: chromadb.Collection) -> None:
-    """Clear all documents from a ChromaDB collection.
-    
-    Parameters
-    ----------
-    collection : chromadb.Collection
-        The collection to clear.
-    """
+    """Delete every document (needed before a rebuild, since index_tickets skips existing ids)."""
     ids = collection.get()["ids"]
     if ids:
         collection.delete(ids=ids)

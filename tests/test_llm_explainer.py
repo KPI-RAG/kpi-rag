@@ -68,7 +68,7 @@ def test_load_alignment_table(alignment):
     assert "3gpp_ts" in entry
     assert "clause" in entry
     assert "oran_component" in entry
-    # Rodina's rich field must be preserved
+    # original row fields must survive normalisation
     assert "causal_mechanism" in entry
     assert entry["3gpp_ts"] == "TS 38.141-1"
 
@@ -103,17 +103,17 @@ def test_parse_response():
 def test_validate_citation(alignment):
     from src.utils import validate_3gpp_ref
 
-    # --- validate_3gpp_ref format checks ---
+    # format check
     assert validate_3gpp_ref("TS 38.104") is True      # old format still valid
-    assert validate_3gpp_ref("TS 38.141-1") is True    # Rodina: Antenna Failure / CCI / RF Filters
-    assert validate_3gpp_ref("TR 38.901") is True       # Rodina: Doppler Shift
-    assert validate_3gpp_ref("TS 28.552") is True       # Rodina: Congestion rows
-    assert validate_3gpp_ref("TS 38.133") is True       # Rodina: Faulty Handover
-    assert validate_3gpp_ref("TS 38.321") is True       # Rodina: Buffer Overflow / Resource Bugs
+    assert validate_3gpp_ref("TS 38.141-1") is True    # Antenna Failure / CCI / RF Filters
+    assert validate_3gpp_ref("TR 38.901") is True       # Doppler Shift
+    assert validate_3gpp_ref("TS 28.552") is True       # Congestion rows
+    assert validate_3gpp_ref("TS 38.133") is True       # Faulty Handover
+    assert validate_3gpp_ref("TS 38.321") is True       # Buffer Overflow / Resource Bugs
     assert validate_3gpp_ref("TS 39.999") is False      # series out of range
     assert validate_3gpp_ref("38.104") is False         # missing prefix
 
-    # --- validate_citation: ref must pass format AND be in alignment table ---
+    # format AND alignment-table membership
     # Known valid (all in new alignment table)
     assert validate_citation("TS 38.141-1", alignment) is True
     assert validate_citation("TS 38.321", alignment) is True
@@ -150,7 +150,7 @@ def test_explain_path2_fallback(mock_call, sample_payload, alignment, cfg):
     assert res.template_generated is True
     assert res.reference_valid is False
     assert res.root_cause == "Antenna Failure detected via KPI deviation"
-    # Template fallback uses entry["3gpp_ts"] from alignment (Rodina's table)
+    # template fallback cites the row's primary standard
     assert res.gpp_reference == "TS 38.141-1"
 
 @patch("src.llm_explainer.call_llm")
@@ -169,7 +169,7 @@ def test_explain_path3_hallucinated_reference(mock_call, sample_payload, alignme
     assert res.reference_valid is False
 
 
-# ─── Track C condition tests ──────────────────────────────────────
+# Track C conditions
 
 @patch("src.llm_explainer.call_llm")
 def test_explain_condition1_no_tickets(mock_call, sample_payload, alignment, cfg):
@@ -233,7 +233,7 @@ def test_explain_condition_invalid(sample_payload, alignment, cfg):
         explain_condition(sample_payload, [], cfg, alignment, condition=99)
 
 
-# ─── P2-A Negative test cases for validate_citation() ────────────────────────
+# validate_citation must reject these
 
 def test_validate_citation_rejects_wrong_fault_reference(alignment):
     """A reference valid for a different fault must fail for CCI Mild.

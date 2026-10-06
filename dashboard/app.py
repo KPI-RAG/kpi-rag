@@ -21,7 +21,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ── API key guard (must come before any heavy resource loading) ────────────────
+# Check the key before loading anything heavy.
 _api_key = os.environ.get("GEMINI_API_KEY")
 if not _api_key:
     st.error(

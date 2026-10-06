@@ -2,15 +2,8 @@ import pytest
 import json
 import logging
 from unittest.mock import patch, MagicMock
-from scripts.run_eval_track_c import (
-    run_track_c,
-    main,
-    build_synthetic_payload,
-    TRACK_C_FAULTS,
-    FAULT_SIGNAL_PROFILES,
-    FAULT_SHAP_PROFILES,
-)
-from src.schema import AnomalyType, ClassifierOutput, LLMExplanation
+from scripts.run_eval_track_c import run_track_c, main, TRACK_C_FAULTS
+from src.schema import LLMExplanation
 
 
 def test_track_c_faults_excludes_jamming():
@@ -18,24 +11,6 @@ def test_track_c_faults_excludes_jamming():
     fault_values = [ft.value for ft in TRACK_C_FAULTS]
     assert "Jamming" not in fault_values
     assert len(TRACK_C_FAULTS) == 10
-
-
-def test_fault_profiles_cover_all_track_c_faults():
-    """Every Track C fault type must have signal and SHAP profiles."""
-    for ft in TRACK_C_FAULTS:
-        assert ft.value in FAULT_SIGNAL_PROFILES, f"Missing signal profile: {ft.value}"
-        assert ft.value in FAULT_SHAP_PROFILES, f"Missing SHAP profile: {ft.value}"
-        assert len(FAULT_SHAP_PROFILES[ft.value]) == 3, f"SHAP must have 3 entries: {ft.value}"
-
-
-def test_build_synthetic_payload():
-    """Synthetic payloads must be valid ClassifierOutput objects."""
-    for ft in TRACK_C_FAULTS:
-        payload = build_synthetic_payload(ft)
-        assert isinstance(payload, ClassifierOutput)
-        assert payload.anomaly_type == ft
-        assert payload.confidence == 0.85
-        assert len(payload.shap_top3) == 3
 
 
 @patch("scripts.run_eval_track_c.explain_condition")

@@ -6,45 +6,36 @@ rag:
   cosine_threshold: 0.35
 
 llm:
-  backend: "gemini"
-  # P1-B AUDIT NOTE: "gemini-3.5-flash-lite" is not listed in Google's public
-  # model catalogue (as of 2026-09). However, the API accepted this name and
-  # completed 90 calls successfully during Track C evaluation. The internal
-  # resolved model identity is unknown without model.get() introspection.
-  # Verified alternatives if this stops working: gemini-2.5-flash-lite,
-  # gemini-1.5-flash-8b, gemini-2.0-flash-lite.
+  backend: "gemini"   # gemini | groq | ollama
+  # Not in Google's public catalogue, but the API accepts it and all Track C runs used it.
+  # Fallbacks if it disappears: gemini-2.5-flash-lite, gemini-2.0-flash-lite.
   gemini_model: "gemini-3.5-flash-lite"
   ollama_model: "llama3.1:8b"
-  ollama_base_url: "http://localhost:11434"  # read by call_llm() for ollama backend
-  groq_model: "llama-3.1-8b-instant"         # free-tier Groq model (was openai/gpt-oss-20b)
+  ollama_base_url: "http://localhost:11434"
+  groq_model: "llama-3.1-8b-instant"
   max_retries: 3
   temperature: 0.1
-  min_request_interval_s: 2.0   # minimum seconds between LLM calls (all backends)
-  backoff_base_s: 5             # base for exponential backoff
-  backoff_max_s: 60             # max wait per retry
+  min_request_interval_s: 2.0   # seconds between LLM calls, all backends
+  backoff_base_s: 5             # exponential backoff on 429 (when no Retry-After)
+  backoff_max_s: 60
 
 data:
   raw_path: "data/raw"
-  processed_path: "data/processed"   # NOTE: not yet wired to any script (reserved)
+  processed_path: "data/processed"
   indices_path: "data/indices"
-  train_idx_file: "train_idx_sessionsplit.npy"
-  test_idx_file: "test_idx_sessionsplit.npy"   # NOTE: test set held out, not indexed
+  train_idx_file: "train_idx_sessionsplit.npy"   # only these windows are indexed
+  test_idx_file: "test_idx_sessionsplit.npy"
   rca_evidence_path: "data/processed/rca_evidence.json"
   window_length: 128
-  n_channels: 18          # NOTE: metadata only, not read by pipeline code
-  n_anomalous: 1235       # NOTE: total anomalous records; 935 are indexed (train split)
-  random_state: 42        # used by run_eval_track_c.py for reproducible sampling
+  n_channels: 18
+  n_anomalous: 1235       # 935 train + 300 test
+  random_state: 42
 
 evaluation:
-  # citation_validity_threshold is read by src/evaluator.py compute_track_b().
-  citation_validity_threshold: 0.70
-  # n_eval_samples / samples_per_fault are defaults documented for Track C runs.
-  # run_eval_track_c.py reads --n-per-fault CLI arg; these keys are informational.
+  citation_validity_threshold: 0.70   # Track B pass mark (pre-registered)
   n_eval_samples: 30
-  samples_per_fault: 3
-  # g_eval_dimensions reserved for future automated G-Eval integration.
-  # Currently human annotation drives these scores; not wired to any script.
-  g_eval_dimensions:
+  samples_per_fault: 3                # default for run_eval_track_c.py --n-per-fault
+  g_eval_dimensions:                  # human-rated, 1-5 each; not automated yet
     - "Citation Validity"
     - "Fault Specificity"
     - "Actionability"

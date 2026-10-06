@@ -14,8 +14,7 @@ except ImportError:
     OpenAI = None  # type: ignore[assignment,misc]
     OpenAIRateLimitError = RateLimitError  # type: ignore[assignment,misc]
 
-# The groq backend goes through the openai client, which raises openai.RateLimitError,
-# a different class from groq.RateLimitError. Catch both.
+# groq is called through the openai client, so its 429 is openai.RateLimitError
 _RATE_LIMIT_ERRORS = (RateLimitError, OpenAIRateLimitError)
 
 try:
@@ -33,23 +32,12 @@ from src.utils import validate_3gpp_ref
 logger = logging.getLogger(__name__)
 
 def load_alignment_table(path: str) -> dict[str, dict]:
-    """Load and normalise the 3GPP alignment table from a JSON file.
+    """Load alignment_table.json as {fault_type: row}.
 
-    The table maps each fault type string (e.g. ``"Antenna Failure"``) to a
-    dict containing normalised fields: ``3gpp_ts`` (primary standard),
-    ``valid_refs`` (every TS/TR the row cites, primary first), ``clause``,
-    ``evidence_span``, and ``oran_component``.  Missing fields are extracted
-    from the raw ``3gpp_reference`` string where possible.
-
-    Parameters
-    ----------
-    path : str
-        Path to ``alignment_table.json``.
-
-    Returns
-    -------
-    dict[str, dict]
-        Mapping of fault_type → normalised alignment entry.
+    Each row keeps its original fields and gains ``3gpp_ts`` (primary
+    standard), ``valid_refs`` (every TS/TR the row cites, primary first),
+    ``clause``, ``evidence_span`` and ``oran_component``, parsed out of the
+    free-text ``3gpp_reference`` when not given explicitly.
     """
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -75,7 +63,7 @@ def load_alignment_table(path: str) -> dict[str, dict]:
                 evidence = entry["clause_text"][:300]
             else:
                 evidence = ""
-        # Every TS/TR the row cites (e.g. CCI Severe: TS 38.141-1 + TS 38.104), primary first.
+        # some rows cite two standards (CCI Severe: TS 38.141-1 + TS 38.104)
         cited = re.findall(r'T[SR]\s+(?:2[1-9]|3[0-8])\.\d{3}(?:-\d+)?', entry.get("3gpp_reference", ""))
         normalized = dict(entry)
         normalized["3gpp_ts"] = ts if ts else ""
@@ -93,16 +81,7 @@ def build_prompt(
     alignment: dict[str, dict],
     rca_context: str = "",
 ) -> str:
-    """Build the full C3 prompt.
-
-    Parameters
-    ----------
-    rca_context : str
-        Optional pre-formatted string from RCALoader.get_prompt_context().
-        When non-empty it is injected between the SHAP summary and the
-        retrieved tickets, giving the LLM window-specific KPI evidence.
-        Pass "" (default) to reproduce the original C3 prompt exactly.
-    """
+    """Full (C3) prompt: label + SHAP, optional RCA evidence block, top-3 tickets, alignment row."""
     shap_lines = []
     for x in payload.shap_top3:
         direction = "above" if "above" in x.feature_vs_normal else "below"
@@ -121,18 +100,13 @@ def build_prompt(
     evidence_span = entry.get("evidence_span", "")
     oran_component = entry.get("oran_component", "")
 
-    # RCA evidence block — only present when rca_context is provided (C3 with evidence)
     rca_block = ""
     if rca_context:
         rca_block = f"\n[EVIDENCE FROM RCA PIPELINE]\n{rca_context}\n"
 
-    # P0-1 AUDIT NOTE: The alignment entry (3gpp_ts, clause, evidence_span) is
-    # injected here and also used by validate_citation() to check the LLM output.
-    # This means C3's citation_valid metric measures: "given the correct standard,
-    # does the LLM incorporate it correctly?" — NOT independent citation retrieval.
-    # The 100% C3 rate quantifies alignment-guided prompting compliance, not the
-    # LLM's intrinsic 3GPP knowledge. C1 (no context, 40%) establishes the true
-    # baseline; the C1→C3 delta (+60pp) is the contribution of the full system.
+    # The same alignment row is used by validate_citation(), so C3's citation
+    # score measures whether the LLM keeps the standard it was given, not
+    # whether it knew it. C1 (no context) is the baseline for that.
     prompt = f"""You are a 5G network fault diagnosis expert.
 
 [FAULT DETECTED]
@@ -165,14 +139,13 @@ Return ONLY a JSON object with exactly these fields:
 
 
 class RateLimiter:
-    """Pre-request rate limiter that enforces a minimum interval between requests."""
+    """Keeps at least min_interval seconds between LLM calls (module-level singleton below)."""
 
     def __init__(self, min_interval: float = 2.0):
         self.min_interval = float(min_interval)
         self.last_call_time = 0.0
 
     def wait(self) -> None:
-        """Sleep if necessary to ensure min_interval seconds since last call."""
         now = time.time()
         if self.last_call_time > 0:
             elapsed = now - self.last_call_time
@@ -185,7 +158,7 @@ _default_rate_limiter = RateLimiter(min_interval=2.0)
 
 
 def _extract_retry_after(e: Exception) -> float | None:
-    """Extract retry-after seconds from exception headers or message if available."""
+    """Retry-After seconds from the error's headers or message ('retry in 12s'), else None."""
     headers = None
     if hasattr(e, "response") and hasattr(e.response, "headers"):
         headers = e.response.headers
@@ -200,7 +173,6 @@ def _extract_retry_after(e: Exception) -> float | None:
                 except (ValueError, TypeError):
                     pass
 
-    # Check for text like 'retry after 12s' or 'retry in 12s' in error string
     err_str = str(e)
     match = re.search(r"retry\s+(?:after|in)\s+(\d+(?:\.\d+)?)\s*s?", err_str, re.IGNORECASE)
     if match:
@@ -213,7 +185,7 @@ def _extract_retry_after(e: Exception) -> float | None:
 
 
 def call_gemini(prompt: str, cfg: dict) -> str:
-    """Call Gemini via the modern google-genai SDK (v2.x)."""
+    """One Gemini call via google-genai."""
     if google_genai is None:
         raise RuntimeError("google-genai package is not installed")
     api_key = os.environ.get("GEMINI_API_KEY", "")
@@ -222,14 +194,13 @@ def call_gemini(prompt: str, cfg: dict) -> str:
     client = google_genai.Client(api_key=api_key)
     model_name = cfg["llm"].get("gemini_model", "gemini-3.5-flash-lite")
     temperature = cfg["llm"].get("temperature", 0.1)
-    # One API call only. Retry/backoff is handled by _run_with_retry(); the shared
-    # rate limiter is applied once per attempt in call_llm().
+    # One call; retries live in _run_with_retry().
     response = client.models.generate_content(
         model=model_name,
         contents=prompt,
         config=google_genai_types.GenerateContentConfig(
             temperature=temperature,
-            response_mime_type="application/json",   # native JSON mode; parse_response still strips fences
+            response_mime_type="application/json",
         ),
     )
     result = response.text or ""
@@ -238,7 +209,7 @@ def call_gemini(prompt: str, cfg: dict) -> str:
 
 
 def _is_rate_limit(e: Exception) -> bool:
-    """True if *e* is a 429 / quota error from any backend (groq, openai, gemini)."""
+    """429 / quota error from any backend?"""
     return (
         isinstance(e, _RATE_LIMIT_ERRORS)
         or getattr(e, "status_code", None) == 429
@@ -248,7 +219,7 @@ def _is_rate_limit(e: Exception) -> bool:
 
 
 def _backoff_wait(e: Exception, attempt: int, cfg: dict) -> float:
-    """Seconds to wait before retrying: server Retry-After if given, else exponential + jitter."""
+    """Server's Retry-After if it sent one, else exponential backoff with jitter."""
     retry_after = _extract_retry_after(e)
     if retry_after is not None:
         return retry_after
@@ -258,19 +229,8 @@ def _backoff_wait(e: Exception, attempt: int, cfg: dict) -> float:
 
 
 def call_llm(prompt: str, cfg: dict) -> str:
-    """Dispatch a prompt to the configured LLM backend and return raw text.
-
-    Backends: ``ollama`` (local), ``groq`` (cloud via OpenAI-compat API),
-    ``gemini`` (Google Generative AI).  Applies the shared rate limiter
-    before every call so that all backends respect ``min_request_interval_s``.
-
-    Raises
-    ------
-    RuntimeError
-        If the ``groq`` backend is selected but the ``openai`` package is not
-        installed, or if an unknown backend name is encountered.
-    """
-    # Apply the shared rate limiter for ALL backends (not only Gemini).
+    """Send one prompt to the configured backend (ollama / groq / gemini) and return the raw text."""
+    # Shared rate limiter, so every backend respects min_request_interval_s.
     _default_rate_limiter.min_interval = cfg.get("llm", {}).get(
         "min_request_interval_s", 2.0
     )
@@ -284,8 +244,7 @@ def call_llm(prompt: str, cfg: dict) -> str:
             "model": cfg["llm"]["ollama_model"],
             "prompt": prompt,
             "stream": False,
-            # Ollama only reads sampling params from "options"; a top-level key is ignored.
-            "options": {"temperature": cfg["llm"]["temperature"]},
+            "options": {"temperature": cfg["llm"]["temperature"]},   # top-level temperature is ignored by Ollama
         }
         resp = requests.post(url, json=payload, timeout=120)
         resp.raise_for_status()
@@ -316,22 +275,11 @@ def call_llm(prompt: str, cfg: dict) -> str:
         raise RuntimeError(f"Unknown LLM backend: {backend}")
 
 def parse_response(raw: str) -> dict:
-    """Extract and validate the JSON payload from a raw LLM response string.
+    """Parse the LLM's JSON (bare or inside a ```json fence).
 
-    Handles two formats:
-    - Bare JSON string.
-    - JSON wrapped in a ``\`\`\`json ... \`\`\`` markdown code block.
-
-    Returns the parsed dict with ``3gpp_reference`` renamed to
-    ``gpp_reference`` (to match ``LLMExplanation`` field name) and the TS
-    number normalised to ``T[SR] XX.XXX`` format when detected.
-
-    Raises
-    ------
-    ValueError
-        If no valid JSON is found, or the JSON is missing any of the five
-        required keys: ``root_cause``, ``3gpp_reference``, ``oran_component``,
-        ``recommended_action``, ``reasoning_trace``.
+    Renames ``3gpp_reference`` to ``gpp_reference`` (not a valid Python
+    field name) and normalises it to ``TS/TR XX.XXX``. Raises ValueError if
+    there is no JSON or any of the five fields is missing.
     """
     match = re.search(r'```json\s*(.*?)\s*```', raw, re.DOTALL)
     if match:
@@ -354,35 +302,11 @@ def parse_response(raw: str) -> dict:
     return parsed
 
 def validate_citation(ref: str, alignment: dict[str, dict], fault_type: str = None) -> bool:
-    """Check that a 3GPP reference string is both well-formed and in the alignment table.
+    """True if ``ref`` is a well-formed TS/TR number AND is cited in the fault's row.
 
-    Two checks are applied:
-    - **Check 1 (format):** ``ref`` matches the ``TS XX.XXX`` / ``TR XX.XXX``
-      regex defined in :func:`~src.utils.validate_3gpp_ref`.
-    - **Check 2 (table lookup):** When ``fault_type`` is provided, ``ref``
-      must exactly match one of the standards cited in that fault's row
-      (``valid_refs``).  When ``fault_type`` is ``None``, ``ref`` must be
-      some row's primary standard.
-
-    Both checks must pass for ``True`` to be returned.
-
-    Parameters
-    ----------
-    ref : str
-        The reference string extracted from the LLM response (e.g.
-        ``"TS 38.141-1"``).
-    alignment : dict[str, dict]
-        Loaded alignment table (from :func:`load_alignment_table`).
-    fault_type : str or None
-        The predicted fault type; enables fault-specific lookup when provided.
-
-    Returns
-    -------
-    bool
-        ``True`` only if the reference passes both the format regex and the
-        alignment-table lookup.
+    With ``fault_type`` the row's ``valid_refs`` are used (primary + secondary
+    standards); without it, any row's primary standard counts.
     """
-
     try:
         check1 = bool(validate_3gpp_ref(ref))
     except Exception:
@@ -420,7 +344,7 @@ def _run_with_retry(
     payload: ClassifierOutput,
     alignment: dict[str, dict],
 ) -> LLMExplanation:
-    """The single retry loop: up to max_retries LLM calls (backing off on 429s), then template fallback."""
+    """Up to max_retries LLM calls (waiting on 429s), then the template fallback."""
     max_retries = cfg["llm"]["max_retries"]
     for attempt in range(max_retries):
         try:
@@ -452,34 +376,18 @@ def explain_from_rca(
     cfg: dict,
     rca_context: str = "",
 ) -> LLMExplanation:
-    """High-level convenience wrapper for demo / evaluation scripts.
+    """Explain one rca_evidence window end to end.
 
-    Builds a ClassifierOutput from the rca_evidence record for *window_index*,
-    retrieves ChromaDB tickets, loads the alignment table, then delegates to
-    explain_condition().
-
-    Parameters
-    ----------
-    window_index : int
-        Window to explain.
-    fault_type : str
-        Predicted fault label (from rca_evidence['predicted_fault']).
-    condition : str | int
-        Ablation condition — 'C1'/'C2'/'C3' or 1/2/3.
-    cfg : dict
-        Loaded config dict.
-    rca_context : str
-        Pre-formatted RCA evidence string from RCALoader.get_prompt_context().
-        Only injected for condition 3/C3.
+    Builds the ClassifierOutput from the record, retrieves tickets (C2/C3),
+    loads the alignment table and calls explain_condition(). ``condition``
+    may be 1/2/3 or "C1"/"C2"/"C3"; ``rca_context`` is only used for C3.
     """
-    # Normalise condition to int
     _cond_map = {"C1": 1, "C2": 2, "C3": 3}
     if isinstance(condition, str):
         cond_int = _cond_map.get(condition.upper(), int(condition.lstrip("Cc")))
     else:
         cond_int = int(condition)
 
-    # Build ClassifierOutput from rca_evidence data
     from src.rca_loader import RCALoader
     rca_evidence_path = cfg.get("data", {}).get(
         "rca_evidence_path", "data/processed/rca_evidence.json"
@@ -491,10 +399,8 @@ def explain_from_rca(
 
     from src.schema import AnomalyType, ClassifierOutput, SHAPEntry
     layer_b = record.get("layer_b_model_attribution", [])
-    # Top-3 SHAP entries (sorted by |shap_value| desc) → SHAPEntry objects
     top3_raw = sorted(layer_b, key=lambda x: abs(x.get("shap_value", 0)), reverse=True)[:3]
-    # Pad to exactly 3 if fewer features are present
-    while len(top3_raw) < 3:
+    while len(top3_raw) < 3:   # schema wants exactly three
         top3_raw.append(
             {"channel": "N/A", "feature": "N/A", "shap_value": 0.0, "feature_vs_normal": "above_normal_mean"}
         )
@@ -516,7 +422,6 @@ def explain_from_rca(
     try:
         anomaly_type = AnomalyType(fault_type)
     except ValueError:
-        # Fallback: match case-insensitively
         matched = next(
             (at for at in AnomalyType if at.value.lower() == fault_type.lower()), None
         )
@@ -531,7 +436,6 @@ def explain_from_rca(
         signal_statistics=signal_statistics,
     )
 
-    # Retrieve ChromaDB tickets (used for C2/C3)
     tickets: list[RetrievedTicket] = []
     if cond_int in (2, 3):
         try:
@@ -562,22 +466,14 @@ def explain(
     condition: "str | int | None" = None,
     rca_context: str = "",
 ) -> LLMExplanation:
-    """Flexible entry-point for LLM explanation generation.
+    """Generate an explanation.
 
-    Supports two calling conventions:
-
-    **Legacy (positional) — used by existing tests and scripts:**
-        explain(payload, tickets, cfg, alignment)
-
-    **New-style (keyword) — used by Step 6 demo and evaluation scripts:**
-        explain(window_index=5, fault_type="Jamming", condition="C3",
-                cfg=cfg, rca_context=rca_context)
-
-    When ``window_index`` is provided the call is delegated to
-    ``explain_from_rca()`` which builds the full pipeline internally.
+    Two ways to call it:
+        explain(payload, tickets, cfg, alignment)            # full C3 prompt
+        explain(window_index=5, fault_type=..., condition="C3", cfg=cfg)
+    The second form builds payload and tickets itself via explain_from_rca().
     """
     if window_index is not None:
-        # New-style call: delegate to explain_from_rca
         if cfg is None:
             raise ValueError("cfg is required when using window_index")
         if fault_type is None:
@@ -592,7 +488,6 @@ def explain(
             rca_context=rca_context,
         )
 
-    # Legacy positional call
     if payload is None or tickets is None or cfg is None or alignment is None:
         raise ValueError(
             "explain() requires either (payload, tickets, cfg, alignment) "
@@ -603,7 +498,7 @@ def explain(
 
 
 def _build_shap_summary(payload: ClassifierOutput) -> str:
-    """Shared helper to format SHAP lines for prompts."""
+    """SHAP lines for the prompts: 'RSRP: below normal (SHAP=-0.42)'."""
     shap_lines = []
     for x in payload.shap_top3:
         direction = "above" if "above" in x.feature_vs_normal else "below"
@@ -678,20 +573,7 @@ def explain_condition(
     condition: int,
     rca_context: str = "",
 ) -> LLMExplanation:
-    """Generate explanation using one of 3 ablation conditions.
-
-    condition 1 -> label + SHAP only (no tickets, no alignment table)
-    condition 2 -> label + SHAP + tickets (no alignment table)
-    condition 3 -> full system (tickets + alignment table + rca_context)
-
-    Parameters
-    ----------
-    rca_context : str
-        Window-specific RCA evidence string from RCALoader.get_prompt_context().
-        Only used for condition 3; ignored for conditions 1 and 2.
-
-    Raises ValueError if condition not in {1, 2, 3}.
-    """
+    """Track C ablation: 1 = label + SHAP, 2 = + tickets, 3 = + alignment row + rca_context."""
     if condition not in (1, 2, 3):
         raise ValueError(f"condition must be 1, 2, or 3, got {condition}")
     if condition == 1:
@@ -699,6 +581,5 @@ def explain_condition(
     elif condition == 2:
         prompt = build_prompt_condition2(payload, tickets)
     else:
-        # C3: full system including RCA evidence when available
         prompt = build_prompt(payload, tickets, alignment, rca_context=rca_context)
     return _run_with_retry(prompt, cfg, payload, alignment)

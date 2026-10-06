@@ -30,7 +30,7 @@ def alignment():
     return load_alignment_table("configs/alignment_table.json")
 
 
-# ─── TEST 1: Alignment table completeness ──────────────────────────────────────
+# TEST 1: Alignment table completeness
 def test_alignment_all_10_faults_resolve(alignment):
     """All 10 non-Jamming faults have valid entries with required fields."""
     for fault in AnomalyType:
@@ -42,13 +42,13 @@ def test_alignment_all_10_faults_resolve(alignment):
         assert entry.get("3gpp_ts"), f"Empty 3gpp_ts for {fault.value}"
         assert entry.get("clause"), f"Empty clause for {fault.value}"
         assert entry.get("oran_component"), f"Empty oran_component for {fault.value}"
-        # Rodina's rich fields must be preserved by load_alignment_table()
+        # original row fields must survive load_alignment_table()
         assert "causal_mechanism" in entry, (
             f"causal_mechanism missing for {fault.value}"
         )
 
 
-# ─── TEST 2: RAG retrieval — all 11 fault types ────────────────────────────────
+# TEST 2: RAG retrieval — all 11 fault types
 def test_retrieval_all_11_faults(all_payloads, collection, cfg):
     """Real ChromaDB retrieval for all 11 fault types must not crash."""
     results = {}
@@ -79,7 +79,7 @@ def test_retrieval_all_11_faults(all_payloads, collection, cfg):
         )
 
 
-# ─── TEST 3: Full explain — Antenna Failure ────────────────────────────────────
+# TEST 3: Full explain — Antenna Failure
 def test_full_explain_antenna_failure(collection, cfg, alignment):
     """Full pipeline with real LLM — Antenna Failure."""
     if not HAS_GROQ:
@@ -119,9 +119,9 @@ def test_full_explain_antenna_failure(collection, cfg, alignment):
     print(f"    template:   {result.template_generated}")
 
 
-# ─── TEST 4: Citation validity across 5 fault types ────────────────────────────
+# TEST 4: Citation validity across 5 fault types
 def test_citation_validity_5_faults(all_payloads, collection, cfg, alignment):
-    """Citation valid rate >= 60% across 5 fault types with Rodina's alignment table."""
+    """Citation valid rate >= 60% across 5 fault types."""
     if not HAS_GROQ:
         pytest.skip("GROQ_API_KEY not set")
 
@@ -161,7 +161,7 @@ def test_citation_validity_5_faults(all_payloads, collection, cfg, alignment):
     )
 
 
-# ─── TEST 5: Jamming — no alignment entry ──────────────────────────────────────
+# TEST 5: Jamming — no alignment entry
 def test_jamming_no_alignment_entry(all_payloads, collection, cfg, alignment):
     """Jamming has no alignment entry — pipeline must not crash; reference_valid=False is correct."""
     if not HAS_GROQ:
