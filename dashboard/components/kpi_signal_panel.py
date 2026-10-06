@@ -9,7 +9,9 @@ def render_kpi_signal_panel(
         st.info("No signal data available")
         return
         
-    st.subheader("KPI Signal Window (128 timesteps @ 10ms)")
+    # Only window-level statistics reach Layer 3, so this shows mean ± std bands,
+    # not the raw 128-sample time series.
+    st.subheader(f"KPI Window Statistics (mean ± std over {window_length} timesteps @ 10ms)")
     
     # signal_statistics is now flat: {"RSRP_mean": -77.6, "RSRP_std": 0.78, ...}
     # Collect unique channel names by stripping trailing _mean/_std/_min/_max
