@@ -293,6 +293,16 @@ def test_validate_citation_accepts_secondary_ts_in_same_row(alignment):
     assert alignment["Doppler Shift (Severe)"]["valid_refs"] == ["TR 38.901"]   # deduplicated
 
 
+@patch("src.llm_explainer.requests.post")
+def test_call_llm_ollama_puts_temperature_in_options(mock_post, cfg):
+    """Ollama ignores a top-level temperature; it must be sent under 'options'."""
+    mock_post.return_value = MagicMock(json=lambda: {"response": "{}"}, raise_for_status=lambda: None)
+    call_llm("p", {"llm": {**cfg["llm"], "min_request_interval_s": 0.0}})
+    body = mock_post.call_args.kwargs["json"]
+    assert body["options"] == {"temperature": cfg["llm"]["temperature"]}
+    assert "temperature" not in body
+
+
 def test_rate_limiter_timing():
     import time
     limiter = RateLimiter(min_interval=0.1)
