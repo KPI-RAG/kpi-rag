@@ -1,14 +1,9 @@
 import logging
-from functools import lru_cache
 import chromadb
-from sentence_transformers import SentenceTransformer
+from src.kg_indexer import get_model as _get_model
 from src.schema import ClassifierOutput, RetrievedTicket
 
 logger = logging.getLogger(__name__)
-
-@lru_cache(maxsize=4)
-def _get_model(model_name: str) -> SentenceTransformer:
-    return SentenceTransformer(model_name)
 
 def build_query(payload: ClassifierOutput) -> str:
     """Build a text query for the RAG system from a ClassifierOutput payload.

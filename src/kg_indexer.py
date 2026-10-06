@@ -1,8 +1,15 @@
 import logging
+from functools import lru_cache
 import chromadb
 from sentence_transformers import SentenceTransformer
 
 logger = logging.getLogger(__name__)
+
+
+@lru_cache(maxsize=4)
+def get_model(model_name: str) -> SentenceTransformer:
+    """One SentenceTransformer per model name for the whole process (indexing and querying)."""
+    return SentenceTransformer(model_name)
 
 def get_collection(cfg: dict) -> chromadb.Collection:
     """Return (or create) the ChromaDB collection specified in the config.
@@ -61,8 +68,8 @@ def embed_tickets(tickets: list[dict], model_name: str) -> tuple[list[str], list
         Ticket ID strings used as unique identifiers in ChromaDB.
     """
     logger.info("Embedding %d tickets using model %s", len(tickets), model_name)
-    model = SentenceTransformer(model_name)
-    
+    model = get_model(model_name)
+
     documents = []
     metadatas = []
     ids = []
