@@ -34,13 +34,13 @@ Classifier → SHAP top-3 KPIs
                  ↓
            ChromaDB retrieval (similar tickets)
                  ↓
-           Alignment table (3GPP TS → fault mapping)
+           Alignment table (3GPP TS → fault mapping) + RCA evidence (per window)
                  ↓
            LLM (Gemini / Groq / Ollama) → structured explanation
                  ↓
            Citation validation (TS XX.XXX format + table lookup)
                  ↓
-           Streamlit dashboard (5 panels)
+           Streamlit dashboard (6 panels)
 ```
 
 ## Quick Start
@@ -49,7 +49,7 @@ Classifier → SHAP top-3 KPIs
 
 - Python ≥ 3.10
 - [uv](https://docs.astral.sh/uv/) package manager
-- [Groq API key](https://console.groq.com/) (free tier works)
+- [Gemini API key](https://aistudio.google.com/apikey) (free tier works; Groq is an optional fallback backend)
 
 ### 1. Clone and install
 
@@ -64,10 +64,10 @@ uv sync
 ```bash
 # PowerShell
 cp .env.example .env
-# Edit .env and add your GROQ_API_KEY
+# Edit .env and add your GEMINI_API_KEY
 
 # Or set directly:
-$env:GROQ_API_KEY="gsk_..."
+$env:GEMINI_API_KEY="..."
 $env:PYTHONPATH="."
 ```
 
@@ -98,7 +98,7 @@ uv run python scripts/run_pipeline.py
 
 ```bash
 $env:PYTHONPATH="."
-$env:GROQ_API_KEY="gsk_..."
+$env:GEMINI_API_KEY="..."
 uv run streamlit run dashboard/app.py --server.fileWatcherType none
 ```
 
@@ -157,7 +157,7 @@ Output files:
 uv run pytest tests/ -v
 ```
 
-16 test modules covering schema validation, RAG query, LLM explainer, evaluator, Track B/C scripts, and all 5 dashboard panels.
+16 unit test modules (83 tests) and 8 integration modules (37 tests; 3 skip without `GROQ_API_KEY`) covering schema validation, RAG query, LLM explainer, evaluator, Track B/C scripts, and all 6 dashboard panels.
 
 ## Project Structure
 
@@ -165,14 +165,15 @@ uv run pytest tests/ -v
 project/
 ├── configs/
 │   ├── config.yaml              # RAG, LLM, data, eval settings
-│   └── alignment_table.json     # 10-row fault→3GPP mapping (DRAFT)
+│   └── alignment_table.json     # 10-row fault→3GPP mapping (v1.0)
 ├── src/
 │   ├── schema.py                # Pydantic models (11 fault types)
 │   ├── config_loader.py         # YAML config loader
 │   ├── data_loader.py           # TelecomTS JSONL loader
 │   ├── kg_indexer.py            # ChromaDB indexing
 │   ├── rag_query.py             # Cosine similarity retrieval
-│   ├── llm_explainer.py         # Groq/Ollama LLM + 3-condition prompts
+│   ├── rca_loader.py            # RCA evidence lookup by window_index
+│   ├── llm_explainer.py         # Gemini/Groq/Ollama LLM, 3-condition prompts, citation validation
 │   ├── evaluator.py             # G-Eval scoring + Track B/C metrics
 │   └── utils.py                 # Logging, 3GPP ref validation
 ├── scripts/
@@ -182,16 +183,14 @@ project/
 │   └── run_eval_track_c.py      # Track C ablation CLI
 ├── dashboard/
 │   ├── app.py                   # Streamlit main app
-│   └── components/              # 5 dashboard panels
-├── tests/                       # 16 test modules
+│   └── components/              # 6 dashboard panels
+├── tests/                       # 16 unit + 8 integration test modules
 ├── data/
 │   ├── raw/                     # TelecomTS JSONL (gitignored)
-│   ├── chroma_db/               # ChromaDB store (gitignored)
-│   └── processed/               # Evaluation outputs
-├── configs/config.yaml
+│   ├── chroma_db/               # ChromaDB store (committed — Streamlit Cloud has no raw data to rebuild it)
+│   └── processed/               # RCA evidence, layer-2 outputs, evaluation outputs
 ├── pyproject.toml
-├── .env.example
-└── context.md                   # Development state tracking
+└── .env.example
 ```
 
 ## Configuration
@@ -203,9 +202,11 @@ Key settings in `configs/config.yaml`:
 | `rag.embedding_model` | `all-MiniLM-L6-v2` | Sentence-BERT |
 | `rag.cosine_threshold` | `0.35` | Provisional — calibrate Week 9 |
 | `rag.top_k` | `5` | Retrieved tickets per query |
-| `llm.backend` | `groq` | Also supports `ollama` |
-| `llm.groq_model` | `llama-3.1-8b-instant` | Free tier compatible |
-| `llm.max_retries` | `2` | Template fallback after failures |
+| `llm.backend` | `gemini` | Also supports `groq`, `ollama` |
+| `llm.gemini_model` | `gemini-3.5-flash-lite` | Free tier: 15 requests/min |
+| `llm.groq_model` | `llama-3.1-8b-instant` | Fallback backend |
+| `llm.max_retries` | `3` | Waits on 429s (server Retry-After, else exponential backoff); template fallback after the last attempt |
+| `llm.min_request_interval_s` | `2.0` | Minimum gap between LLM calls (all backends) |
 
 ## Fault Types
 
