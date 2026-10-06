@@ -187,9 +187,14 @@ project/
 ├── tests/                       # 16 unit + 8 integration test modules
 ├── data/
 │   ├── raw/                     # TelecomTS JSONL (gitignored)
+│   ├── indices/                 # train/test window indices (gitignored)
 │   ├── chroma_db/               # ChromaDB store (committed — Streamlit Cloud has no raw data to rebuild it)
-│   └── processed/               # RCA evidence, layer-2 outputs, evaluation outputs
-├── pyproject.toml
+│   └── processed/               # RCA evidence, layer-2 outputs, Track C outputs
+├── docs/
+│   ├── KPI-RAG_Proposal_Group_15.pdf
+│   └── REVIEW_2026-10-06.md     # end-to-end code/eval review with evidence
+├── pyproject.toml / uv.lock     # dev environment (uv)
+├── requirements.txt             # pinned install for Streamlit Cloud
 └── .env.example
 ```
 

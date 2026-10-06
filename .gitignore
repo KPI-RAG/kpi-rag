@@ -37,3 +37,9 @@ test_colors.py
 # ── OS / editor ───────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+
+# ── Not part of the submission ────────────────────────────────────────────────
+.claude/
+.codegraph
+Graduation_Project_Full_History.md
+notebooks/
