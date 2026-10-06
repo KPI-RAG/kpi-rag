@@ -55,7 +55,8 @@ def score_explanation(
     citation_validity: float,
     fault_specificity: float,
     actionability: float,
-    causal_soundness: float
+    causal_soundness: float,
+    alignment: dict[str, dict] | None = None,
 ) -> GEvalScore:
     """
     Validate G-Eval dimension scores and construct a ``GEvalScore`` record.
@@ -90,6 +91,10 @@ def score_explanation(
     causal_soundness : float
         G-Eval score (1–5) measuring the logical correctness of the causal
         chain presented in the explanation.
+    alignment : dict[str, dict] | None
+        Loaded alignment table. When given, ``reference_valid`` uses the same
+        fault-specific check as Track C (:func:`validate_citation`); when
+        ``None`` only the ``TS/TR XX.XXX`` format is checked.
 
     Returns
     -------
@@ -108,7 +113,11 @@ def score_explanation(
             raise ValueError(f"Score {val} outside 1-5 range")
             
     try:
-        ref_valid = bool(validate_3gpp_ref(explanation.gpp_reference))
+        if alignment is not None:
+            from src.llm_explainer import validate_citation
+            ref_valid = validate_citation(explanation.gpp_reference, alignment, fault_type)
+        else:
+            ref_valid = bool(validate_3gpp_ref(explanation.gpp_reference))
     except Exception:
         ref_valid = False
         

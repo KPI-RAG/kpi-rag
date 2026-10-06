@@ -48,6 +48,18 @@ def test_score_explanation():
     with pytest.raises(ValueError):
         score_explanation(expl, "3", 1, "Antenna Failure", 6.0, 4.0, 5.0, 2.0)
 
+
+def test_score_explanation_fault_specific_with_alignment():
+    """With an alignment table, a well-formed but wrong-fault spec is invalid (same rule as Track C)."""
+    from src.llm_explainer import load_alignment_table
+    alignment = load_alignment_table("configs/alignment_table.json")
+    wrong = score_explanation(create_mock_explanation("TS 38.104"), "1", 3, "Antenna Failure",
+                              3.0, 3.0, 3.0, 3.0, alignment=alignment)
+    right = score_explanation(create_mock_explanation("TS 38.141-1"), "2", 3, "Antenna Failure",
+                              3.0, 3.0, 3.0, 3.0, alignment=alignment)
+    assert wrong.reference_valid is False
+    assert right.reference_valid is True
+
 def test_compute_track_b(synth_scores):
     res = compute_track_b(synth_scores)
     assert isinstance(res, TrackBResults)
