@@ -1,0 +1,39 @@
+{
+  "flagged": 382,
+  "flagged_idle": 50,
+  "flagged_idle_true_faults": 5,
+  "flagged_idle_false_alarms": 45,
+  "flagged_nonidle_true_faults": 261,
+  "flagged_nonidle_false_alarms": 71,
+  "idle_true_faults_by_type": {
+    "Co-Channel Interference (Mild)": 5
+  },
+  "idle_by_test_session": {
+    "1": {
+      "flagged": 94,
+      "flagged_idle": 0
+    },
+    "3": {
+      "flagged": 44,
+      "flagged_idle": 21
+    },
+    "4": {
+      "flagged": 72,
+      "flagged_idle": 24
+    },
+    "13": {
+      "flagged": 54,
+      "flagged_idle": 5
+    },
+    "17": {
+      "flagged": 118,
+      "flagged_idle": 0
+    }
+  },
+  "ece": {
+    "oof_raw": 0.199,
+    "oof_cal": 0.0,
+    "test_raw": 0.1326,
+    "test_cal": 0.0178
+  }
+}

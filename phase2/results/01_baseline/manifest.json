@@ -1,0 +1,45 @@
+{
+  "versions": {
+    "python": "3.12.13",
+    "numpy": "2.4.6",
+    "pandas": "3.0.3",
+    "scikit-learn": "1.9.0",
+    "catboost": "1.2.10",
+    "scipy": "1.17.1"
+  },
+  "files": {
+    "Models Improvement/Data Splits/train_X_sessionsplit_fixed.npy": {
+      "sha256": "7902d9bf979d310d594227dbd2012f0ee14411278c902320380fe0fff0bc8c36",
+      "bytes": 13152384
+    },
+    "Models Improvement/Data Splits/train_y_sessionsplit.npy": {
+      "sha256": "9b162bb5e46e4ad9cf0fa01a8ea76e851e9c82ef9b56da9491e62710dd519c77",
+      "bytes": 249135
+    },
+    "Models Improvement/Data Splits/train_idx_sessionsplit.npy": {
+      "sha256": "e89974c5828cb708d571319651dc8f5b956cffcc70b37ebf77a41c350caa910d",
+      "bytes": 205632
+    },
+    "Models Improvement/Data Splits/test_idx_sessionsplit.npy": {
+      "sha256": "322582c6cc566b415879b92a47b79709a316e55b96f150bd17140beb4f7dd619",
+      "bytes": 50624
+    },
+    "Models Improvement/Data Splits/session_id_by_row.npy": {
+      "sha256": "2973974a7afbdd8a5d57376a81663e0ededf074e63b64ee6293c233ffbcef79b",
+      "bytes": 256128
+    },
+    "Models Improvement/Synthetic/raw_meta.csv": {
+      "sha256": "170ca9ee3eef75edfa91bdb4576b3725902cd220b1c8dd763f2038b5e23a0359",
+      "bytes": 591259
+    },
+    "Models Improvement/Synthetic/raw_kpis.npy": {
+      "sha256": "b962e756928f43e6a29c643a8f07f73fa6919207bd828b30bdb85c87b29754f9",
+      "bytes": 262144128
+    }
+  },
+  "baseline": {
+    "f1_macro_mean": 0.2908,
+    "f1_macro_std": 0.0902,
+    "reproduced": true
+  }
+}

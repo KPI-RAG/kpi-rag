@@ -1,0 +1,38 @@
+# 12b_pair_specialist  |  2026-10-15 09:46 UTC  |  python 3.12.13 on jupyter-farida-gaber44
+  seed=42    fold=1  macro-F1 0.342 -> 0.342  pair-F1 0.234 -> 0.234  HNC->BO 9/11 -> 9/11  (65s)
+  seed=42    fold=2  macro-F1 0.372 -> 0.335  pair-F1 0.441 -> 0.406  HNC->BO 6/6 -> 6/6  (65s)
+  seed=42    fold=3  macro-F1 0.434 -> 0.434  pair-F1 0.262 -> 0.262  HNC->BO 29/39 -> 29/39  (64s)
+  seed=42    fold=4  macro-F1 0.260 -> 0.225  pair-F1 0.276 -> 0.087  HNC->BO 0/0 -> 0/0  (63s)
+  seed=42    fold=5  macro-F1 0.506 -> 0.496  pair-F1 0.277 -> 0.225  HNC->BO 0/0 -> 0/0  (65s)
+  seed=7     fold=1  macro-F1 0.346 -> 0.346  pair-F1 0.238 -> 0.238  HNC->BO 10/11 -> 10/11  (66s)
+  seed=7     fold=2  macro-F1 0.360 -> 0.360  pair-F1 0.429 -> 0.429  HNC->BO 6/6 -> 6/6  (66s)
+  seed=7     fold=3  macro-F1 0.425 -> 0.425  pair-F1 0.281 -> 0.281  HNC->BO 27/39 -> 27/39  (63s)
+  seed=7     fold=4  macro-F1 0.253 -> 0.229  pair-F1 0.382 -> 0.250  HNC->BO 0/0 -> 0/0  (66s)
+  seed=7     fold=5  macro-F1 0.575 -> 0.559  pair-F1 0.277 -> 0.200  HNC->BO 0/0 -> 0/0  (66s)
+  seed=123   fold=1  macro-F1 0.332 -> 0.331  pair-F1 0.231 -> 0.222  HNC->BO 10/11 -> 10/11  (65s)
+  seed=123   fold=2  macro-F1 0.394 -> 0.396  pair-F1 0.443 -> 0.451  HNC->BO 6/6 -> 6/6  (65s)
+  seed=123   fold=3  macro-F1 0.399 -> 0.399  pair-F1 0.257 -> 0.257  HNC->BO 32/39 -> 32/39  (64s)
+  seed=123   fold=4  macro-F1 0.253 -> 0.194  pair-F1 0.323 -> 0.000  HNC->BO 0/0 -> 0/0  (65s)
+  seed=123   fold=5  macro-F1 0.581 -> 0.584  pair-F1 0.250 -> 0.268  HNC->BO 0/0 -> 0/0  (66s)
+  seed=2024  fold=1  macro-F1 0.373 -> 0.375  pair-F1 0.221 -> 0.227  HNC->BO 11/11 -> 11/11  (65s)
+  seed=2024  fold=2  macro-F1 0.337 -> 0.337  pair-F1 0.441 -> 0.441  HNC->BO 6/6 -> 6/6  (65s)
+  seed=2024  fold=3  macro-F1 0.399 -> 0.399  pair-F1 0.233 -> 0.233  HNC->BO 35/39 -> 35/39  (63s)
+  seed=2024  fold=4  macro-F1 0.244 -> 0.193  pair-F1 0.276 -> 0.000  HNC->BO 0/0 -> 0/0  (65s)
+  seed=2024  fold=5  macro-F1 0.571 -> 0.568  pair-F1 0.233 -> 0.216  HNC->BO 0/0 -> 0/0  (65s)
+  seed=99    fold=1  macro-F1 0.388 -> 0.407  pair-F1 0.238 -> 0.341  HNC->BO 10/11 -> 8/11  (64s)
+  seed=99    fold=2  macro-F1 0.334 -> 0.336  pair-F1 0.420 -> 0.429  HNC->BO 6/6 -> 6/6  (66s)
+  seed=99    fold=3  macro-F1 0.434 -> 0.434  pair-F1 0.262 -> 0.262  HNC->BO 29/39 -> 29/39  (65s)
+  seed=99    fold=4  macro-F1 0.222 -> 0.177  pair-F1 0.250 -> 0.000  HNC->BO 0/0 -> 0/0  (65s)
+  seed=99    fold=5  macro-F1 0.586 -> 0.574  pair-F1 0.279 -> 0.216  HNC->BO 0/0 -> 0/0  (68s)
+
+== Mean over 25 folds ==
+  macro_f1  main 0.3888 -> specialist 0.3782  (better in 5/25 folds)
+  pair_f1   main 0.2981 -> specialist 0.2470  (better in 5/25 folds)
+  HNC-G predicted as BO: 232/280 -> 230/280 (pooled)
+
+== POST-HOC held-out sessions ==
+  main:       macro-F1 0.5908  acc 0.7033  pair-F1 0.305  HNC->BO 30/37
+  specialist: macro-F1 0.5895  acc 0.7000  pair-F1 0.298  HNC->BO 30/37
+
+Decision rule: CV consistent = False, holds on test = False -> not adopted
+saved results/12b_pair_specialist/results.json

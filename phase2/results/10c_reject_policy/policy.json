@@ -1,0 +1,4 @@
+{
+  "reject_tau": 0.9,
+  "rule": "reject iff P(Normal) >= tau; chosen on CV (<= 10 % faults rejected, F1 within 2 SD, best F1)"
+}

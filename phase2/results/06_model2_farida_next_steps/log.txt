@@ -1,0 +1,49 @@
+# 06_model2_farida_next_steps  |  2026-10-13 10:08 UTC  |  python 3.12.13 on jupyter-farida-gaber44
+fault order (fixes the RNG sequence): ['Co-Channel Interference (Mild)', 'Co-Channel Interference (Severe)', 'Buffer Overflow (Gradual Buildup)', 'Antenna Failure', 'Faulty RF Filters (Temporal)', 'High Network Congestion (Gradual Buildup)', 'Doppler Shift (Severe)', 'Faulty Handover Algorithm (Too Frequent)', 'Resource Allocation Bugs', 'High Network Congestion (Sudden Spike)']
+hosts: 4200 | CatBoost threads: 254
+Config A from cached signals vs saved train_X: max|diff| = 0.01562 (notebook reported 0.0156)
+  seed=42    fold=1  final=0.3390 (her 0.3390 MATCH)  excl_pair=0.3537  trend=0.3424  trend_fixed=0.3436
+  seed=42    fold=2  final=0.3300 (her 0.3300 MATCH)  excl_pair=0.3339  trend=0.3723  trend_fixed=0.3716
+  seed=42    fold=3  final=0.4020 (her 0.4020 MATCH)  excl_pair=0.3517  trend=0.4338  trend_fixed=0.4132
+  seed=42    fold=4  final=0.2597 (her 0.2597 MATCH)  excl_pair=0.2241  trend=0.2596  trend_fixed=0.2568
+  seed=42    fold=5  final=0.4671 (her 0.4671 MATCH)  excl_pair=0.5919  trend=0.5063  trend_fixed=0.5198
+  seed=7     fold=1  final=0.3330 (her 0.3330 MATCH)  excl_pair=0.3672  trend=0.3457  trend_fixed=0.3429
+  seed=7     fold=2  final=0.3377 (her 0.3377 MATCH)  excl_pair=0.3166  trend=0.3600  trend_fixed=0.3712
+  seed=7     fold=3  final=0.3999 (her 0.3999 MATCH)  excl_pair=0.3862  trend=0.4249  trend_fixed=0.4026
+  seed=7     fold=4  final=0.2481 (her 0.2481 MATCH)  excl_pair=0.2239  trend=0.2526  trend_fixed=0.3014
+  seed=7     fold=5  final=0.5655 (her 0.5655 MATCH)  excl_pair=0.6311  trend=0.5745  trend_fixed=0.5956
+  seed=123   fold=1  final=0.3379 (her 0.3379 MATCH)  excl_pair=0.3396  trend=0.3324  trend_fixed=0.3377
+  seed=123   fold=2  final=0.3338 (her 0.3338 MATCH)  excl_pair=0.3405  trend=0.3940  trend_fixed=0.4186
+  seed=123   fold=3  final=0.4397 (her 0.4397 MATCH)  excl_pair=0.4313  trend=0.3991  trend_fixed=0.4153
+  seed=123   fold=4  final=0.2393 (her 0.2393 MATCH)  excl_pair=0.1946  trend=0.2531  trend_fixed=0.2586
+  seed=123   fold=5  final=0.4948 (her 0.4948 MATCH)  excl_pair=0.5187  trend=0.5808  trend_fixed=0.5141
+  seed=2024  fold=1  final=0.3788 (her 0.3788 MATCH)  excl_pair=0.3656  trend=0.3733  trend_fixed=0.3499
+  seed=2024  fold=2  final=0.3157 (her 0.3157 MATCH)  excl_pair=0.3351  trend=0.3368  trend_fixed=0.3615
+  seed=2024  fold=3  final=0.4272 (her 0.4272 MATCH)  excl_pair=0.4167  trend=0.3992  trend_fixed=0.3893
+  seed=2024  fold=4  final=0.2660 (her 0.2660 MATCH)  excl_pair=0.2195  trend=0.2436  trend_fixed=0.2551
+  seed=2024  fold=5  final=0.5185 (her 0.5185 MATCH)  excl_pair=0.5950  trend=0.5708  trend_fixed=0.5641
+  seed=99    fold=1  final=0.3761 (her 0.3761 MATCH)  excl_pair=0.3730  trend=0.3881  trend_fixed=0.3465
+  seed=99    fold=2  final=0.3115 (her 0.3115 MATCH)  excl_pair=0.3213  trend=0.3344  trend_fixed=0.3427
+  seed=99    fold=3  final=0.4239 (her 0.4239 MATCH)  excl_pair=0.3988  trend=0.4341  trend_fixed=0.4038
+  seed=99    fold=4  final=0.2452 (her 0.2452 MATCH)  excl_pair=0.2024  trend=0.2224  trend_fixed=0.2284
+  seed=99    fold=5  final=0.5682 (her 0.5682 MATCH)  excl_pair=0.5934  trend=0.5861  trend_fixed=0.5155
+
+Reproduction of her final model: 25/25 folds match her records (mean 0.3743 vs her 0.3743)
+
+== Macro-F1 over 25 folds ==
+               mean     std
+real_only    0.2908  0.0921
+final        0.3743  0.0960
+excl_pair    0.3770  0.1259
+trend        0.3888  0.1079
+trend_fixed  0.3848  0.0966
+
+== Paired comparisons (Nadeau-Bengio corrected t-test) ==
+  final        vs real_only: d=+0.0835  p=0.0065  wins 25/25
+  excl_pair    vs real_only: d=+0.0862  p=0.0192  wins 21/25
+  trend        vs real_only: d=+0.0980  p=0.0018  wins 24/25
+  trend_fixed  vs real_only: d=+0.0940  p=0.0005  wins 24/25
+  excl_pair    vs final    : d=+0.0027  p=0.9051  wins 12/25
+  trend        vs final    : d=+0.0145  p=0.3591  wins 18/25
+  trend_fixed  vs final    : d=+0.0105  p=0.5737  wins 15/25
+saved results/06_model2_farida_next_steps/results.json

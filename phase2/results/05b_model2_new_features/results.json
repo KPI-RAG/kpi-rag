@@ -1,0 +1,65 @@
+{
+  "cv": {
+    "A+G1G2G3": {
+      "mean": 0.3323,
+      "std": 0.0664
+    },
+    "A+G1G3": {
+      "mean": 0.3266,
+      "std": 0.0817
+    },
+    "A_fixed": {
+      "mean": 0.291,
+      "std": 0.0969
+    },
+    "A_phase1": {
+      "mean": 0.2908,
+      "std": 0.0921
+    }
+  },
+  "paired_vs_phase1": {
+    "A_fixed": {
+      "mean_diff": 0.0001,
+      "p_corrected": 0.9907,
+      "p_wilcoxon": 0.731,
+      "folds_better": 10,
+      "meets_decision_rule": false
+    },
+    "A+G1G3": {
+      "mean_diff": 0.0358,
+      "p_corrected": 0.135,
+      "p_wilcoxon": 0.0006,
+      "folds_better": 21,
+      "meets_decision_rule": false
+    },
+    "A+G1G2G3": {
+      "mean_diff": 0.0415,
+      "p_corrected": 0.1911,
+      "p_wilcoxon": 0.0013,
+      "folds_better": 20,
+      "meets_decision_rule": false
+    }
+  },
+  "hard_pairs": {
+    "A_fixed: High Network Congestion (Gradual Buildup) -> Buffer Overflow (Gradual Buildup)": 0.857,
+    "A_fixed: Co-Channel Interference (Severe) -> Co-Channel Interference (Mild)": 0.381,
+    "A+G1G3: High Network Congestion (Gradual Buildup) -> Buffer Overflow (Gradual Buildup)": 0.875,
+    "A+G1G3: Co-Channel Interference (Severe) -> Co-Channel Interference (Mild)": 0.321,
+    "A+G1G2G3: High Network Congestion (Gradual Buildup) -> Buffer Overflow (Gradual Buildup)": 0.893,
+    "A+G1G2G3: Co-Channel Interference (Severe) -> Co-Channel Interference (Mild)": 0.369
+  },
+  "posthoc_test": {
+    "A_fixed": {
+      "macro_f1": 0.5829,
+      "accuracy": 0.6967
+    },
+    "A+G1G3": {
+      "macro_f1": 0.6073,
+      "accuracy": 0.72
+    },
+    "A+G1G2G3": {
+      "macro_f1": 0.6357,
+      "accuracy": 0.7367
+    }
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "model1_variant": "adopted",
+  "model1_test": {
+    "TP": 266,
+    "FP": 116,
+    "FN": 34,
+    "TN": 5896,
+    "precision": 0.6963,
+    "recall": 0.8867,
+    "f1": 0.7801
+  },
+  "model2_cv": {
+    "none": {
+      "mean": 0.3888,
+      "std": 0.1079,
+      "faults_rejected": 0.0
+    },
+    "hard1000": {
+      "mean": 0.369,
+      "std": 0.1162,
+      "faults_rejected": 0.1978
+    },
+    "random1000": {
+      "mean": 0.3605,
+      "std": 0.0897,
+      "faults_rejected": 0.1782
+    }
+  },
+  "cascade_test": {
+    "none": {
+      "flagged": 382,
+      "false_alarms_in": 116,
+      "fp_rejected": 0,
+      "fp_residual": 116,
+      "residual_catchall_class": "Co-Channel Interference (Mild)",
+      "residual_catchall_share": 0.647,
+      "cci_mild_share_of_all_fp": 0.647,
+      "true_faults_in": 266,
+      "tp_rejected": 0,
+      "tp_loss_rate": 0.0,
+      "useful_precision": 0.521,
+      "fault_label_accuracy_on_true_faults": 0.748,
+      "per_session_fp_residual": {
+        "1": 0,
+        "3": 44,
+        "4": 72,
+        "13": 0,
+        "17": 0
+      }
+    },
+    "hard1000": {
+      "flagged": 382,
+      "false_alarms_in": 116,
+      "fp_rejected": 16,
+      "fp_residual": 100,
+      "residual_catchall_class": "Co-Channel Interference (Mild)",
+      "residual_catchall_share": 0.68,
+      "cci_mild_share_of_all_fp": 0.586,
+      "true_faults_in": 266,
+      "tp_rejected": 0,
+      "tp_loss_rate": 0.0,
+      "useful_precision": 0.549,
+      "fault_label_accuracy_on_true_faults": 0.756,
+      "per_session_fp_residual": {
+        "1": 0,
+        "3": 40,
+        "4": 60,
+        "13": 0,
+        "17": 0
+      }
+    },
+    "random1000": {
+      "flagged": 382,
+      "false_alarms_in": 116,
+      "fp_rejected": 21,
+      "fp_residual": 95,
+      "residual_catchall_class": "Co-Channel Interference (Mild)",
+      "residual_catchall_share": 0.663,
+      "cci_mild_share_of_all_fp": 0.543,
+      "true_faults_in": 266,
+      "tp_rejected": 3,
+      "tp_loss_rate": 0.011,
+      "useful_precision": 0.545,
+      "fault_label_accuracy_on_true_faults": 0.733,
+      "per_session_fp_residual": {
+        "1": 0,
+        "3": 41,
+        "4": 54,
+        "13": 0,
+        "17": 0
+      }
+    }
+  },
+  "promotion": {
+    "hard1000": {
+      "f1_within_2sd": true,
+      "residual_catchall_below_41pct": false,
+      "promoted": false
+    },
+    "random1000": {
+      "f1_within_2sd": true,
+      "residual_catchall_below_41pct": false,
+      "promoted": false
+    }
+  }
+}

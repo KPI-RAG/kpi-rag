@@ -1,0 +1,39 @@
+# 07_model2_algorithms  |  2026-10-13 10:40 UTC  |  python 3.12.13 on jupyter-farida-gaber44
+windows 935 | A 64 | rich 240 | catch22 352 (3s)
+  seed=42    fold=1  catboost_A=0.213  catboost_rich=0.363  lightgbm_rich=0.410  xgboost_rich=0.440  extratrees_rich=0.405  catboost_c22=0.450  minirocket=0.392  hydra=0.383  quant=0.435
+  seed=42    fold=2  catboost_A=0.269  catboost_rich=0.283  lightgbm_rich=0.393  xgboost_rich=0.318  extratrees_rich=0.243  catboost_c22=0.384  minirocket=0.275  hydra=0.182  quant=0.480
+  seed=42    fold=3  catboost_A=0.333  catboost_rich=0.371  lightgbm_rich=0.425  xgboost_rich=0.390  extratrees_rich=0.414  catboost_c22=0.409  minirocket=0.389  hydra=0.370  quant=0.432
+  seed=42    fold=4  catboost_A=0.231  catboost_rich=0.232  lightgbm_rich=0.268  xgboost_rich=0.239  extratrees_rich=0.267  catboost_c22=0.237  minirocket=0.230  hydra=0.251  quant=0.342
+  seed=42    fold=5  catboost_A=0.459  catboost_rich=0.555  lightgbm_rich=0.458  xgboost_rich=0.403  extratrees_rich=0.290  catboost_c22=0.512  minirocket=0.361  hydra=0.374  quant=0.481
+  seed=7     fold=1  catboost_A=0.209  catboost_rich=0.394  lightgbm_rich=0.410  xgboost_rich=0.440  extratrees_rich=0.347  catboost_c22=0.430  minirocket=0.329  hydra=0.383  quant=0.450
+  seed=7     fold=2  catboost_A=0.279  catboost_rich=0.279  lightgbm_rich=0.393  xgboost_rich=0.318  extratrees_rich=0.252  catboost_c22=0.329  minirocket=0.228  hydra=0.179  quant=0.491
+  seed=7     fold=3  catboost_A=0.263  catboost_rich=0.334  lightgbm_rich=0.425  xgboost_rich=0.390  extratrees_rich=0.422  catboost_c22=0.419  minirocket=0.369  hydra=0.373  quant=0.414
+  seed=7     fold=4  catboost_A=0.195  catboost_rich=0.257  lightgbm_rich=0.268  xgboost_rich=0.239  extratrees_rich=0.259  catboost_c22=0.255  minirocket=0.227  hydra=0.292  quant=0.331
+  seed=7     fold=5  catboost_A=0.438  catboost_rich=0.501  lightgbm_rich=0.458  xgboost_rich=0.403  extratrees_rich=0.277  catboost_c22=0.505  minirocket=0.442  hydra=0.370  quant=0.448
+  seed=123   fold=1  catboost_A=0.182  catboost_rich=0.359  lightgbm_rich=0.410  xgboost_rich=0.440  extratrees_rich=0.342  catboost_c22=0.445  minirocket=0.423  hydra=0.349  quant=0.446
+  seed=123   fold=2  catboost_A=0.248  catboost_rich=0.251  lightgbm_rich=0.393  xgboost_rich=0.318  extratrees_rich=0.249  catboost_c22=0.431  minirocket=0.200  hydra=0.181  quant=0.440
+  seed=123   fold=3  catboost_A=0.270  catboost_rich=0.374  lightgbm_rich=0.425  xgboost_rich=0.390  extratrees_rich=0.402  catboost_c22=0.389  minirocket=0.337  hydra=0.390  quant=0.420
+  seed=123   fold=4  catboost_A=0.240  catboost_rich=0.251  lightgbm_rich=0.268  xgboost_rich=0.239  extratrees_rich=0.265  catboost_c22=0.236  minirocket=0.202  hydra=0.274  quant=0.336
+  seed=123   fold=5  catboost_A=0.449  catboost_rich=0.467  lightgbm_rich=0.458  xgboost_rich=0.403  extratrees_rich=0.280  catboost_c22=0.508  minirocket=0.428  hydra=0.373  quant=0.448
+  seed=2024  fold=1  catboost_A=0.231  catboost_rich=0.353  lightgbm_rich=0.410  xgboost_rich=0.440  extratrees_rich=0.328  catboost_c22=0.497  minirocket=0.394  hydra=0.338  quant=0.476
+  seed=2024  fold=2  catboost_A=0.253  catboost_rich=0.322  lightgbm_rich=0.393  xgboost_rich=0.318  extratrees_rich=0.251  catboost_c22=0.397  minirocket=0.128  hydra=0.214  quant=0.494
+  seed=2024  fold=3  catboost_A=0.271  catboost_rich=0.310  lightgbm_rich=0.425  xgboost_rich=0.390  extratrees_rich=0.418  catboost_c22=0.411  minirocket=0.406  hydra=0.415  quant=0.382
+  seed=2024  fold=4  catboost_A=0.242  catboost_rich=0.226  lightgbm_rich=0.268  xgboost_rich=0.239  extratrees_rich=0.254  catboost_c22=0.248  minirocket=0.313  hydra=0.277  quant=0.336
+  seed=2024  fold=5  catboost_A=0.538  catboost_rich=0.467  lightgbm_rich=0.458  xgboost_rich=0.403  extratrees_rich=0.252  catboost_c22=0.522  minirocket=0.418  hydra=0.337  quant=0.446
+  seed=99    fold=1  catboost_A=0.213  catboost_rich=0.370  lightgbm_rich=0.410  xgboost_rich=0.440  extratrees_rich=0.322  catboost_c22=0.426  minirocket=0.378  hydra=0.324  quant=0.456
+  seed=99    fold=2  catboost_A=0.279  catboost_rich=0.232  lightgbm_rich=0.393  xgboost_rich=0.318  extratrees_rich=0.250  catboost_c22=0.423  minirocket=0.189  hydra=0.153  quant=0.467
+  seed=99    fold=3  catboost_A=0.285  catboost_rich=0.400  lightgbm_rich=0.425  xgboost_rich=0.390  extratrees_rich=0.395  catboost_c22=0.382  minirocket=0.436  hydra=0.420  quant=0.423
+  seed=99    fold=4  catboost_A=0.229  catboost_rich=0.259  lightgbm_rich=0.268  xgboost_rich=0.239  extratrees_rich=0.262  catboost_c22=0.233  minirocket=0.292  hydra=0.263  quant=0.336
+  seed=99    fold=5  catboost_A=0.453  catboost_rich=0.449  lightgbm_rich=0.458  xgboost_rich=0.403  extratrees_rich=0.280  catboost_c22=0.564  minirocket=0.412  hydra=0.373  quant=0.493
+
+== Macro-F1 over 25 folds vs Phase 1 baseline (0.2908) ==
+  quant            0.4280 ± 0.0539   d=+0.1372  p=0.0084  wins 22/25   5s/fold
+  catboost_c22     0.4016 ± 0.0971   d=+0.1108  p=0.0211  wins 23/25   148s/fold
+  lightgbm_rich    0.3909 ± 0.0666   d=+0.1001  p=0.0203  wins 23/25   3s/fold
+  xgboost_rich     0.3580 ± 0.0731   d=+0.0672  p=0.2170  wins 19/25   3s/fold
+  catboost_rich    0.3464 ± 0.0912   d=+0.0556  p=0.1059  wins 21/25   105s/fold
+  minirocket       0.3280 ± 0.0933   d=+0.0371  p=0.4835  wins 13/25   2s/fold
+  hydra            0.3135 ± 0.0814   d=+0.0226  p=0.6801  wins 15/25   11s/fold
+  extratrees_rich  0.3090 ± 0.0645   d=+0.0182  p=0.7812  wins 17/25   2s/fold
+  catboost_A       0.2910 ± 0.0969   d=+0.0001  p=0.9907  wins 10/25   30s/fold
+saved results/07_model2_algorithms/results.json

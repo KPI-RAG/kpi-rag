@@ -1,0 +1,55 @@
+# 05b_model2_new_features  |  2026-10-13 09:46 UTC  |  python 3.12.13 on jupyter-farida-gaber44
+fault windows: 935 | dims: A_fixed=64, A+G1G3=112, A+G1G2G3=160
+  seed=42    fold=1  macro-F1  A_phase1=0.2132  A_fixed=0.2126  A+G1G3=0.3047  A+G1G2G3=0.3112
+  seed=42    fold=2  macro-F1  A_phase1=0.2749  A_fixed=0.2689  A+G1G3=0.2619  A+G1G2G3=0.2798
+  seed=42    fold=3  macro-F1  A_phase1=0.2909  A_fixed=0.3330  A+G1G3=0.3422  A+G1G2G3=0.3463
+  seed=42    fold=4  macro-F1  A_phase1=0.2429  A_fixed=0.2315  A+G1G3=0.2640  A+G1G2G3=0.2622
+  seed=42    fold=5  macro-F1  A_phase1=0.4491  A_fixed=0.4587  A+G1G3=0.5102  A+G1G2G3=0.4633
+  seed=7     fold=1  macro-F1  A_phase1=0.2350  A_fixed=0.2094  A+G1G3=0.3161  A+G1G2G3=0.3429
+  seed=7     fold=2  macro-F1  A_phase1=0.2856  A_fixed=0.2787  A+G1G3=0.2475  A+G1G2G3=0.2379
+  seed=7     fold=3  macro-F1  A_phase1=0.2932  A_fixed=0.2634  A+G1G3=0.3092  A+G1G2G3=0.3346
+  seed=7     fold=4  macro-F1  A_phase1=0.2143  A_fixed=0.1952  A+G1G3=0.2561  A+G1G2G3=0.2597
+  seed=7     fold=5  macro-F1  A_phase1=0.4651  A_fixed=0.4385  A+G1G3=0.4287  A+G1G2G3=0.4572
+  seed=123   fold=1  macro-F1  A_phase1=0.1937  A_fixed=0.1822  A+G1G3=0.2695  A+G1G2G3=0.3500
+  seed=123   fold=2  macro-F1  A_phase1=0.2437  A_fixed=0.2480  A+G1G3=0.2822  A+G1G2G3=0.3123
+  seed=123   fold=3  macro-F1  A_phase1=0.2952  A_fixed=0.2703  A+G1G3=0.3233  A+G1G2G3=0.3297
+  seed=123   fold=4  macro-F1  A_phase1=0.2044  A_fixed=0.2402  A+G1G3=0.2703  A+G1G2G3=0.2655
+  seed=123   fold=5  macro-F1  A_phase1=0.4491  A_fixed=0.4494  A+G1G3=0.5014  A+G1G2G3=0.4171
+  seed=2024  fold=1  macro-F1  A_phase1=0.2417  A_fixed=0.2312  A+G1G3=0.2892  A+G1G2G3=0.3416
+  seed=2024  fold=2  macro-F1  A_phase1=0.2726  A_fixed=0.2534  A+G1G3=0.2945  A+G1G2G3=0.2963
+  seed=2024  fold=3  macro-F1  A_phase1=0.2855  A_fixed=0.2713  A+G1G3=0.3201  A+G1G2G3=0.3128
+  seed=2024  fold=4  macro-F1  A_phase1=0.2351  A_fixed=0.2422  A+G1G3=0.2523  A+G1G2G3=0.2663
+  seed=2024  fold=5  macro-F1  A_phase1=0.5043  A_fixed=0.5378  A+G1G3=0.4407  A+G1G2G3=0.4220
+  seed=99    fold=1  macro-F1  A_phase1=0.1922  A_fixed=0.2129  A+G1G3=0.3238  A+G1G2G3=0.3428
+  seed=99    fold=2  macro-F1  A_phase1=0.2297  A_fixed=0.2788  A+G1G3=0.2705  A+G1G2G3=0.3062
+  seed=99    fold=3  macro-F1  A_phase1=0.2981  A_fixed=0.2848  A+G1G3=0.3270  A+G1G2G3=0.3791
+  seed=99    fold=4  macro-F1  A_phase1=0.2350  A_fixed=0.2292  A+G1G3=0.2642  A+G1G2G3=0.2334
+  seed=99    fold=5  macro-F1  A_phase1=0.4259  A_fixed=0.4527  A+G1G3=0.4958  A+G1G2G3=0.4373
+
+== Macro-F1 / accuracy over 25 folds ==
+              f1         accuracy        
+            mean     std     mean     std
+variant                                  
+A_phase1  0.2908  0.0921      NaN     NaN
+A_fixed   0.2910  0.0969   0.3588  0.1086
+A+G1G3    0.3266  0.0817   0.4218  0.1129
+A+G1G2G3  0.3323  0.0664   0.4459  0.1081
+
+== Paired comparison with A_phase1 (= 0.2908 baseline) ==
+  A_fixed    dF1=+0.0001  corrected p=0.991  Wilcoxon p=0.731  10/25 better  -> not adopted
+  A+G1G3     dF1=+0.0358  corrected p=0.135  Wilcoxon p=0.001  21/25 better  -> not adopted
+  A+G1G2G3   dF1=+0.0415  corrected p=0.191  Wilcoxon p=0.001  20/25 better  -> not adopted
+
+== Hard pairs (seed 42, pooled OOF): share of class A predicted as class B ==
+  A_fixed    High Network Congestion (Gradual -> Buffer Overflow (Gradual Buildup 85.7%
+  A_fixed    Co-Channel Interference (Severe) -> Co-Channel Interference (Mild)   38.1%
+  A+G1G3     High Network Congestion (Gradual -> Buffer Overflow (Gradual Buildup 87.5%
+  A+G1G3     Co-Channel Interference (Severe) -> Co-Channel Interference (Mild)   32.1%
+  A+G1G2G3   High Network Congestion (Gradual -> Buffer Overflow (Gradual Buildup 89.3%
+  A+G1G2G3   Co-Channel Interference (Severe) -> Co-Channel Interference (Mild)   36.9%
+
+== POST-HOC test check (test fault windows; not used to decide) ==
+  A_fixed    macro-F1=0.5829  accuracy=0.6967  (n=300)
+  A+G1G3     macro-F1=0.6073  accuracy=0.7200  (n=300)
+  A+G1G2G3   macro-F1=0.6357  accuracy=0.7367  (n=300)
+saved results/05b_model2_new_features/results.json

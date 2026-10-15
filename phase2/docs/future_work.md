@@ -1,0 +1,19 @@
+# Future work — what we deferred, why, and what it would need
+
+Each item below was considered during Phase 2 and deliberately **not** pursued to completion. For each:
+what it is (simply), the evidence behind the decision, and what would be needed to do it well.
+
+| # | Item | Simple explanation | Why deferred (evidence) | What it would need |
+|---|---|---|---|---|
+| 1 | **More jamming recordings (with and without traffic)** | Our two jamming recordings contradict each other: in one, "jamming" means an idle link; in the other, a loaded link. | Step 10b: every detector fails on session 0 for this reason; no model or rule can fix it (steps 10a, 12a). | New recordings where jamming happens under different traffic loads, or a context label telling idle from blocked. |
+| 2 | **Recordings where Normal and fault windows co-occur** | Today 27 of 28 training recordings are either all-Normal or all-fault. Models partly learn "which recording is this" instead of "is this a fault". | Step 04/10b: every Normal recording is perfectly identifiable (AUC 1.0); 90 % of false alarms come from two Normal recordings. | Mixed recordings; or at least 10–20 more fault sessions (step 12c power analysis). |
+| 3 | **Specialist classifier for HNC-Gradual vs Buffer Overflow** | A small 2-class model that re-decides between the two most confused faults. | Tested in step 12b (see its NOTES for the outcome). If not adopted: the two faults differ in how buffer and PRB usage grow, but 56 + 117 real windows from ≤ 10 sessions are too few to learn it reliably. | More windows of both classes from new sessions; or a labelled "cause" field. |
+| 4 | **Leave-one-session-out evaluation** | Use every fault session once as the test, for a per-session picture. | Step 12c-1 already gives session-level confidence intervals and the power analysis; LOSO would add precision, not change decisions. | ~1 h of server time; can be run with the existing scripts/cache. |
+| 5 | **Alternative donor/host selection for synthetic data (v3)** | Change which real windows the generator copies from / pastes onto. | Steps 06, 09a: more synthetic windows give nothing; the generator cannot invent a new session. Host diversity is already matched by zone/app. | New real fault sessions as donors (the limiting factor). |
+| 6 | **Trend features for Model 1 (adopted+G)** | The paper-inspired features that helped Model 2 also help Model 1 a little. | Step 10a: better in CV (20/25) and on test (PR-AUC 0.893 → 0.917) but p = 0.23; +7 false alarms. Promising, not proven. | 2–3× more fault sessions to reach significance (step 12c). |
+| 7 | **QUANT as a second-opinion model** | A different algorithm that is perfect on Jamming/Doppler/RF-Filters where CatBoost fails, but worse elsewhere. | Step 09c: best in CV, not on the held-out sessions; synthetic data hurts it; two models to maintain. | A fair arbitration rule learned on more sessions; or per-class routing with evidence. |
+| 8 | **Reject option in the cascade** | Let Model 2 answer "Normal" for a false alarm. | Steps 10/10c: after the Model 1 fix only 116 false alarms remain and the reject class removes ≤ 16 while rejecting ~20 % of real faults in CV. | A different definition of "hard negatives" matching the remaining false alarms (test-session-like Normal windows). |
+| 9 | **TabPFN / Mantis / foundation models** | Pre-trained models applied to our windows. | Research review (docs/research_round2): no evidence of gains at 935 samples; licence/token and CPU constraints. | A GPU and a reason to believe they transfer across recordings. |
+| 10 | **Threshold tuning for Model 1** | Change the 0.5 cut-off to trade false alarms vs missed faults. | Step 02: best threshold per fold ranges 0.008–0.927 → unstable across sessions. | Stable sessions; or an operator-set operating point per deployment. |
+
+Everything above is recorded in `EXPERIMENT_LOG.md` and `DECISIONS.md` with the numbers.

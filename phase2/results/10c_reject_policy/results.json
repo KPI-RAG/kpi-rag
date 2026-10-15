@@ -1,0 +1,93 @@
+{
+  "cv": {
+    "0.5": {
+      "macro_f1": 0.3483,
+      "faults_rejected": 0.1309
+    },
+    "0.6": {
+      "macro_f1": 0.3515,
+      "faults_rejected": 0.0983
+    },
+    "0.7": {
+      "macro_f1": 0.3475,
+      "faults_rejected": 0.0758
+    },
+    "0.8": {
+      "macro_f1": 0.3482,
+      "faults_rejected": 0.0598
+    },
+    "0.9": {
+      "macro_f1": 0.3624,
+      "faults_rejected": 0.0477
+    }
+  },
+  "chosen_tau": 0.9,
+  "test": {
+    "0.5": {
+      "fp_in": 116,
+      "fp_rejected": 13,
+      "fp_residual": 103,
+      "residual_catchall_share": 0.68,
+      "residual_catchall_class": "Co-Channel Interference (Mild)",
+      "tp_in": 266,
+      "tp_rejected": 0,
+      "fault_label_correct": 201,
+      "useful_precision": 0.545
+    },
+    "0.6": {
+      "fp_in": 116,
+      "fp_rejected": 5,
+      "fp_residual": 111,
+      "residual_catchall_share": 0.703,
+      "residual_catchall_class": "Co-Channel Interference (Mild)",
+      "tp_in": 266,
+      "tp_rejected": 0,
+      "fault_label_correct": 201,
+      "useful_precision": 0.533
+    },
+    "0.7": {
+      "fp_in": 116,
+      "fp_rejected": 2,
+      "fp_residual": 114,
+      "residual_catchall_share": 0.711,
+      "residual_catchall_class": "Co-Channel Interference (Mild)",
+      "tp_in": 266,
+      "tp_rejected": 0,
+      "fault_label_correct": 201,
+      "useful_precision": 0.529
+    },
+    "0.8": {
+      "fp_in": 116,
+      "fp_rejected": 0,
+      "fp_residual": 116,
+      "residual_catchall_share": 0.707,
+      "residual_catchall_class": "Co-Channel Interference (Mild)",
+      "tp_in": 266,
+      "tp_rejected": 0,
+      "fault_label_correct": 201,
+      "useful_precision": 0.526
+    },
+    "0.9": {
+      "fp_in": 116,
+      "fp_rejected": 0,
+      "fp_residual": 116,
+      "residual_catchall_share": 0.707,
+      "residual_catchall_class": "Co-Channel Interference (Mild)",
+      "tp_in": 266,
+      "tp_rejected": 0,
+      "fault_label_correct": 201,
+      "useful_precision": 0.526
+    },
+    "argmax": {
+      "fp_in": 116,
+      "fp_rejected": 16,
+      "fp_residual": 100,
+      "residual_catchall_share": 0.68,
+      "residual_catchall_class": "Co-Channel Interference (Mild)",
+      "tp_in": 266,
+      "tp_rejected": 0,
+      "fault_label_correct": 201,
+      "useful_precision": 0.549
+    }
+  }
+}

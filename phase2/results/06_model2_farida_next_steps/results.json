@@ -1,0 +1,54 @@
+{
+  "reproduction_matches": 25,
+  "means": {
+    "real_only": 0.2908,
+    "final": 0.3743,
+    "excl_pair": 0.377,
+    "trend": 0.3888,
+    "trend_fixed": 0.3848
+  },
+  "paired": {
+    "final_vs_real_only": {
+      "mean_diff": 0.0835,
+      "p_corrected": 0.0065,
+      "p_wilcoxon": 0.0,
+      "folds_better": 25
+    },
+    "excl_pair_vs_real_only": {
+      "mean_diff": 0.0862,
+      "p_corrected": 0.0192,
+      "p_wilcoxon": 0.0,
+      "folds_better": 21
+    },
+    "trend_vs_real_only": {
+      "mean_diff": 0.098,
+      "p_corrected": 0.0018,
+      "p_wilcoxon": 0.0,
+      "folds_better": 24
+    },
+    "trend_fixed_vs_real_only": {
+      "mean_diff": 0.094,
+      "p_corrected": 0.0005,
+      "p_wilcoxon": 0.0,
+      "folds_better": 24
+    },
+    "excl_pair_vs_final": {
+      "mean_diff": 0.0027,
+      "p_corrected": 0.9051,
+      "p_wilcoxon": 0.8119,
+      "folds_better": 12
+    },
+    "trend_vs_final": {
+      "mean_diff": 0.0145,
+      "p_corrected": 0.3591,
+      "p_wilcoxon": 0.0219,
+      "folds_better": 18
+    },
+    "trend_fixed_vs_final": {
+      "mean_diff": 0.0105,
+      "p_corrected": 0.5737,
+      "p_wilcoxon": 0.1485,
+      "folds_better": 15
+    }
+  }
+}

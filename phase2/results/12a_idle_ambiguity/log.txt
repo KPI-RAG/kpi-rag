@@ -1,0 +1,36 @@
+# 12a_idle_ambiguity  |  2026-10-15 09:40 UTC  |  python 3.12.13 on jupyter-farida-gaber44
+== 1. idle_link indicator (TX_Bytes mean < 1000.0 B, PRB_Util_DL mean < 1.0 %, packets < 1.0/sample) ==
+  training sessions with idle share > 5 %:
+         windows  idle_share  faults
+session                             
+0           3100       0.466      93
+2             92       0.185      92
+11           147       0.456     147
+14           125       0.328     125
+29           309       0.272       0
+  idle share: Normal windows 6.4%  (session 0: 48.1%, other Normal: 0.6%) | fault windows 13.4%
+  idle share by fault type:
+label
+Co-Channel Interference (Severe)             0.381
+Co-Channel Interference (Mild)               0.333
+Doppler Shift (Severe)                       0.117
+Resource Allocation Bugs                     0.116
+Faulty RF Filters (Temporal)                 0.104
+Antenna Failure                              0.102
+Jamming                                      0.092
+Faulty Handover Algorithm (Too Frequent)     0.067
+Buffer Overflow (Gradual Buildup)            0.000
+High Network Congestion (Sudden Spike)       0.000
+High Network Congestion (Gradual Buildup)    0.000
+
+== 2. Model 1 calibration (isotonic on step-10 OOF probabilities) ==
+  ECE on OOF (train):  raw 0.199 -> calibrated 0.000
+  ECE on test (post-hoc): raw 0.133 -> calibrated 0.018
+  idle Normal windows of session 0: mean raw p = 0.972 -> calibrated 0.085
+
+== 3. Held-out sessions: the flag as a review queue (labels unchanged) ==
+  flagged 382: idle 50 (true faults 5, false alarms 45); non-idle 332 (true faults 261, false alarms 71)
+  idle true faults by type: {'Co-Channel Interference (Mild)': 5}
+  per test session (flagged / of which idle): s1: 94/0, s3: 44/21, s4: 72/24, s13: 54/5, s17: 118/0
+  Reading: the flag marks windows whose fault label rests on 'no traffic' evidence only; it changes no label.
+saved results/12a_idle_ambiguity/results.json
