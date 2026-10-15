@@ -29,7 +29,6 @@ from src import features as F
 from src import v3 as V
 from src.data import load_splits
 from src.evaluation import nadeau_bengio_ttest
-from src.models import balanced_class_weights
 from src.utils import StepLog
 from src.v3 import IDX_B_FFT, V3, fit_predict_w, full_feats, macro
 

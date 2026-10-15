@@ -22,7 +22,6 @@ import numpy as np
 from catboost import CatBoostClassifier
 
 from src import config as C
-from src import features as F
 from src import pipeline as P
 from src.data import csv_labels, load_splits
 from src.models import anomaly_detector, rebalance_80_20

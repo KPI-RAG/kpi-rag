@@ -16,7 +16,6 @@ and uses the calibrated probability as the Normal-window confidence. Schema unch
 
 Run from the phase2 folder:   python scripts/12a_idle_ambiguity.py
 """
-import json
 import os
 import pickle
 import sys
@@ -90,7 +89,7 @@ res = {"flagged": int(flag.sum()), "flagged_idle": int(amb.sum()),
 log(f"  flagged {res['flagged']}: idle {res['flagged_idle']} (true faults {res['flagged_idle_true_faults']}, false alarms {res['flagged_idle_false_alarms']}); "
     f"non-idle {res['flagged'] - res['flagged_idle']} (true faults {res['flagged_nonidle_true_faults']}, false alarms {res['flagged_nonidle_false_alarms']})")
 log(f"  idle true faults by type: {res['idle_true_faults_by_type']}")
-log(f"  per test session (flagged / of which idle): " + ", ".join(f"s{s}: {v['flagged']}/{v['flagged_idle']}" for s, v in res["idle_by_test_session"].items()))
+log("  per test session (flagged / of which idle): " + ", ".join(f"s{s}: {v['flagged']}/{v['flagged_idle']}" for s, v in res["idle_by_test_session"].items()))
 log("  Reading: the flag marks windows whose fault label rests on 'no traffic' evidence only; it changes no label.")
 log.save_json("results.json", res)
 log.close()
