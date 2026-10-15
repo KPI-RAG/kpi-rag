@@ -1,0 +1,74 @@
+# 04_session_diagnosis  |  2026-10-13 02:05 UTC  |  python 3.12.13 on jupyter-farida-gaber44
+
+== 1. Per-session out-of-fold Model 1 (adopted) ==
+ session  fold  windows  anomalies  pr_auc  recall@0.5  false_alarm_rate@0.5  median_p_normal  median_p_anomaly
+       8     1     3007          0     NaN         NaN                0.0000           0.0026               NaN
+      16     1      136        136   1.000       0.596                   NaN              NaN            0.7174
+      18     1       59         59   1.000       0.339                   NaN              NaN            0.2039
+      20     1      309          0     NaN         NaN                0.0000           0.0010               NaN
+      25     1      309          0     NaN         NaN                0.0000           0.0012               NaN
+      26     1      309          0     NaN         NaN                0.0000           0.0014               NaN
+      31     1      309          0     NaN         NaN                0.0000           0.0021               NaN
+       5     2     3007          0     NaN         NaN                0.6605           0.7031               NaN
+      14     2      125        125   1.000       0.672                   NaN              NaN            0.6492
+      21     2      309          0     NaN         NaN                0.0000           0.0015               NaN
+      22     2      309          0     NaN         NaN                0.0000           0.0022               NaN
+      24     2      309          0     NaN         NaN                0.0000           0.0022               NaN
+      29     2      309          0     NaN         NaN                0.3204           0.0972               NaN
+      32     2       79         79   1.000       0.582                   NaN              NaN            0.8614
+       2     3       92         92   1.000       0.261                   NaN              NaN            0.2875
+       7     3     3006          0     NaN         NaN                0.0000           0.0250               NaN
+       9     3     3006          0     NaN         NaN                0.0007           0.0084               NaN
+      15     3       99         99   1.000       0.747                   NaN              NaN            0.9202
+       0     4     3100         93   0.015       0.011                0.9840           0.9861            0.0100
+       6     4     3006          0     NaN         NaN                0.0749           0.0411               NaN
+      12     4       98         98   1.000       0.327                   NaN              NaN            0.2488
+      10     5     3006          0     NaN         NaN                0.0609           0.0789               NaN
+      11     5      147        147   1.000       0.844                   NaN              NaN            0.8831
+      19     5        7          7   1.000       1.000                   NaN              NaN            0.9969
+      23     5      309          0     NaN         NaN                0.0000           0.0027               NaN
+      27     5      309          0     NaN         NaN                0.0032           0.0049               NaN
+      28     5      309          0     NaN         NaN                0.0000           0.0049               NaN
+      30     5      309          0     NaN         NaN                0.0000           0.0334               NaN
+
+Fault mix of sessions with anomalies:
+  session 16 (fold 1, PR-AUC 1.0): Antenna Failure (38); Faulty RF Filters (Temporal) (24); Buffer Overflow (Gradual Buildup) (19); Doppler Shift (Severe) (16); Faulty Handover Algorithm (Too Frequent) (16); Co-Channel Interference (Mild) (11); High Network Congestion (Sudden Spike) (8); Resource Allocation Bugs (4)
+  session 18 (fold 1, PR-AUC 1.0): High Network Congestion (Gradual Buildup) (18); Doppler Shift (Severe) (18); Resource Allocation Bugs (11); Faulty RF Filters (Temporal) (8); Antenna Failure (4)
+  session 14 (fold 2, PR-AUC 1.0): Co-Channel Interference (Mild) (59); High Network Congestion (Gradual Buildup) (21); Buffer Overflow (Gradual Buildup) (19); Antenna Failure (17); Co-Channel Interference (Severe) (6); High Network Congestion (Sudden Spike) (3)
+  session 32 (fold 2, PR-AUC 1.0): Buffer Overflow (Gradual Buildup) (26); Resource Allocation Bugs (18); Co-Channel Interference (Mild) (15); Co-Channel Interference (Severe) (8); Antenna Failure (6); High Network Congestion (Sudden Spike) (4); Doppler Shift (Severe) (2)
+  session  2 (fold 3, PR-AUC 1.0): Jamming (92)
+  session 15 (fold 3, PR-AUC 1.0): Buffer Overflow (Gradual Buildup) (32); Doppler Shift (Severe) (23); Faulty Handover Algorithm (Too Frequent) (16); Faulty RF Filters (Temporal) (9); High Network Congestion (Sudden Spike) (8); High Network Congestion (Gradual Buildup) (6); Co-Channel Interference (Severe) (5)
+  session  0 (fold 4, PR-AUC 0.015): Jamming (93)
+  session 12 (fold 4, PR-AUC 1.0): Antenna Failure (27); Co-Channel Interference (Mild) (25); High Network Congestion (Sudden Spike) (14); High Network Congestion (Gradual Buildup) (11); Faulty RF Filters (Temporal) (9); Co-Channel Interference (Severe) (8); Faulty Handover Algorithm (Too Frequent) (4)
+  session 11 (fold 5, PR-AUC 1.0): Co-Channel Interference (Severe) (50); Buffer Overflow (Gradual Buildup) (21); Doppler Shift (Severe) (18); Faulty RF Filters (Temporal) (17); Co-Channel Interference (Mild) (16); Resource Allocation Bugs (10); Faulty Handover Algorithm (Too Frequent) (9); Antenna Failure (6)
+  session 19 (fold 5, PR-AUC 1.0): Co-Channel Interference (Severe) (7)
+
+== 2. Normal-window shift vs all other sessions (robust z, top 6 features) ==
+sessions with faults and PR-AUC < 0.1: [0]
+         max_abs_z  n_features_|z|>3
+session                             
+31          133.20                11
+29          196.82                10
+30          175.72                 8
+0             7.09                 7
+5            10.00                 5
+10            5.75                 1
+8             4.40                 1
+9             3.40                 1
+6             1.35                 0
+20            2.33                 0
+7             0.88                 0
+23            1.93                 0
+22            2.27                 0
+21            2.75                 0
+24            1.70                 0
+27            2.92                 0
+26            2.86                 0
+25            1.81                 0
+28            3.00                 0
+  session 0: UL_BLER_mean=-7.1, UL_BLER_max=-6.8, UL_MCS_mean=-5.0, UL_MCS_max=-3.6, UL_BLER_min=-3.6, PRBs_DL_max=-3.2
+
+== 3. Anomaly segment length and contrast vs own-session Normal ==
+ session  anomalies  median_segment_len  median_contrast  n_features_contrast>3  pr_auc
+       0         93               128.0             2.08                     27   0.015
+saved results/04_session_diagnosis/summary.json

@@ -1,0 +1,47 @@
+# 01_baseline  |  2026-10-13 01:32 UTC  |  python 3.12.13 on jupyter-farida-gaber44
+
+== 1. Input files ==
+  Models Improvement/Data Splits/train_X_sessionsplit_fixed.npy 7902d9bf979d310d
+  Models Improvement/Data Splits/train_y_sessionsplit.npy    9b162bb5e46e4ad9
+  Models Improvement/Data Splits/train_idx_sessionsplit.npy  e89974c5828cb708
+  Models Improvement/Data Splits/test_idx_sessionsplit.npy   322582c6cc566b41
+  Models Improvement/Data Splits/session_id_by_row.npy       2973974a7afbdd8a
+  Models Improvement/Synthetic/raw_meta.csv                  170ca9ee3eef75ed
+  Models Improvement/Synthetic/raw_kpis.npy                  b962e756928f43e6
+
+== 2. Integrity checks ==
+Check 1  CSV label order vs train_y   : 100.00% (must be 100%)
+Check 2  train/test session overlap   : none (must be none)
+Check 3  training fault windows       : 935 (expected 935)
+         training sessions            : 28
+         sessions containing faults   : 10
+
+== 3. Model 2 baseline (5 seeds x 5 folds) ==
+  seed=42    fold=1  F1-macro=0.2132
+  seed=42    fold=2  F1-macro=0.2749
+  seed=42    fold=3  F1-macro=0.2909
+  seed=42    fold=4  F1-macro=0.2429
+  seed=42    fold=5  F1-macro=0.4491
+  seed=7     fold=1  F1-macro=0.2350
+  seed=7     fold=2  F1-macro=0.2856
+  seed=7     fold=3  F1-macro=0.2932
+  seed=7     fold=4  F1-macro=0.2143
+  seed=7     fold=5  F1-macro=0.4651
+  seed=123   fold=1  F1-macro=0.1937
+  seed=123   fold=2  F1-macro=0.2437
+  seed=123   fold=3  F1-macro=0.2952
+  seed=123   fold=4  F1-macro=0.2044
+  seed=123   fold=5  F1-macro=0.4491
+  seed=2024  fold=1  F1-macro=0.2417
+  seed=2024  fold=2  F1-macro=0.2726
+  seed=2024  fold=3  F1-macro=0.2855
+  seed=2024  fold=4  F1-macro=0.2351
+  seed=2024  fold=5  F1-macro=0.5043
+  seed=99    fold=1  F1-macro=0.1922
+  seed=99    fold=2  F1-macro=0.2297
+  seed=99    fold=3  F1-macro=0.2981
+  seed=99    fold=4  F1-macro=0.2350
+  seed=99    fold=5  F1-macro=0.4259
+
+Baseline F1-macro: 0.2908 +- 0.0902   (Phase 1 record: 0.2908 +- 0.0902)  ->  REPRODUCED
+saved results/01_baseline/manifest.json

@@ -1,0 +1,397 @@
+{
+  "cv_means": {
+    "adopted": {
+      "pr_auc": 0.4917,
+      "precision": 0.4399,
+      "recall": 0.4988,
+      "f1": 0.3758,
+      "false_alarms": 1021.24,
+      "fa_s0": 0.9582,
+      "fa_s5": 0.584,
+      "rec_jam_s0": 0.0086,
+      "rec_s2": 0.0826,
+      "rec_s12": 0.4102,
+      "rec_s18": 0.1966
+    },
+    "adopted+G": {
+      "pr_auc": 0.532,
+      "precision": 0.4839,
+      "recall": 0.5454,
+      "f1": 0.4304,
+      "false_alarms": 958.76,
+      "fa_s0": 0.9554,
+      "fa_s5": 0.5435,
+      "rec_jam_s0": 0.0022,
+      "rec_s2": 0.287,
+      "rec_s12": 0.5306,
+      "rec_s18": 0.2305
+    },
+    "jitter": {
+      "pr_auc": 0.5495,
+      "precision": 0.5205,
+      "recall": 0.5679,
+      "f1": 0.453,
+      "false_alarms": 879.36,
+      "fa_s0": 0.9377,
+      "fa_s5": 0.4675,
+      "rec_jam_s0": 0.0043,
+      "rec_s2": 0.113,
+      "rec_s12": 0.6837,
+      "rec_s18": 0.5119
+    },
+    "quant": {
+      "pr_auc": 0.4837,
+      "precision": 0.431,
+      "recall": 0.5541,
+      "f1": 0.3843,
+      "false_alarms": 1260.84,
+      "fa_s0": 0.9838,
+      "fa_s5": 0.6302,
+      "rec_jam_s0": 0.0,
+      "rec_s2": 0.5848,
+      "rec_s12": 0.5347,
+      "rec_s18": 0.061
+    },
+    "quant+cb": {
+      "pr_auc": 0.5269,
+      "precision": 0.504,
+      "recall": 0.5678,
+      "f1": 0.4496,
+      "false_alarms": 1034.6,
+      "fa_s0": 0.9777,
+      "fa_s5": 0.612,
+      "rec_jam_s0": 0.0022,
+      "rec_s2": 0.5261,
+      "rec_s12": 0.5286,
+      "rec_s18": 0.1661
+    }
+  },
+  "paired_vs_adopted": {
+    "adopted+G": {
+      "pr_auc": {
+        "mean_diff": 0.0403,
+        "p_corrected": 0.2279,
+        "p_wilcoxon": 0.0001,
+        "folds_better": 20
+      },
+      "f1": {
+        "mean_diff": 0.0545,
+        "p_corrected": 0.119,
+        "p_wilcoxon": 0.0,
+        "folds_better": 25
+      },
+      "recall": {
+        "mean_diff": 0.0467,
+        "p_corrected": 0.123,
+        "p_wilcoxon": 0.0004,
+        "folds_better": 19
+      },
+      "precision": {
+        "mean_diff": 0.044,
+        "p_corrected": 0.2974,
+        "p_wilcoxon": 0.0001,
+        "folds_better": 22
+      }
+    },
+    "jitter": {
+      "pr_auc": {
+        "mean_diff": 0.0578,
+        "p_corrected": 0.1694,
+        "p_wilcoxon": 0.0001,
+        "folds_better": 22
+      },
+      "f1": {
+        "mean_diff": 0.0772,
+        "p_corrected": 0.1391,
+        "p_wilcoxon": 0.0,
+        "folds_better": 23
+      },
+      "recall": {
+        "mean_diff": 0.0691,
+        "p_corrected": 0.1357,
+        "p_wilcoxon": 0.0008,
+        "folds_better": 17
+      },
+      "precision": {
+        "mean_diff": 0.0806,
+        "p_corrected": 0.2922,
+        "p_wilcoxon": 0.0005,
+        "folds_better": 21
+      }
+    },
+    "quant": {
+      "pr_auc": {
+        "mean_diff": -0.008,
+        "p_corrected": 0.8681,
+        "p_wilcoxon": 0.7712,
+        "folds_better": 11
+      },
+      "f1": {
+        "mean_diff": 0.0085,
+        "p_corrected": 0.8994,
+        "p_wilcoxon": 0.5965,
+        "folds_better": 15
+      },
+      "recall": {
+        "mean_diff": 0.0553,
+        "p_corrected": 0.5036,
+        "p_wilcoxon": 0.0527,
+        "folds_better": 19
+      },
+      "precision": {
+        "mean_diff": -0.0089,
+        "p_corrected": 0.8847,
+        "p_wilcoxon": 0.3896,
+        "folds_better": 11
+      }
+    },
+    "quant+cb": {
+      "pr_auc": {
+        "mean_diff": 0.0352,
+        "p_corrected": 0.3628,
+        "p_wilcoxon": 0.0551,
+        "folds_better": 16
+      },
+      "f1": {
+        "mean_diff": 0.0738,
+        "p_corrected": 0.1665,
+        "p_wilcoxon": 0.0,
+        "folds_better": 23
+      },
+      "recall": {
+        "mean_diff": 0.069,
+        "p_corrected": 0.1542,
+        "p_wilcoxon": 0.0004,
+        "folds_better": 20
+      },
+      "precision": {
+        "mean_diff": 0.0641,
+        "p_corrected": 0.3274,
+        "p_wilcoxon": 0.0002,
+        "folds_better": 21
+      }
+    }
+  },
+  "posthoc_test": {
+    "adopted": {
+      "threshold": 0.5,
+      "TP": 266,
+      "FP": 116,
+      "FN": 34,
+      "TN": 5896,
+      "precision": 0.6963,
+      "recall": 0.8867,
+      "f1": 0.7801,
+      "f2": 0.8407,
+      "pr_auc": 0.8929,
+      "per_session": {
+        "1": {
+          "n": 94,
+          "flagged": 94,
+          "faults": 94,
+          "caught": 94
+        },
+        "3": {
+          "n": 3006,
+          "flagged": 44,
+          "faults": 0,
+          "caught": 0
+        },
+        "4": {
+          "n": 3006,
+          "flagged": 72,
+          "faults": 0,
+          "caught": 0
+        },
+        "13": {
+          "n": 69,
+          "flagged": 54,
+          "faults": 69,
+          "caught": 54
+        },
+        "17": {
+          "n": 137,
+          "flagged": 118,
+          "faults": 137,
+          "caught": 118
+        }
+      }
+    },
+    "adopted+G": {
+      "threshold": 0.5,
+      "TP": 270,
+      "FP": 123,
+      "FN": 30,
+      "TN": 5889,
+      "precision": 0.687,
+      "recall": 0.9,
+      "f1": 0.7792,
+      "f2": 0.8475,
+      "pr_auc": 0.9175,
+      "per_session": {
+        "1": {
+          "n": 94,
+          "flagged": 94,
+          "faults": 94,
+          "caught": 94
+        },
+        "3": {
+          "n": 3006,
+          "flagged": 80,
+          "faults": 0,
+          "caught": 0
+        },
+        "4": {
+          "n": 3006,
+          "flagged": 43,
+          "faults": 0,
+          "caught": 0
+        },
+        "13": {
+          "n": 69,
+          "flagged": 55,
+          "faults": 69,
+          "caught": 55
+        },
+        "17": {
+          "n": 137,
+          "flagged": 121,
+          "faults": 137,
+          "caught": 121
+        }
+      }
+    },
+    "jitter": {
+      "threshold": 0.5,
+      "TP": 215,
+      "FP": 805,
+      "FN": 85,
+      "TN": 5207,
+      "precision": 0.2108,
+      "recall": 0.7167,
+      "f1": 0.3258,
+      "f2": 0.4842,
+      "pr_auc": 0.6175,
+      "per_session": {
+        "1": {
+          "n": 94,
+          "flagged": 50,
+          "faults": 94,
+          "caught": 50
+        },
+        "3": {
+          "n": 3006,
+          "flagged": 422,
+          "faults": 0,
+          "caught": 0
+        },
+        "4": {
+          "n": 3006,
+          "flagged": 383,
+          "faults": 0,
+          "caught": 0
+        },
+        "13": {
+          "n": 69,
+          "flagged": 56,
+          "faults": 69,
+          "caught": 56
+        },
+        "17": {
+          "n": 137,
+          "flagged": 109,
+          "faults": 137,
+          "caught": 109
+        }
+      }
+    },
+    "quant": {
+      "threshold": 0.5,
+      "TP": 257,
+      "FP": 2512,
+      "FN": 43,
+      "TN": 3500,
+      "precision": 0.0928,
+      "recall": 0.8567,
+      "f1": 0.1675,
+      "f2": 0.3238,
+      "pr_auc": 0.5385,
+      "per_session": {
+        "1": {
+          "n": 94,
+          "flagged": 94,
+          "faults": 94,
+          "caught": 94
+        },
+        "3": {
+          "n": 3006,
+          "flagged": 395,
+          "faults": 0,
+          "caught": 0
+        },
+        "4": {
+          "n": 3006,
+          "flagged": 2117,
+          "faults": 0,
+          "caught": 0
+        },
+        "13": {
+          "n": 69,
+          "flagged": 52,
+          "faults": 69,
+          "caught": 52
+        },
+        "17": {
+          "n": 137,
+          "flagged": 111,
+          "faults": 137,
+          "caught": 111
+        }
+      }
+    },
+    "quant+cb": {
+      "threshold": 0.5,
+      "TP": 267,
+      "FP": 124,
+      "FN": 33,
+      "TN": 5888,
+      "precision": 0.6829,
+      "recall": 0.89,
+      "f1": 0.7728,
+      "f2": 0.8391,
+      "pr_auc": 0.8857,
+      "per_session": {
+        "1": {
+          "n": 94,
+          "flagged": 94,
+          "faults": 94,
+          "caught": 94
+        },
+        "3": {
+          "n": 3006,
+          "flagged": 59,
+          "faults": 0,
+          "caught": 0
+        },
+        "4": {
+          "n": 3006,
+          "flagged": 65,
+          "faults": 0,
+          "caught": 0
+        },
+        "13": {
+          "n": 69,
+          "flagged": 54,
+          "faults": 69,
+          "caught": 54
+        },
+        "17": {
+          "n": 137,
+          "flagged": 119,
+          "faults": 137,
+          "caught": 119
+        }
+      }
+    }
+  }
+}

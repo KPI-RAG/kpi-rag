@@ -1,0 +1,29 @@
+session,fold,windows,anomalies,pr_auc,recall@0.5,false_alarm_rate@0.5,median_p_normal,median_p_anomaly,fault_mix
+8,1,3007,0,,,0.0,0.0026,,
+16,1,136,136,1.0,0.596,,,0.7174,Antenna Failure (38); Faulty RF Filters (Temporal) (24); Buffer Overflow (Gradual Buildup) (19); Doppler Shift (Severe) (16); Faulty Handover Algorithm (Too Frequent) (16); Co-Channel Interference (Mild) (11); High Network Congestion (Sudden Spike) (8); Resource Allocation Bugs (4)
+18,1,59,59,1.0,0.339,,,0.2039,High Network Congestion (Gradual Buildup) (18); Doppler Shift (Severe) (18); Resource Allocation Bugs (11); Faulty RF Filters (Temporal) (8); Antenna Failure (4)
+20,1,309,0,,,0.0,0.001,,
+25,1,309,0,,,0.0,0.0012,,
+26,1,309,0,,,0.0,0.0014,,
+31,1,309,0,,,0.0,0.0021,,
+5,2,3007,0,,,0.6605,0.7031,,
+14,2,125,125,1.0,0.672,,,0.6492,Co-Channel Interference (Mild) (59); High Network Congestion (Gradual Buildup) (21); Buffer Overflow (Gradual Buildup) (19); Antenna Failure (17); Co-Channel Interference (Severe) (6); High Network Congestion (Sudden Spike) (3)
+21,2,309,0,,,0.0,0.0015,,
+22,2,309,0,,,0.0,0.0022,,
+24,2,309,0,,,0.0,0.0022,,
+29,2,309,0,,,0.3204,0.0972,,
+32,2,79,79,1.0,0.582,,,0.8614,Buffer Overflow (Gradual Buildup) (26); Resource Allocation Bugs (18); Co-Channel Interference (Mild) (15); Co-Channel Interference (Severe) (8); Antenna Failure (6); High Network Congestion (Sudden Spike) (4); Doppler Shift (Severe) (2)
+2,3,92,92,1.0,0.261,,,0.2875,Jamming (92)
+7,3,3006,0,,,0.0,0.025,,
+9,3,3006,0,,,0.0007,0.0084,,
+15,3,99,99,1.0,0.747,,,0.9202,Buffer Overflow (Gradual Buildup) (32); Doppler Shift (Severe) (23); Faulty Handover Algorithm (Too Frequent) (16); Faulty RF Filters (Temporal) (9); High Network Congestion (Sudden Spike) (8); High Network Congestion (Gradual Buildup) (6); Co-Channel Interference (Severe) (5)
+0,4,3100,93,0.015,0.011,0.984,0.9861,0.01,Jamming (93)
+6,4,3006,0,,,0.0749,0.0411,,
+12,4,98,98,1.0,0.327,,,0.2488,Antenna Failure (27); Co-Channel Interference (Mild) (25); High Network Congestion (Sudden Spike) (14); High Network Congestion (Gradual Buildup) (11); Faulty RF Filters (Temporal) (9); Co-Channel Interference (Severe) (8); Faulty Handover Algorithm (Too Frequent) (4)
+10,5,3006,0,,,0.0609,0.0789,,
+11,5,147,147,1.0,0.844,,,0.8831,Co-Channel Interference (Severe) (50); Buffer Overflow (Gradual Buildup) (21); Doppler Shift (Severe) (18); Faulty RF Filters (Temporal) (17); Co-Channel Interference (Mild) (16); Resource Allocation Bugs (10); Faulty Handover Algorithm (Too Frequent) (9); Antenna Failure (6)
+19,5,7,7,1.0,1.0,,,0.9969,Co-Channel Interference (Severe) (7)
+23,5,309,0,,,0.0,0.0027,,
+27,5,309,0,,,0.0032,0.0049,,
+28,5,309,0,,,0.0,0.0049,,
+30,5,309,0,,,0.0,0.0334,,

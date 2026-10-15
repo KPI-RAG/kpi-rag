@@ -1,0 +1,39 @@
+# 10b_session0_diagnosis  |  2026-10-13 21:32 UTC  |  python 3.12.13 on jupyter-farida-gaber44
+== T1. Session-0 Normal vs other Normal: 5-fold AUC of a 100-tree ExtraTrees ==
+  session  0 Normal (3007 windows) vs other Normal: AUC = 1.000
+  session  5 Normal (3007 windows) vs other Normal: AUC = 1.000
+  session  6 Normal (3006 windows) vs other Normal: AUC = 1.000
+  session 10 Normal (3006 windows) vs other Normal: AUC = 1.000
+  (AUC ~1.0 = that session's Normal windows are trivially distinguishable, i.e. a recording fingerprint)
+
+== T2. Nearest class centroid (standardised Config A) for Normal windows of selected sessions ==
+  session  0: Co-Channel Interference (Mil 62%, Jamming 25%, Resource Allocation Bugs 11%
+  session  5: Co-Channel Interference (Mil 60%, Resource Allocation Bugs 32%, Normal (other sessions) 3%
+  session  6: Resource Allocation Bugs 75%, Normal (other sessions) 22%, Faulty Handover Algorithm (T 2%
+  session 10: Normal (other sessions) 91%, Faulty Handover Algorithm (T 5%, Co-Channel Interference (Mil 2%
+  session 20: Normal (other sessions) 95%, Faulty Handover Algorithm (T 2%, High Network Congestion (Sud 2%
+
+== T3. Jamming in session 0 vs session 2 ==
+  centroid distance s0-s2 = 12.17  vs mean within-session spread = 4.08
+  largest standardised differences: TX_Bytes_mean +47.8, DL_Packets_mean +34.0, PRB_Util_DL_mean +33.4, PRBs_DL_mean +33.4, UL_Packets_mean +32.4, UL_MCS_mean +12.8
+  session-0 Normal centroid: distance to Jamming-s0 12.33, to Jamming-s2 3.09, to other Normal 8.25
+
+== T4. Channel medians (mean feature): session-0 Normal vs session-0 Jamming vs other Normal ==
+               s0_normal  s0_jamming  other_normal  s2_jamming
+channel                                                       
+RSRP             -87.228     -73.000      -111.964     -75.332
+DL_BLER            0.000       0.007         0.000       0.004
+DL_MCS             7.000       7.000         7.000       7.000
+UL_BLER            0.000       0.092         0.091       0.001
+UL_MCS             9.008      15.729        15.254       9.166
+UL_NPRB            5.036      22.373        14.500       5.302
+UL_SNR            21.428      20.148        20.243      21.231
+TX_Bytes          44.250  438154.102    163695.645    8091.727
+RX_Bytes         214.688    6328.117      4017.812     486.660
+Est_UL_Buffer      0.362     904.387       267.254      15.548
+PRBs_DL            0.007      63.998        34.729       1.179
+PRBs_UL            0.029       1.693         1.119       0.140
+PRB_Util_DL        0.006      60.375        32.764       1.112
+PRB_Util_UL        0.028       1.597         1.055       0.132
+UL_Packets         0.031      75.922        26.059       0.473
+DL_Packets         0.023     287.484        72.668       4.672

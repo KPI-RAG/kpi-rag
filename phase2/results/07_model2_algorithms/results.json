@@ -1,0 +1,74 @@
+{
+  "catboost_A": {
+    "mean": 0.291,
+    "std": 0.0969,
+    "d_vs_phase1": 0.0001,
+    "p_corrected": 0.9907,
+    "wins": 10,
+    "sec_per_fold": 30.3
+  },
+  "catboost_rich": {
+    "mean": 0.3464,
+    "std": 0.0912,
+    "d_vs_phase1": 0.0556,
+    "p_corrected": 0.1059,
+    "wins": 21,
+    "sec_per_fold": 105.1
+  },
+  "lightgbm_rich": {
+    "mean": 0.3909,
+    "std": 0.0666,
+    "d_vs_phase1": 0.1001,
+    "p_corrected": 0.0203,
+    "wins": 23,
+    "sec_per_fold": 3.0
+  },
+  "xgboost_rich": {
+    "mean": 0.358,
+    "std": 0.0731,
+    "d_vs_phase1": 0.0672,
+    "p_corrected": 0.217,
+    "wins": 19,
+    "sec_per_fold": 2.9
+  },
+  "extratrees_rich": {
+    "mean": 0.309,
+    "std": 0.0645,
+    "d_vs_phase1": 0.0182,
+    "p_corrected": 0.7812,
+    "wins": 17,
+    "sec_per_fold": 1.9
+  },
+  "catboost_c22": {
+    "mean": 0.4016,
+    "std": 0.0971,
+    "d_vs_phase1": 0.1108,
+    "p_corrected": 0.0211,
+    "wins": 23,
+    "sec_per_fold": 148.3
+  },
+  "minirocket": {
+    "mean": 0.328,
+    "std": 0.0933,
+    "d_vs_phase1": 0.0371,
+    "p_corrected": 0.4835,
+    "wins": 13,
+    "sec_per_fold": 1.5
+  },
+  "hydra": {
+    "mean": 0.3135,
+    "std": 0.0814,
+    "d_vs_phase1": 0.0226,
+    "p_corrected": 0.6801,
+    "wins": 15,
+    "sec_per_fold": 10.7
+  },
+  "quant": {
+    "mean": 0.428,
+    "std": 0.0539,
+    "d_vs_phase1": 0.1372,
+    "p_corrected": 0.0084,
+    "wins": 22,
+    "sec_per_fold": 5.0
+  }
+}

@@ -1,0 +1,50 @@
+# 10a_model1_shift  |  2026-10-13 21:24 UTC  |  python 3.12.13 on jupyter-farida-gaber44
+  seed=42    fold=1  PR-AUC  adopted=0.866  adopted+G=0.878  jitter=0.867  quant=0.866  quant+cb=0.907  (52s)
+  seed=42    fold=2  PR-AUC  adopted=0.206  adopted+G=0.356  jitter=0.323  quant=0.150  quant+cb=0.219  (58s)
+  seed=42    fold=3  PR-AUC  adopted=0.865  adopted+G=0.838  jitter=0.750  quant=0.732  quant+cb=0.806  (72s)
+  seed=42    fold=4  PR-AUC  adopted=0.019  adopted+G=0.020  jitter=0.024  quant=0.020  quant+cb=0.020  (62s)
+  seed=42    fold=5  PR-AUC  adopted=0.831  adopted+G=0.856  jitter=0.847  quant=0.911  quant+cb=0.902  (78s)
+  seed=7     fold=1  PR-AUC  adopted=0.106  adopted+G=0.126  jitter=0.206  quant=0.039  quant+cb=0.052  (44s)
+  seed=7     fold=2  PR-AUC  adopted=0.757  adopted+G=0.819  jitter=0.831  quant=0.837  quant+cb=0.894  (65s)
+  seed=7     fold=3  PR-AUC  adopted=0.757  adopted+G=0.893  jitter=0.753  quant=0.762  quant+cb=0.886  (70s)
+  seed=7     fold=4  PR-AUC  adopted=0.021  adopted+G=0.020  jitter=0.043  quant=0.018  quant+cb=0.019  (58s)
+  seed=7     fold=5  PR-AUC  adopted=0.748  adopted+G=0.812  jitter=0.859  quant=0.888  quant+cb=0.879  (73s)
+  seed=123   fold=1  PR-AUC  adopted=0.835  adopted+G=0.836  jitter=0.864  quant=0.756  quant+cb=0.830  (51s)
+  seed=123   fold=2  PR-AUC  adopted=0.242  adopted+G=0.231  jitter=0.319  quant=0.180  quant+cb=0.197  (60s)
+  seed=123   fold=3  PR-AUC  adopted=0.301  adopted+G=0.419  jitter=0.457  quant=0.036  quant+cb=0.298  (87s)
+  seed=123   fold=4  PR-AUC  adopted=0.021  adopted+G=0.021  jitter=0.037  quant=0.020  quant+cb=0.021  (58s)
+  seed=123   fold=5  PR-AUC  adopted=0.830  adopted+G=0.850  jitter=0.890  quant=0.889  quant+cb=0.889  (71s)
+  seed=2024  fold=1  PR-AUC  adopted=0.825  adopted+G=0.852  jitter=0.875  quant=0.731  quant+cb=0.829  (47s)
+  seed=2024  fold=2  PR-AUC  adopted=0.195  adopted+G=0.231  jitter=0.303  quant=0.136  quant+cb=0.173  (84s)
+  seed=2024  fold=3  PR-AUC  adopted=0.676  adopted+G=0.906  jitter=0.731  quant=0.744  quant+cb=0.889  (68s)
+  seed=2024  fold=4  PR-AUC  adopted=0.020  adopted+G=0.020  jitter=0.038  quant=0.018  quant+cb=0.019  (58s)
+  seed=2024  fold=5  PR-AUC  adopted=0.885  adopted+G=0.885  jitter=0.911  quant=0.894  quant+cb=0.903  (69s)
+  seed=99    fold=1  PR-AUC  adopted=0.062  adopted+G=0.112  jitter=0.320  quant=0.042  quant+cb=0.064  (41s)
+  seed=99    fold=2  PR-AUC  adopted=0.787  adopted+G=0.791  jitter=0.834  quant=0.872  quant+cb=0.909  (70s)
+  seed=99    fold=3  PR-AUC  adopted=0.465  adopted+G=0.531  jitter=0.673  quant=0.609  quant+cb=0.595  (66s)
+  seed=99    fold=4  PR-AUC  adopted=0.028  adopted+G=0.028  jitter=0.044  quant=0.028  quant+cb=0.028  (61s)
+  seed=99    fold=5  PR-AUC  adopted=0.944  adopted+G=0.966  jitter=0.941  quant=0.917  quant+cb=0.948  (74s)
+
+== Mean over 25 folds (t = 0.5); fa_* = false-alarm rate in that Normal session, rec_* = recall in that fault session ==
+           pr_auc  precision  recall     f1  false_alarms  fa_s0  fa_s5  rec_jam_s0  rec_s2  rec_s12  rec_s18
+variant                                                                                                      
+adopted     0.492      0.440   0.499  0.376       1021.24  0.958  0.584       0.009   0.083    0.410    0.197
+adopted+G   0.532      0.484   0.545  0.430        958.76  0.955  0.544       0.002   0.287    0.531    0.231
+jitter      0.550      0.520   0.568  0.453        879.36  0.938  0.468       0.004   0.113    0.684    0.512
+quant       0.484      0.431   0.554  0.384       1260.84  0.984  0.630       0.000   0.585    0.535    0.061
+quant+cb    0.527      0.504   0.568  0.450       1034.60  0.978  0.612       0.002   0.526    0.529    0.166
+
+== Paired vs adopted (Nadeau-Bengio corrected t-test) ==
+  adopted+G  dPR-AUC=+0.0403 (p=0.228, 20/25)  dF1=+0.0545 (p=0.119)  dRecall=+0.0467  dPrec=+0.0440
+  jitter     dPR-AUC=+0.0578 (p=0.169, 22/25)  dF1=+0.0772 (p=0.139)  dRecall=+0.0691  dPrec=+0.0806
+  quant      dPR-AUC=-0.0080 (p=0.868, 11/25)  dF1=+0.0085 (p=0.899)  dRecall=+0.0553  dPrec=-0.0089
+  quant+cb   dPR-AUC=+0.0352 (p=0.363, 16/25)  dF1=+0.0738 (p=0.167)  dRecall=+0.0690  dPrec=+0.0641
+
+== POST-HOC test (5 held-out sessions, 6,312 windows; not used to decide) ==
+  adopted    PR-AUC=0.893  P=0.696 R=0.887 F1=0.780  TP=266 FP=116 FN=34  per-session flagged/faults: s1: 94/94, s3: 44/0, s4: 72/0, s13: 54/69, s17: 118/137
+  adopted+G  PR-AUC=0.917  P=0.687 R=0.900 F1=0.779  TP=270 FP=123 FN=30  per-session flagged/faults: s1: 94/94, s3: 80/0, s4: 43/0, s13: 55/69, s17: 121/137
+  jitter     PR-AUC=0.618  P=0.211 R=0.717 F1=0.326  TP=215 FP=805 FN=85  per-session flagged/faults: s1: 50/94, s3: 422/0, s4: 383/0, s13: 56/69, s17: 109/137
+  quant      PR-AUC=0.538  P=0.093 R=0.857 F1=0.168  TP=257 FP=2512 FN=43  per-session flagged/faults: s1: 94/94, s3: 395/0, s4: 2117/0, s13: 52/69, s17: 111/137
+  quant+cb   PR-AUC=0.886  P=0.683 R=0.890 F1=0.773  TP=267 FP=124 FN=33  per-session flagged/faults: s1: 94/94, s3: 59/0, s4: 65/0, s13: 54/69, s17: 119/137
+  reference: Phase 1 TP 269 / FP 1105; step 03 adopted TP 266 / FP 116
+saved results/10a_model1_shift/results.json

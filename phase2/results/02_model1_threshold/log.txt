@@ -1,0 +1,24 @@
+# 02_model1_threshold  |  2026-10-13 01:31 UTC  |  python 3.12.13 on jupyter-farida-gaber44
+training partition: 25688 windows, 935 anomalies (3.6%), 28 sessions
+
+== 1. Out-of-fold Model 1 probabilities ==
+  fold 1: 4438 windows (195 anomalies), PR-AUC=0.837, F2-optimal t=0.085
+  fold 2: 4447 windows (204 anomalies), PR-AUC=0.259, F2-optimal t=0.927
+  fold 3: 6203 windows (191 anomalies), PR-AUC=0.574, F2-optimal t=0.357
+  fold 4: 6204 windows (191 anomalies), PR-AUC=0.020, F2-optimal t=0.008
+  fold 5: 4396 windows (154 anomalies), PR-AUC=0.806, F2-optimal t=0.736
+
+== 2. Threshold selection on pooled OOF probabilities ==
+OOF PR-AUC = 0.0658   (a random detector scores 0.0364)
+F2-optimal threshold per fold: [0.085, 0.927, 0.357, 0.008, 0.736]
+  default_0.5                    t=0.500  P=0.080 R=0.537 F2=0.251  TP=502 FP=5762 FN=433  catch-all=36.0%
+  max_precision_at_recall_0.85   t=0.061  P=0.063 R=0.855 F2=0.243  TP=799 FP=11910 FN=136  catch-all=30.1%
+  f2_optimal                     t=0.253  P=0.079 R=0.678 F2=0.270  TP=634 FP=7373 FN=301  catch-all=32.7%
+Chosen by the pre-registered rule: t = 0.0607
+
+== 3. POST-HOC test check (reported only, not used for selection) ==
+Phase 1 parser replica vs saved train_X (2000 rows, 9 with the BLER bug): max|diff| = 0.00e+00  -> EXACT
+  default_0.5  t=0.500  P=0.196 R=0.897  TP=269 FP=1105 FN=31 TN=4907  catch-all=82.2%
+  chosen       t=0.061  P=0.049 R=0.990  TP=297 FP=5751 FN=3 TN=261  catch-all=81.4%
+  Phase 1 reference at 0.5: TP=269 FP=1105 FN=31 TN=4907
+saved results/02_model1_threshold/results.json

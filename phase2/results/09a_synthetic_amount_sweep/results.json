@@ -1,0 +1,56 @@
+{
+  "amounts": [
+    500,
+    1000,
+    2000
+  ],
+  "means": {
+    "500": {
+      "catboost": 0.379,
+      "lightgbm": 0.403,
+      "quant": 0.3886
+    },
+    "1000": {
+      "catboost": 0.3781,
+      "lightgbm": 0.4336,
+      "quant": 0.3748
+    },
+    "2000": {
+      "catboost": 0.3781,
+      "lightgbm": 0.4088,
+      "quant": 0.3681
+    }
+  },
+  "paired": {
+    "catboost@1000_vs_500": {
+      "mean_diff": -0.0009,
+      "p_corrected": 0.9474,
+      "wins": 5
+    },
+    "catboost@2000_vs_500": {
+      "mean_diff": -0.0009,
+      "p_corrected": 0.963,
+      "wins": 7
+    },
+    "lightgbm@1000_vs_500": {
+      "mean_diff": 0.0306,
+      "p_corrected": 0.1979,
+      "wins": 9
+    },
+    "lightgbm@2000_vs_500": {
+      "mean_diff": 0.0057,
+      "p_corrected": 0.7881,
+      "wins": 5
+    },
+    "quant@1000_vs_500": {
+      "mean_diff": -0.0137,
+      "p_corrected": 0.457,
+      "wins": 2
+    },
+    "quant@2000_vs_500": {
+      "mean_diff": -0.0204,
+      "p_corrected": 0.419,
+      "wins": 3
+    }
+  }
+}

@@ -1,0 +1,13 @@
+,Antenna Failure,Buffer Overflow (Gradual Buildup),Co-Channel Interference (Mild),Co-Channel Interference (Severe),Doppler Shift (Severe),Faulty Handover Algorithm (Too Frequent),Faulty RF Filters (Temporal),High Network Congestion (Gradual Buildup),High Network Congestion (Sudden Spike),Jamming,Resource Allocation Bugs,Normal
+Antenna Failure,7,2,0,0,0,0,0,0,0,0,0,0
+Buffer Overflow (Gradual Buildup),1,15,0,0,2,0,0,0,0,0,0,0
+Co-Channel Interference (Mild),4,0,9,0,0,0,6,0,0,0,0,0
+Co-Channel Interference (Severe),1,0,0,12,0,0,17,0,0,0,0,0
+Doppler Shift (Severe),0,0,0,0,9,0,0,0,0,0,0,0
+Faulty Handover Algorithm (Too Frequent),0,0,0,0,0,10,3,0,0,0,0,0
+Faulty RF Filters (Temporal),0,0,0,0,0,0,25,0,0,0,0,0
+High Network Congestion (Gradual Buildup),0,26,4,0,0,0,0,2,0,0,0,0
+High Network Congestion (Sudden Spike),0,0,0,0,0,0,0,0,0,0,0,0
+Jamming,0,0,0,0,0,0,1,0,0,93,0,0
+Resource Allocation Bugs,0,0,0,0,0,0,0,0,0,0,17,0
+Normal,8,3,75,0,6,20,3,0,1,0,0,0

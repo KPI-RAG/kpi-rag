@@ -1,0 +1,47 @@
+# 05a_model1_new_features  |  2026-10-13 09:46 UTC  |  python 3.12.13 on jupyter-farida-gaber44
+feature dims: A=64, A+G1G3=112, A+G1G2G3=160, levelfree=96
+  seed=42    fold=1  PR-AUC  A=0.866  A+G1G3=0.897  A+G1G2G3=0.878  levelfree=0.773
+  seed=42    fold=2  PR-AUC  A=0.206  A+G1G3=0.308  A+G1G2G3=0.356  levelfree=0.452
+  seed=42    fold=3  PR-AUC  A=0.865  A+G1G3=0.862  A+G1G2G3=0.838  levelfree=0.389
+  seed=42    fold=4  PR-AUC  A=0.019  A+G1G3=0.021  A+G1G2G3=0.020  levelfree=0.027
+  seed=42    fold=5  PR-AUC  A=0.831  A+G1G3=0.817  A+G1G2G3=0.856  levelfree=0.469
+  seed=7     fold=1  PR-AUC  A=0.106  A+G1G3=0.196  A+G1G2G3=0.126  levelfree=0.447
+  seed=7     fold=2  PR-AUC  A=0.757  A+G1G3=0.789  A+G1G2G3=0.819  levelfree=0.738
+  seed=7     fold=3  PR-AUC  A=0.757  A+G1G3=0.862  A+G1G2G3=0.893  levelfree=0.446
+  seed=7     fold=4  PR-AUC  A=0.021  A+G1G3=0.021  A+G1G2G3=0.020  levelfree=0.027
+  seed=7     fold=5  PR-AUC  A=0.748  A+G1G3=0.730  A+G1G2G3=0.812  levelfree=0.546
+  seed=123   fold=1  PR-AUC  A=0.835  A+G1G3=0.864  A+G1G2G3=0.836  levelfree=0.773
+  seed=123   fold=2  PR-AUC  A=0.242  A+G1G3=0.287  A+G1G2G3=0.231  levelfree=0.438
+  seed=123   fold=3  PR-AUC  A=0.301  A+G1G3=0.342  A+G1G2G3=0.419  levelfree=0.228
+  seed=123   fold=4  PR-AUC  A=0.021  A+G1G3=0.022  A+G1G2G3=0.021  levelfree=0.036
+  seed=123   fold=5  PR-AUC  A=0.830  A+G1G3=0.865  A+G1G2G3=0.850  levelfree=0.502
+  seed=2024  fold=1  PR-AUC  A=0.825  A+G1G3=0.847  A+G1G2G3=0.852  levelfree=0.769
+  seed=2024  fold=2  PR-AUC  A=0.195  A+G1G3=0.207  A+G1G2G3=0.231  levelfree=0.454
+  seed=2024  fold=3  PR-AUC  A=0.676  A+G1G3=0.908  A+G1G2G3=0.906  levelfree=0.380
+  seed=2024  fold=4  PR-AUC  A=0.020  A+G1G3=0.020  A+G1G2G3=0.020  levelfree=0.030
+  seed=2024  fold=5  PR-AUC  A=0.885  A+G1G3=0.853  A+G1G2G3=0.885  levelfree=0.585
+  seed=99    fold=1  PR-AUC  A=0.062  A+G1G3=0.065  A+G1G2G3=0.112  levelfree=0.515
+  seed=99    fold=2  PR-AUC  A=0.787  A+G1G3=0.785  A+G1G2G3=0.791  levelfree=0.713
+  seed=99    fold=3  PR-AUC  A=0.465  A+G1G3=0.482  A+G1G2G3=0.531  levelfree=0.317
+  seed=99    fold=4  PR-AUC  A=0.028  A+G1G3=0.029  A+G1G2G3=0.028  levelfree=0.041
+  seed=99    fold=5  PR-AUC  A=0.944  A+G1G3=0.949  A+G1G2G3=0.966  levelfree=0.730
+
+== Mean over 25 folds (t = 0.5) ==
+           pr_auc  precision  recall      f1  false_alarms  fa_session0  fa_session5  jamming_s0_recall
+variant                                                                                                
+A          0.4917     0.4399  0.4988  0.3758       1021.24       576.28       351.24             0.0086
+A+G1G3     0.5211     0.4675  0.5310  0.4127        952.32       579.04       307.96             0.0022
+A+G1G2G3   0.5320     0.4839  0.5454  0.4304        958.76       574.60       326.88             0.0022
+levelfree  0.4330     0.4440  0.4327  0.3613        724.36       572.88       108.08             0.0000
+
+== Paired comparison with A (Nadeau-Bengio corrected t-test) ==
+  A+G1G3     dPR-AUC=+0.0294 (p=0.331, 20/25 better)  dF1=+0.0369 (p=0.159)  dRecall=+0.0322  -> not adopted
+  A+G1G2G3   dPR-AUC=+0.0403 (p=0.228, 20/25 better)  dF1=+0.0545 (p=0.119)  dRecall=+0.0467  -> not adopted
+  levelfree  dPR-AUC=-0.0587 (p=0.642, 10/25 better)  dF1=-0.0145 (p=0.870)  dRecall=-0.0660  -> not adopted
+
+== POST-HOC test check (3 held-out sessions; not used to decide) ==
+  A          PR-AUC=0.893  P=0.696 R=0.887 F1=0.780  TP=266 FP=116 FN=34
+  A+G1G3     PR-AUC=0.906  P=0.730 R=0.890 F1=0.802  TP=267 FP=99 FN=33
+  A+G1G2G3   PR-AUC=0.917  P=0.687 R=0.900 F1=0.779  TP=270 FP=123 FN=30
+  levelfree  PR-AUC=0.456  P=0.241 R=0.497 F1=0.325  TP=149 FP=468 FN=151
+saved results/05a_model1_new_features/results.json

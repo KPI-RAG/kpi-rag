@@ -1,0 +1,29 @@
+{
+  "cv": {
+    "main_macro_f1": 0.3888,
+    "main_pair_f1": 0.2981,
+    "main_hnc_to_bo": 9.28,
+    "main_hnc_n": 11.2,
+    "spec_macro_f1": 0.3782,
+    "spec_pair_f1": 0.247,
+    "spec_hnc_to_bo": 9.2,
+    "spec_hnc_n": 11.2
+  },
+  "test": {
+    "main": {
+      "macro_f1": 0.5907686444447383,
+      "pair_f1": 0.30480317804261464,
+      "hnc_to_bo": 30,
+      "hnc_n": 37
+    },
+    "specialist": {
+      "macro_f1": 0.5894624389131806,
+      "pair_f1": 0.2976190476190476,
+      "hnc_to_bo": 30,
+      "hnc_n": 37
+    },
+    "acc_main": 0.7033,
+    "acc_spec": 0.7
+  },
+  "adopt": false
+}
