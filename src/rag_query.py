@@ -163,3 +163,46 @@ def query_from_classifier_output(
         k=k,
         threshold=threshold
     )
+
+
+def retrieve_similar_tickets(
+    query: str,
+    cfg: dict,
+    n_results: int = 5
+) -> list[dict]:
+    """Retrieve similar tickets for a free-text query and return a list of dictionaries.
+
+    Parameters
+    ----------
+    query : str
+        Free-text query to search.
+    cfg : dict
+        Application configuration containing RAG settings.
+    n_results : int, optional
+        Number of tickets to retrieve (default is 5).
+
+    Returns
+    -------
+    list[dict]
+        List of dicts with keys 'ticket_id', 'fault_type', 'similarity', 'content'.
+    """
+    from src.kg_indexer import get_collection
+    collection = get_collection(cfg)
+    model_name = cfg["rag"]["embedding_model"]
+    threshold = cfg["rag"]["cosine_threshold"]
+    tickets, _ = retrieve(
+        query=query,
+        collection=collection,
+        model_name=model_name,
+        k=n_results,
+        threshold=threshold,
+    )
+    return [
+        {
+            "ticket_id": t.ticket_id,
+            "fault_type": t.anomaly_type,
+            "similarity": t.similarity_score,
+            "content": t.content,
+        }
+        for t in tickets
+    ]
