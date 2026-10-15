@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+results/cache/
+results/_runs/
+results/**/folds_partial.csv
+results/final/phase1_layer2_reference.json

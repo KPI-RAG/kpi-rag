@@ -9,9 +9,6 @@ by GROUND TRUTH (true anomalies -> Model 2 SHAP, false positives -> Model 1 SHAP
 available at inference; here the choice follows the models' own output: a window Model 2 rejects as
 "Normal" gets Model 1 SHAP with the Phase 1 note, every other flagged window gets Model 2 SHAP.
 """
-import json
-import os
-
 import numpy as np
 
 from . import config as C

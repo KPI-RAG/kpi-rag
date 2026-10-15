@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.expanduser("~/.kpi_rag_vendor"))
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import ExtraTreesClassifier
-from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, precision_recall_fscore_support
+from sklearn.metrics import accuracy_score, confusion_matrix, precision_recall_fscore_support
 from sklearn.model_selection import StratifiedGroupKFold
 
 from src import config as C

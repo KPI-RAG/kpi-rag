@@ -16,7 +16,6 @@ data.py), exactly as in the notebook. Step 07 measures the effect of the parser 
 import json
 import os
 import pickle
-from collections import Counter
 
 import numpy as np
 import pandas as pd
@@ -73,7 +72,7 @@ class V3:
             self.raw = np.load(C.RAW_KPIS, mmap_mode="r")
             self.cache_sig = np.asarray(self.raw[self.cache_rows], dtype=np.float64)
         self.ROW2IDX = {int(r): i for i, r in enumerate(self.cache_rows)}
-        si_train, train_y = d["train_idx"], d["train_y"]
+        train_y = d["train_y"]
         n_fault10 = int(np.isin(train_y, self.SYNTHETIC_FAULTS).sum())
         self.host_rows = self.cache_rows[n_fault10:]                 # cell 21 layout
         train_X = d["train_X"]

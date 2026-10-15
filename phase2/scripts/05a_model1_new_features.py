@@ -49,7 +49,7 @@ def build(part, variant):
 
 VARIANTS = ["A", "A+G1G3", "A+G1G2G3", "levelfree"]
 X = {v: build("train", v) for v in VARIANTS}
-log(f"feature dims: " + ", ".join(f"{v}={X[v].shape[1]}" for v in VARIANTS))
+log("feature dims: " + ", ".join(f"{v}={X[v].shape[1]}" for v in VARIANTS))
 
 rows = []
 for seed in C.CV_SEEDS:

@@ -12,7 +12,6 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import numpy as np
 import pandas as pd
 from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedGroupKFold
