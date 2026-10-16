@@ -108,7 +108,7 @@ def build_prompt(
 
     # The same alignment row is used by validate_citation(), so C3's citation
     # score (100%, 30/30) measures whether the LLM keeps the standard it was given, not
-    # whether it knew it. C1 (20%) and C2 (23%) provide the baselines without this context.
+    # whether it knew it. C1 (27%) and C2 (23%) provide the baselines without this context.
     prompt = f"""You are a 5G network fault diagnosis expert.
 
 [FAULT DETECTED]
