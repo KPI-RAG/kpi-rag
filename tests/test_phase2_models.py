@@ -156,3 +156,37 @@ def test_feature_spec_model2_has_fft_features():
     features = fs["model2"]["features"]
     fft_features = [f for f in features if "fft" in f]
     assert len(fft_features) > 0
+
+
+# ── calibrator integration ───────────────────────────────────────────────────
+
+def test_calibrator_produces_valid_probability():
+    """Calibrated confidence must be in [0, 1]."""
+    import pickle, numpy as np
+    with open("data/models/model1_calibrator.pkl", "rb") as f:
+        cal = pickle.load(f)
+    test_inputs = np.array([0.1, 0.3, 0.5, 0.7, 0.9])
+    outputs = cal.predict(test_inputs)
+    assert all(0.0 <= p <= 1.0 for p in outputs), f"Out of range: {outputs}"
+
+def test_calibrator_is_monotonic():
+    """Higher raw prob must give higher or equal calibrated prob."""
+    import pickle, numpy as np
+    with open("data/models/model1_calibrator.pkl", "rb") as f:
+        cal = pickle.load(f)
+    probs = np.linspace(0.1, 0.9, 9)
+    calibrated = cal.predict(probs)
+    for i in range(len(calibrated) - 1):
+        assert calibrated[i] <= calibrated[i+1] + 1e-6, \
+            f"Not monotonic at {probs[i]:.1f}: {calibrated[i]:.3f} > {calibrated[i+1]:.3f}"
+
+def test_load_models_returns_calibrator():
+    """load_models must return 3-tuple including calibrator."""
+    from src.config_loader import load_config
+    from src.ml_model import load_models
+    cfg = load_config()
+    result = load_models(cfg)
+    assert len(result) == 3, f"Expected 3-tuple (m1, m2, cal), got {len(result)}"
+    m1, m2, cal = result
+    assert cal is not None, "Calibrator should not be None"
+
