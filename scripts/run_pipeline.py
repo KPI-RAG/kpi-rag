@@ -24,6 +24,11 @@ def run(payload: ClassifierOutput, cfg: dict) -> LLMExplanation:
     return result
 
 def main() -> None:
+    from dotenv import load_dotenv
+    import os
+    if os.path.exists(".env"):
+        load_dotenv()
+
     parser = argparse.ArgumentParser(description="Run complete pipeline")
     parser.add_argument("--input", type=str, required=True, help="path to ClassifierOutput JSON file")
     parser.add_argument("--output", type=str, required=True, help="path to write LLMExplanation JSON")

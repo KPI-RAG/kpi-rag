@@ -26,6 +26,7 @@ graphify-out/
 .agent/
 
 # ── Temp / scratch files ──────────────────────────────────────────────────────
+scratch/
 test_results.txt
 plan_input.json
 context.md
