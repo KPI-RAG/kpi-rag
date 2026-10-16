@@ -181,12 +181,13 @@ def test_calibrator_is_monotonic():
             f"Not monotonic at {probs[i]:.1f}: {calibrated[i]:.3f} > {calibrated[i+1]:.3f}"
 
 def test_load_models_returns_calibrator():
-    """load_models must return 3-tuple including calibrator."""
+    """load_models must return 3-tuple (m1, m2, calibrator); calibrator is None when disabled."""
     from src.config_loader import load_config
     from src.ml_model import load_models
     cfg = load_config()
     result = load_models(cfg)
     assert len(result) == 3, f"Expected 3-tuple (m1, m2, cal), got {len(result)}"
     m1, m2, cal = result
-    assert cal is not None, "Calibrator should not be None"
+    assert cal is None, "Degenerate calibrator should be disabled"
+
 

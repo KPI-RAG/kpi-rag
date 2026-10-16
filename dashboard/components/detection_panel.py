@@ -11,4 +11,5 @@ def render_detection_panel(anomaly_type: str | None, confidence: float | None) -
                 label="Model Confidence",
                 value=f"{confidence:.1%}"
             )
-        st.caption("⚠️ Confidence is uncalibrated — do not use as probability estimate")
+        st.caption("⚠️ Raw model probability — calibrator disabled due to degenerate mapping")
+
