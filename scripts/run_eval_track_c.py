@@ -165,7 +165,13 @@ def run_track_c(
             # measures prompt compliance, with C1/C2 as the baselines.
             rca_context = ""
             if condition == 3 and window_index is not None:
-                rca_context = rca_loader.get_prompt_context(window_index)
+                rec = rca_loader.get(window_index)
+                if rec and rec.get("predicted_fault") == ft.value:
+                    rca_context = rca_loader.get_prompt_context(window_index)
+                else:
+                    rep = rca_loader.find_by_fault(ft.value)
+                    if rep:
+                        rca_context = rca_loader._format_context(rep)
                 if rca_context:
                     logger.info(
                         "  RCA evidence injected for window %s (%d chars)",
@@ -255,8 +261,8 @@ def main() -> None:
         description="Run Track C evaluation — generate explanations under 3 ablation conditions",
     )
     parser.add_argument(
-        "--output", type=str, required=True,
-        help="directory for output files (explanations + scores template)",
+        "--output", type=str, default="data/processed",
+        help="directory for output files (explanations + scores template, default: data/processed)",
     )
     parser.add_argument(
         "--config", type=str, default="configs/config.yaml",

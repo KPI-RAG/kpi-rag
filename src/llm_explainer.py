@@ -211,12 +211,13 @@ def call_gemini(prompt: str, cfg: dict) -> str:
 
 
 def _is_rate_limit(e: Exception) -> bool:
-    """429 / quota error from any backend?"""
+    """429 / quota error or connection error from any backend?"""
     return (
         isinstance(e, _RATE_LIMIT_ERRORS)
         or getattr(e, "status_code", None) == 429
         or "429" in str(e)
         or "RESOURCE_EXHAUSTED" in str(e)
+        or "getaddrinfo" in str(e)
     )
 
 
@@ -362,10 +363,9 @@ def _run_with_retry(
                 template_generated=False,
             )
         except Exception as e:
-            logger.warning("LLM attempt %d/%d failed: %s", attempt + 1, max_retries, e)
             if _is_rate_limit(e) and attempt < max_retries - 1:
                 wait = _backoff_wait(e, attempt, cfg)
-                logger.warning("Rate limited, waiting %.1fs before retry", wait)
+                logger.warning("Attempt failed (%s), waiting %.1fs before retry", e, wait)
                 time.sleep(wait)
     logger.error("All %d LLM attempts failed, using template fallback", max_retries)
     return _template_fallback(payload, alignment)
