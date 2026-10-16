@@ -47,30 +47,29 @@ def load_alignment_table(path: str) -> dict[str, dict]:
         fault_type = entry.get("fault_type", entry.get("telecomts_fault"))
         if not fault_type:
             continue
+        raw_ref = entry.get("3gpp_reference") or ""
         ts = entry.get("3gpp_ts")
-        if not ts and "3gpp_reference" in entry:
-            match = re.search(r'T[SR]\s+(2[1-9]|3[0-8])\.\d{3}(?:-\d+)?', entry["3gpp_reference"])
+        if not ts and raw_ref:
+            match = re.search(r'T[SR]\s+(2[1-9]|3[0-8])\.\d{3}(?:-\d+)?', raw_ref)
             if match:
                 ts = match.group(0)
         clause = entry.get("clause")
-        if not clause and "3gpp_reference" in entry:
-            match = re.search(r'§(\d+(?:\.\d+)*)', entry["3gpp_reference"])
+        if not clause and raw_ref:
+            match = re.search(r'§(\d+(?:\.\d+)*)', raw_ref)
             if match:
                 clause = match.group(1)
         evidence = entry.get("evidence_span")
         if evidence is None:
-            if "clause_text" in entry:
-                evidence = entry["clause_text"][:300]
-            else:
-                evidence = ""
+            raw_clause = entry.get("clause_text") or ""
+            evidence = raw_clause[:300]
         # some rows cite two standards (CCI Severe: TS 38.141-1 + TS 38.104)
-        cited = re.findall(r'T[SR]\s+(?:2[1-9]|3[0-8])\.\d{3}(?:-\d+)?', entry.get("3gpp_reference", ""))
+        cited = re.findall(r'T[SR]\s+(?:2[1-9]|3[0-8])\.\d{3}(?:-\d+)?', raw_ref)
         normalized = dict(entry)
         normalized["3gpp_ts"] = ts if ts else ""
         normalized["valid_refs"] = list(dict.fromkeys(([ts] if ts else []) + cited))
         normalized["clause"] = clause if clause else ""
         normalized["evidence_span"] = evidence
-        normalized["oran_component"] = entry.get("oran_component", "")
+        normalized["oran_component"] = entry.get("oran_component") or ""
         alignment[fault_type] = normalized
     logger.info("Loaded %d entries from alignment table", len(alignment))
     return alignment
