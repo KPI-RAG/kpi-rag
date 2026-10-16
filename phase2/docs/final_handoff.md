@@ -6,8 +6,8 @@ Server: kpi_rag/phase2/   =   Drive: Farida/Phase 2 - Data & Models/
 
 1. THE FINAL CONFIGURATION (WHAT WE SHIP)
    - Model 1 (alarm): CatBoost on 64 basic statistics, with the two bugs fixed (correct
-     number parsing, imbalance corrected once), threshold 0.5. Its confidence is now
-     *calibrated*: a confidence of 0.9 means "right about 9 times in 10".
+     number parsing, imbalance corrected once), threshold 0.5. Its confidence is the raw
+     model probability (a calibration was tested and rejected: step 12a).
    - Model 2 (diagnosis): your recipe (CatBoost + your v3 synthetic data + Config B + FFT)
      plus the trend features. 11 fault classes, no reject class.
    - Output for the team: the same Layer 2 JSON format as Phase 1, with one addition inside
@@ -27,7 +27,7 @@ Server: kpi_rag/phase2/   =   Drive: Farida/Phase 2 - Data & Models/
    - Fixing Model 1's double imbalance correction: this alone removed ~90% of the false alarms.
    - Your synthetic data: now statistically proven (p = 0.006, better in 25/25 folds).
    - Trend features: small but consistent gain for Model 2 in CV and on the held-out sessions.
-   - Honest reporting: calibrated confidence, idle-link flag (45 of the 116 false alarms,
+   - Honest reporting: idle-link flag (45 of the 116 false alarms,
      5 true faults), and a family-level metric.
 
 4. REJECTED, WITH EVIDENCE (so nobody repeats them)
@@ -47,7 +47,7 @@ Server: kpi_rag/phase2/   =   Drive: Farida/Phase 2 - Data & Models/
    docs/future_work.md (10 items, each with the evidence and what it would need).
 
 7. FILES  (server kpi_rag/phase2/  =  Drive Farida/Phase 2 - Data & Models/)
-   - results/final/: model1.cbm, model2.cbm, model1_calibrator.pkl, feature_spec.json,
+   - results/final/: model1.cbm, model2.cbm, feature_spec.json,
      normal_means.json (0 NaN now), layer2_output_sessionsplit_phase2.json,
      validation.json (ok: true).
    - docs/phase2_results.md + .docx (report), PROJECT_STORY.md (beginner story),

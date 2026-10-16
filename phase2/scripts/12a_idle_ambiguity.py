@@ -7,12 +7,13 @@ A rule "idle => Normal" would delete the 94 Jamming windows of test session 1, s
      (UL+DL packets) mean < PKT_T. Thresholds are fixed physical constants (not fitted on labels);
      their coverage is reported per session on the training partition.
   2. Model 1 probability calibration (isotonic) fitted on the step-10 OUT-OF-FOLD probabilities of the
-     training partition; expected calibration error (ECE) before/after on OOF and (post-hoc) on test.
+     training partition; ECE before/after plus a FLATNESS CHECK. RESULT (2026-10-16): REJECTED - the isotonic
+     map is flat (8.5 %) for every raw score between 0.30 and 0.99, so it is not used (kept only as a negative result).
   3. Measurement on the 5 test sessions: how many flagged windows are idle, how many of them are true
      faults vs false alarms (= the value of the flag as an operator-review queue), and whether the
      flag changes any label (it must not).
 The pipeline (src/pipeline.py) then writes note "idle_link_ambiguous" into shap_top3 of flagged idle windows
-and uses the calibrated probability as the Normal-window confidence. Schema unchanged.
+and keeps the RAW Model 1 probability as the Normal-window confidence. Schema unchanged.
 
 Run from the phase2 folder:   python scripts/12a_idle_ambiguity.py
 """
@@ -72,8 +73,16 @@ log(f"  ECE on OOF (train):  raw {ece(oof, y):.3f} -> calibrated {ece(cal.predic
 log(f"  ECE on test (post-hoc): raw {ece(p_te, y_te):.3f} -> calibrated {ece(cal.predict(p_te), y_te):.3f}")
 log(f"  idle Normal windows of session 0: mean raw p = {oof[(sess == 0) & (y == 0) & idle_tr].mean():.3f} -> calibrated "
     f"{cal.predict(oof[(sess == 0) & (y == 0) & idle_tr]).mean():.3f}")
-os.makedirs(os.path.join(C.RESULTS, "final"), exist_ok=True)
-with open(os.path.join(C.RESULTS, "final", "model1_calibrator.pkl"), "wb") as f:
+grid = np.linspace(0.30, 0.99, 15)
+distinct = sorted(set(np.round(cal.predict(grid), 3)))
+hi = oof >= 0.9
+log(f"  FLATNESS CHECK: 15 raw scores between 0.30 and 0.99 map to {len(distinct)} distinct calibrated value(s): {distinct}")
+log(f"  Why: OOF windows with raw >= 0.9: {int(hi.sum())}, true fault rate {y[hi].mean():.3f}; "
+    f"{int((hi & np.isin(sess, [0, 5]) & (y == 0)).sum())} of them are Normal windows of the Normal-only sessions 0 and 5")
+log("  VERDICT: isotonic calibration REJECTED - it erases the ranking information (a raw 0.99 and a raw 0.30 get the same value) "
+    "and a 'probability' fitted across recordings is unstable (same reason as the unstable threshold, step 02). "
+    "The pipeline keeps the raw Model 1 probability; reliability is reported empirically (precision at t = 0.5).")
+with open(os.path.join(log.dir, "rejected_isotonic_calibrator.pkl"), "wb") as f:
     pickle.dump(cal, f)
 
 # 3. test measurement --------------------------------------------------------------------------------------

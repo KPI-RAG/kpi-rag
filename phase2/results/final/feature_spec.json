@@ -580,7 +580,7 @@
     ],
     "reject_class": false,
     "reject_tau": null,
-    "calibrated_confidence": true,
+    "calibrated_confidence": false,
     "idle_link_flag": [
       1000.0,
       1.0,

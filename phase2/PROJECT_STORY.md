@@ -35,7 +35,7 @@ never for scoring, and never from the held-out recordings.
 4. Proved Farida's synthetic method statistically; kept her recipe as the final Model 2.
 5. Compared 9 algorithms, more synthetic data, a reject option, several Model 1 fixes — kept only what
    held up on unseen recordings.
-6. Added a calibrated confidence and an "idle link" review flag, and a family-level metric.
+6. Added an "idle link" review flag and a family-level metric. (A probability calibration was tried and rejected: it flattened every score to 8.5 %.)
 7. Produced the final models and the Layer 2 JSON in the same format as Phase 1.
 
 ## 7. Which results improved, and by how much? (5 held-out recordings, 6,312 windows)
@@ -61,7 +61,7 @@ cross-validation (LightGBM, QUANT, ensembles, jitter augmentation) did worse or 
 sessions. Simpler and proven beats complex and unproven.
 
 ## 10. Which files should the team use?
-`results/final/`: `model1.cbm`, `model2.cbm`, `model1_calibrator.pkl`, `feature_spec.json`,
+`results/final/`: `model1.cbm`, `model2.cbm`, `feature_spec.json`,
 `normal_means.json`, `layer2_output_sessionsplit_phase2.json` (for Rodina/Ahmed), `validation.json`.
 Report: `docs/phase2_results.md` / `.docx`. Status: `PROJECT_STATUS.md`. All experiments: `EXPERIMENT_LOG.md`.
 

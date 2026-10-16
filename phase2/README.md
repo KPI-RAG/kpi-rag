@@ -19,7 +19,7 @@ New here? Read `PROJECT_STORY.md` first (plain-language overview), then `docs/fi
 | Windows handed to the explanation layer as "fault" | 1,374 (1,105 wrong) | **382 (116 wrong)** |
 
 Final configuration: Model 1 = CatBoost on 64 statistics, correct parser, imbalance corrected once, threshold 0.5,
-calibrated confidence. Model 2 = CatBoost, real + Farida's v3 synthetic data (500/class), Config B + FFT + trend
+raw probability as confidence (calibration tested and rejected). Model 2 = CatBoost, real + Farida's v3 synthetic data (500/class), Config B + FFT + trend
 features, 11 classes, no reject class. Full numbers and the reasoning: `docs/phase2_results.md` (and `.docx`).
 
 ## Where things are
@@ -43,7 +43,7 @@ phase2/
 │   └── utils.py          per-step logging and result saving
 ├── scripts/              one numbered script per step (see table below)
 ├── results/              one folder per step: NOTES.md, log.txt, folds.csv, results.json, ...
-│   └── final/            FINAL ARTIFACTS: model1.cbm, model2.cbm, model1_calibrator.pkl, feature_spec.json,
+│   └── final/            FINAL ARTIFACTS: model1.cbm, model2.cbm, feature_spec.json,
 │                         normal_means.json, layer2_output_sessionsplit_phase2.json, validation.json
 └── docs/                 phase2_results.md/.docx (report), future_work.md, final_handoff.md, research notes
 ```
@@ -76,7 +76,7 @@ No synthetic windows are ever used for validation or testing.
 | `10b_session0_diagnosis` | Why every detector fails on session 0 | — | 1 min |
 | `10_cascade_reject_option` | Complete cascade + Raneem's reject option | 09z, 09c, (10a) | 1.5 h |
 | `10c_reject_policy` | Reject by probability threshold instead of argmax | 10 | 10 min |
-| `12a_idle_ambiguity` | Idle-link flag + Model 1 probability calibration | 10 | 5 min |
+| `12a_idle_ambiguity` | Idle-link flag; Model 1 calibration tested and rejected | 10 | 5 min |
 | `11_final_pipeline` | **Train final models, write the Layer 2 JSON and `validation.json`** | 09c, 10, 12a, shap | 5 min |
 | `12b_pair_specialist` | Specialist for HNC-Gradual vs Buffer Overflow (not adopted) | 09c | 30 min |
 | `12c_session_statistics` | Session-level confidence intervals and power analysis | 03, 06, 09c, 10a | 1 min |

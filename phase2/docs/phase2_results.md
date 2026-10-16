@@ -200,14 +200,14 @@ signal_statistics`), 0 invalid field values (every `channel` is one of the 16 KP
 | exact fault type correct (of 300 true faults) | 0.677 × 300 ≈ 203 (accuracy on flagged faults) | 199 end-to-end (266 flagged × 0.748 label accuracy) |
 | false alarms labelled CCI-Mild | 82.2 % of 1,105 (≈ 908 windows) | 64.7 % of 116 (75 windows) |
 
-Three reporting complements were added on 2026-10-15 without changing the schema: (a) the `confidence` of Normal
-windows is a **calibrated** probability (isotonic regression fitted on out-of-fold Model 1 probabilities; expected
-calibration error 0.133 → 0.018 on the held-out sessions), (b) flagged windows with an **idle link** (no traffic,
+Two reporting complements were added on 2026-10-15 without changing the schema: (a) flagged windows with an **idle link** (no traffic,
 no PRBs) carry `note: "idle_link_ambiguous"` in their `shap_top3` entries (50 windows: 45 false alarms, 5 true
-faults — a review queue with 90 % precision on false alarms), (c) `validation.json` reports a family-level
+faults — a review queue with 90 % precision on false alarms), (b) `validation.json` reports a family-level
 accuracy (HNC-Gradual + Buffer Overflow + HNC-Sudden as one "congestion" family): 0.75 vs 0.663 exact
 end-to-end. Undefined co-movement features (correlation of a flat KPI) are NaN: CatBoost treats them as missing,
 `normal_means.json` is computed NaN-safe, and such features are never written to `shap_top3`.
+
+**A calibration that was tested and rejected (step 12a).** An isotonic regression fitted on out-of-fold Model 1 probabilities lowered the calibration error (0.133 → 0.018 on the held-out sessions) but mapped every raw score between 0.30 and 0.99 to the same value (8.5 %): 2,908 of the 3,206 training windows scoring ≥ 0.9 are Normal windows of the two Normal-only sessions 0 and 5, so the map learned "a high score is usually a false alarm", which does not hold for other recordings. It erased the ranking information, was reported by a teammate and confirmed, and was removed. `confidence` in the Layer 2 JSON is therefore the raw Model 1 probability for Normal windows and Model 2's probability for fault windows, as in Phase 1 (which labelled it uncalibrated); no label or count changed. Model 1's reliability is reported empirically instead (precision 0.70 at t = 0.5 on the held-out sessions).
 
 Two implementation differences from Phase 1, both internal to the schema: (1) the SHAP source is chosen from
 the models' own output (Phase 1 used the ground-truth label, which is unavailable at inference); (2) the three
@@ -239,8 +239,8 @@ All randomness is seeded; `requirements.txt` pins the versions; aeon/shap live i
 
 **Session 0 — idle link vs blocked-by-jamming (12a).** The ambiguity is in the recordings (§4.2), so the system
 now *says so* instead of guessing: an `idle_link` indicator (fixed physical thresholds: TX < 1 kB/sample,
-PRB < 1 %, < 1 packet/sample) marks flagged windows whose only fault evidence is "no traffic", and Model 1's
-confidence is calibrated. On the held-out sessions the flag catches 45 of the 116 false alarms and touches
+PRB < 1 %, < 1 packet/sample) marks flagged windows whose only fault evidence is "no traffic", (an isotonic calibration of Model 1's
+confidence was also tested and rejected, §8). On the held-out sessions the flag catches 45 of the 116 false alarms and touches
 5 true faults; the 94 Jamming windows of session 1 are loaded-link and keep a clean label. No label is changed.
 
 **HNC-Gradual vs Buffer Overflow (12b).** A 2-class specialist built from the physics of the pair (buffer growth

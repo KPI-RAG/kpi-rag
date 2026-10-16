@@ -93,7 +93,7 @@ log(f"Model 2 trained on {len(ytr)} rows ({Xtr.shape[1]} features; classes {len(
 spec = {"model1": {"variant": M1, "features": P.M1_NAMES if WITH_G else P.A_NAMES, "threshold": C.MODEL1_THRESHOLD,
                    "params": C.MODEL1_PARAMS, "class_weighting": C.MODEL1_CLASS_WEIGHTING, "parser": "correct (raw_kpis.npy)"},
         "model2": {"recipe": "Farida v3 500/class + Config B + FFT + G1G2G3", "features": P.M2_NAMES,
-                   "reject_class": REJECT, "reject_tau": TAU, "calibrated_confidence": True, "idle_link_flag": [P.IDLE_TX, P.IDLE_PRB, P.IDLE_PKT], "parser": "Phase 1 regex replica (matches the synthetic cache)"},
+                   "reject_class": REJECT, "reject_tau": TAU, "calibrated_confidence": False, "idle_link_flag": [P.IDLE_TX, P.IDLE_PRB, P.IDLE_PKT], "parser": "Phase 1 regex replica (matches the synthetic cache)"},
         "versions": library_versions()}
 json.dump(spec, open(os.path.join(OUT, "feature_spec.json"), "w"), indent=2)
 json.dump({"model1": normal_means_m1.tolist(), "model2": normal_means_m2.tolist()}, open(os.path.join(OUT, "normal_means.json"), "w"))
@@ -107,10 +107,8 @@ S_te_m2 = np.stack([eng.real_sig(r) for r in te])                 # Model 2: Pha
 A_raw = np.stack([P.config_a(x) for x in S_te_m1])
 X1_te = P.model1_features(S_te_m1, WITH_G)
 flagged_idx = np.where(m1.predict_proba(X1_te)[:, 1] >= C.MODEL1_THRESHOLD)[0]
-import pickle
-cal_path = os.path.join(OUT, "model1_calibrator.pkl")               # step 12a: isotonic on OOF probabilities
-CAL = pickle.load(open(cal_path, "rb")) if os.path.exists(cal_path) else None
-log(f"calibrated confidence: {CAL is not None} | idle-link flag: True")
+CAL = None   # step 12a: the isotonic calibrator was REJECTED (flat 8.5 % for raw 0.30-0.99); raw Model 1 probability is reported
+log("confidence: raw Model 1 probability (calibration rejected in step 12a) | idle-link flag: True")
 records = P.run_layer2(m1, m2, S_te_m1, te, A_raw, normal_means_m1, normal_means_m2, WITH_G, S_m2=S_te_m2, reject_tau=TAU,
                        calibrator=CAL, flag_idle=True)
 out_json = os.path.join(OUT, "layer2_output_sessionsplit_phase2.json")
