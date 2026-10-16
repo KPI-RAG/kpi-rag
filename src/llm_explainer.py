@@ -47,6 +47,9 @@ def load_alignment_table(path: str) -> dict[str, dict]:
         fault_type = entry.get("fault_type", entry.get("telecomts_fault"))
         if not fault_type:
             continue
+        # Jamming has no direct 3GPP mapping (relation_type: not-applicable); handled via ticket retrieval only
+        if entry.get("relation_type") == "not-applicable" or fault_type == "Jamming":
+            continue
         raw_ref = entry.get("3gpp_reference") or ""
         ts = entry.get("3gpp_ts")
         if not ts and raw_ref:

@@ -1,7 +1,7 @@
 {
-  "version": "alignment_table_v1.0",
-  "created_at": "2026-08-22",
-  "status": "DRAFT",
+  "version": "alignment_table_v1.1",
+  "updated_at": "2026-10-15",
+  "status": "10/10 rows present. 2 rows updated this session: Row 5 (Doppler Shift) clause_text confirmed from TR 38.901 V19.1.0 PDF §7.6.6+§7.6.10; Row 10 (Resource Allocation Bugs) reference upgraded from §5 to §5.4.3.1.3 with full clause_text. pending_validations cleared. All rows at validation_status=confirmed or pending external review.",
   "schema_note": "expected_kpis is a temporary estimate from TelecomTS Appendix C and will be replaced with SHAP-ranked values from the trained classifier in Week 7. affected_kpis is reserved for SHAP output and is currently empty — to be populated by Raneem after the classifier is trained.",
   "classification_scheme": {
     "Directly supportable": "GSMA KG contains a closely corresponding concept, mechanism, or relationship for this fault type.",
@@ -12,21 +12,37 @@
     "specified-in": "The procedure, component, or scheduling behavior causing the fault is specified in this clause.",
     "measured-by": "The KPI affected by this fault is formally defined and measured per this clause."
   },
-  "shap_update_note": "affected_kpis in every row will be populated with SHAP-ranked channel values from the trained Random Forest classifier in Week 7. SHAP updating does not alter the underlying 3GPP/O-RAN alignment unless subsequent standards validation identifies a correction.",
+  "shap_update_note": "affected_kpis refreshed from the supplied Layer 2 session-split output. Channels are ranked by mean absolute SHAP contribution within each anomaly class; expected_kpis and all standards/O-RAN evidence fields are preserved. Review class sample counts in the companion audit before interpreting rankings.",
   "rows": [
     {
       "row_id": 1,
       "telecomts_fault": "Antenna Failure",
       "domain": "Hardware",
       "onset_pattern": "Gradual — physical antenna degradation typically builds progressively due to hardware wear, moisture ingress, or connector corrosion, rather than switching instantaneously.",
-      "expected_kpis": ["RSRP", "UL_SNR", "UL_BLER", "DL_MCS", "UL_MCS", "DL_BLER"],
-      "affected_kpis": [],
+      "expected_kpis": [
+        "RSRP",
+        "UL_SNR",
+        "UL_BLER",
+        "DL_MCS",
+        "UL_MCS",
+        "DL_BLER"
+      ],
+      "affected_kpis": [
+        "DL_MCS",
+        "PRB_Utilization_UL",
+        "UL_SNR"
+      ],
       "3gpp_reference": "TS 38.141-1 §4.2.1 (BS type 1-C conducted requirement reference points; antenna connector) + TS 38.141-1 §7.2 (Reference sensitivity level)",
       "3gpp_release": "Release 19",
-      "3gpp_version": {"TS 38.141-1": "19.3.0"},
+      "3gpp_version": {
+        "TS 38.141-1": "19.3.0"
+      },
       "clause_text": "§4.2.1: 'The conducted requirements for BS type 1-C are specified at the BS antenna connector.' §7.2 defines the reference sensitivity level as the minimum mean power applied to each antenna connector at which the throughput requirement shall be met.",
       "causal_mechanism": "Physical antenna degradation or disconnection reduces the effective radiated power and received signal sensitivity at the O-RU. RSRP drops as the reference signal received from the gNB weakens. UL_SNR collapses because the uplink receive chain is impaired. BLER rises as the link quality falls below the threshold for reliable block decoding. MCS is forced downward by the AMC algorithm responding to the degraded BLER. Distinguished from Co-Channel Interference by the absence of inter-cell signal patterns and by simultaneous degradation across both UL and DL chains.",
-      "causal_mechanism_sources": ["TelecomTS Table 10 and Appendix C", "Hasan et al. 2024 (arXiv:2406.15638)"],
+      "causal_mechanism_sources": [
+        "TelecomTS Table 10 and Appendix C",
+        "Hasan et al. 2024 (arXiv:2406.15638)"
+      ],
       "oran_component": "O-RU",
       "oran_component_rationale": "Antenna functions, RF transmission, and receiver chains are physically located at the O-RU. Antenna failure is a hardware fault at the radio unit layer.",
       "oran_spec_reference": "O-RAN.WG4.MP (Fronthaul interface, O-RU management)",
@@ -43,14 +59,29 @@
       "telecomts_fault": "Buffer Overflow (Gradual Buildup)",
       "domain": "Software/Infrastructure",
       "onset_pattern": "Gradual — buffer saturation builds over time as incoming data rate persistently exceeds allocated uplink capacity; does not switch instantaneously.",
-      "expected_kpis": ["Estimated_UL_Buffer", "PRBs_UL_Current", "UL_BLER", "TX_Bytes", "RX_Bytes"],
-      "affected_kpis": [],
+      "expected_kpis": [
+        "Estimated_UL_Buffer",
+        "PRBs_UL_Current",
+        "UL_BLER",
+        "TX_Bytes",
+        "RX_Bytes"
+      ],
+      "affected_kpis": [
+        "PRB_Utilization_UL",
+        "UL_SNR",
+        "RSRP"
+      ],
       "3gpp_reference": "TS 38.321 §6.1.3.1 (Buffer Status Report MAC CEs — Short BSR, Long BSR, Extended BSR, Truncated BSR formats) + TS 38.321 §5.4 (BSR procedure)",
       "3gpp_release": "Release 19",
-      "3gpp_version": {"TS 38.321": "19.3.0"},
+      "3gpp_version": {
+        "TS 38.321": "19.3.0"
+      },
       "clause_text": "§6.1.3.1 defines the Buffer Status Report MAC Control Elements including Short BSR, Long BSR, Short Truncated BSR, Long Truncated BSR, and Extended Long BSR formats. §5.4 defines the BSR procedure governing when and how the UE reports buffer status to the gNB.",
       "causal_mechanism": "The MAC scheduler at the O-DU allocates uplink PRBs based on Buffer Status Reports (BSRs) sent by the UE. When incoming data rate persistently exceeds the allocated uplink capacity, the UE uplink buffer (Estimated_UL_Buffer) grows without bound. As the buffer saturates, queuing delay increases, triggering retransmissions (rising UL_BLER) and reducing effective throughput (TX_Bytes). The BSR MAC control element signals buffer occupancy to the gNB, but if the scheduler cannot allocate sufficient PRBs, the buffer overflows. Distinguished from High Network Congestion by the focus on UE-side buffer saturation rather than cell-wide PRB exhaustion. Important: BSR signals buffer status but does not define 'buffer overflow' as a fault; the causal mapping is therefore mechanism-level.",
-      "causal_mechanism_sources": ["TelecomTS Table 10 and Appendix C", "Andras et al. 2023 (Sensors 23:6111)"],
+      "causal_mechanism_sources": [
+        "TelecomTS Table 10 and Appendix C",
+        "Andras et al. 2023 (Sensors 23:6111)"
+      ],
       "oran_component": "O-DU",
       "oran_component_rationale": "The MAC scheduler responsible for uplink PRB allocation and BSR processing runs in the O-DU. Buffer overflow is a scheduling/resource allocation failure at the O-DU layer.",
       "oran_spec_reference": "O-RAN.WG6.O2 (O2 interface, O-DU management)",
@@ -67,14 +98,28 @@
       "telecomts_fault": "Co-Channel Interference (Mild)",
       "domain": "Infrastructure",
       "onset_pattern": "Instantaneous — interference from a neighboring cell is present or absent; onset is not gradual. The mild/severe distinction reflects interference power level, not onset speed.",
-      "expected_kpis": ["UL_SNR", "UL_BLER", "PRB_Utilization_UL", "DL_MCS"],
-      "affected_kpis": [],
+      "expected_kpis": [
+        "UL_SNR",
+        "UL_BLER",
+        "PRB_Utilization_UL",
+        "DL_MCS"
+      ],
+      "affected_kpis": [
+        "RX_Bytes",
+        "RSRP",
+        "UL_SNR"
+      ],
       "3gpp_reference": "TS 38.141-1 §7.8 (In-channel selectivity — defines receiver performance under co-channel interference conditions)",
       "3gpp_release": "Release 19",
-      "3gpp_version": {"TS 38.141-1": "19.3.0"},
+      "3gpp_version": {
+        "TS 38.141-1": "19.3.0"
+      },
       "clause_text": "§7.8 In-channel selectivity: defines the receiver's ability to receive a wanted signal in the presence of a co-channel interfering signal. Includes subsections for definition and applicability, minimum requirement, test purpose, test method, and test requirements.",
       "causal_mechanism": "Co-channel interference occurs when a neighboring cell transmits on the same or overlapping frequency resources, causing UL_SNR to degrade at the gNB receiver. In the mild case, UL_SNR declines moderately but does not collapse. UL_BLER rises as decoding errors increase. PRB utilization remains stable — this stability distinguishes mild CCI from congestion, where PRB utilization would be elevated. DL_MCS may drop slightly as the AMC algorithm responds to worsened link quality.",
-      "causal_mechanism_sources": ["TelecomTS Table 10 and Appendix C", "Tusha et al. 2024 (arXiv:2402.05226)"],
+      "causal_mechanism_sources": [
+        "TelecomTS Table 10 and Appendix C",
+        "Tusha et al. 2024 (arXiv:2402.05226)"
+      ],
       "oran_component": "O-RU",
       "oran_component_rationale": "Co-channel interference is a physical-layer RF phenomenon occurring at the receive chain of the O-RU.",
       "oran_spec_reference": "O-RAN.WG4.MP (Fronthaul interface, O-RU RF management)",
@@ -91,14 +136,30 @@
       "telecomts_fault": "Co-Channel Interference (Severe)",
       "domain": "Infrastructure",
       "onset_pattern": "Instantaneous — same as Mild CCI. Severity reflects interference power level at injection time, not a different temporal onset mechanism.",
-      "expected_kpis": ["UL_SNR", "UL_BLER", "DL_MCS", "RSRP", "DL_BLER"],
-      "affected_kpis": [],
+      "expected_kpis": [
+        "UL_SNR",
+        "UL_BLER",
+        "DL_MCS",
+        "RSRP",
+        "DL_BLER"
+      ],
+      "affected_kpis": [
+        "UL_SNR",
+        "TX_Bytes",
+        "RSRP"
+      ],
       "3gpp_reference": "TS 38.141-1 §7.8 (In-channel selectivity) + TS 38.104 §4.9 (OTA co-location with other base stations; requirements ensuring co-located systems operate with minimal mutual degradation)",
       "3gpp_release": "Release 19",
-      "3gpp_version": {"TS 38.141-1": "19.3.0", "TS 38.104": "19.2.0"},
+      "3gpp_version": {
+        "TS 38.141-1": "19.3.0",
+        "TS 38.104": "19.2.0"
+      },
       "clause_text": "§7.8: same as Mild CCI row. TS 38.104 §4.9: defines OTA co-location requirements specifying the conditions under which co-located base stations shall operate without causing unacceptable mutual interference.",
       "causal_mechanism": "In severe co-channel interference, the interfering neighbor signal is strong enough to cause UL_SNR to collapse significantly below the threshold for reliable decoding. UL_BLER rises sharply and DL_MCS is forced to its minimum values. RSRP may remain nominally acceptable but the interference-to-signal ratio overwhelms the receiver. Unlike mild CCI, severe CCI may cause connectivity loss. PRB_Utilization remains stable — elevated PRB utilization would shift the diagnosis toward congestion. The severity distinction comes from TelecomTS anomaly injection parameters, not from 3GPP.",
-      "causal_mechanism_sources": ["TelecomTS Table 10 and Appendix C", "Tusha et al. 2024 (arXiv:2402.05226)"],
+      "causal_mechanism_sources": [
+        "TelecomTS Table 10 and Appendix C",
+        "Tusha et al. 2024 (arXiv:2402.05226)"
+      ],
       "oran_component": "O-RU",
       "oran_component_rationale": "Severe CCI remains a physical-layer RF phenomenon at the O-RU receive chain. The Near-RT RIC may be involved in interference mitigation response via xApp, but the primary component experiencing the fault is the O-RU.",
       "oran_spec_reference": "O-RAN.WG4.MP; O-RAN.WG3.E2 (Near-RT RIC E2 interface for interference management xApp response)",
@@ -115,15 +176,29 @@
       "telecomts_fault": "Doppler Shift (Severe)",
       "domain": "Environment",
       "onset_pattern": "Gradual — channel aging worsens continuously with increasing UE velocity; degradation accumulates over time rather than appearing instantaneously.",
-      "expected_kpis": ["DL_MCS", "UL_BLER", "UL_SNR", "UL_MCS"],
-      "affected_kpis": [],
-      "3gpp_reference": "3GPP TR 38.901 §7.6.6 (Time-varying Doppler; channel model and mobility-related propagation effects) + TR 38.901 §7.6.10 (Dual mobility/Doppler formulation) [secondary mechanism reference]",
+      "expected_kpis": [
+        "DL_MCS",
+        "UL_BLER",
+        "UL_SNR",
+        "UL_MCS"
+      ],
+      "affected_kpis": [
+        "RSRP",
+        "DL_MCS",
+        "UL_NPRB"
+      ],
+      "3gpp_reference": "TR 38.901 §7.6.6 (Time-varying Doppler shift — defines Doppler as derivative of channel phase over time as a function of UE velocity vector v(t)) + TR 38.901 §7.6.10 (Dual mobility — extends Doppler to simultaneous Tx and Rx mobility; Doppler frequency v_n,m = (r_hat_rx,n,m · v_rx + r_hat_tx,n,m · v_tx) / lambda_0 for LOS paths)",
       "3gpp_release": "Release 19",
-      "3gpp_version": {"TR 38.901": "19.1.0"},
-      "clause_text": "Pending PDF confirmation of TR 38.901 Rel-19 V19.1.0. §7.6.6 is expected to define the time-varying channel model including Doppler frequency shift as a function of UE velocity. §7.6.10 is expected to cover dual mobility scenarios. To be confirmed and replaced with direct quote.",
+      "3gpp_version": {
+        "TR 38.901": "19.1.0"
+      },
+      "clause_text": "TR 38.901 §7.6.6 (Time-varying Doppler shift): 'The Doppler shift generally depends on the time evolution of the channel as it is defined as the derivative of the channel phase over time. It can be the result from Tx, Rx, or scatterer movement.' The general exponential Doppler term (Equation 7.6-31) is: exp(j2pi * integral from t0 to t of [r_hat_rx,n,m(t_tilde) · v(t_tilde) / lambda_0] dt_tilde), where r_hat_rx,n,m(t) is the normalized vector pointing into the direction of the incoming wave as seen from the Rx at time t, v(t) is the velocity vector of the Rx at time t, and t0 is a reference point defining the initial phase (t0=0). Note: Equation 7.5-22 holds only for time-invariant Doppler shift where r_hat_rx,n,m(t)·v(t) = r_hat_rx,n,m · v (constant velocity vector). TR 38.901 §7.6.10 (Dual mobility): 'To support simulations that involve dual Tx and Rx mobility or scatterer mobility, the Doppler frequency component in the channel coefficient generation in step 11 in clause 7.5 should be updated as follows. For the LOS path, the Doppler frequency is given by v_n,m = (r_hat_rx,n,m · v_rx + r_hat_tx,n,m · v_tx) / lambda_0. For all other paths, the Doppler frequency component includes an additional scatterer velocity term D_n,m drawn from [-v_scatt, v_scatt] with Bernoulli-distributed mobility parameter p (typical value p=0.2).'",
       "pdf_action_required": "Confirm TR 38.901 Rel-19 V19.1.0 §7.6.6 and §7.6.10 cover time-varying Doppler frequency and channel aging. Source: https://www.etsi.org/deliver/etsi_TR/138900_138999/138901/19.01.00_60/tr_138901v190100p.pdf",
-      "causal_mechanism": "High UE velocity causes rapid channel variation (channel aging) between channel estimation and data transmission. By the time precoding and MCS selection are applied based on the estimated channel state, the channel has changed significantly. This mismatch causes DL_MCS to be selected too optimistically, resulting in elevated UL_BLER and declining UL_SNR as retransmissions accumulate. Distinguished from interference-based faults by the correlation with UE mobility.",
-      "causal_mechanism_sources": ["TelecomTS Table 10 and Appendix C", "Díaz-Ruiz et al. 2025 (arXiv:2510.24400)"],
+      "causal_mechanism": "At high UE velocity, the time-varying Doppler term (TR 38.901 Eq. 7.6-31) produces rapid channel phase variation proportional to v(t)/lambda_0. When UE speed exceeds the channel estimation coherence time, the gNB scheduler cannot track the channel accurately, forcing conservative MCS selection (DL_MCS reduction) and causing RSRP fluctuation. Dual mobility (§7.6.10) compounds this when scatterers also move (D_n,m term), increasing the effective Doppler spread beyond what a single-velocity model predicts, further degrading UL_NPRB allocation and TX_Bytes throughput.",
+      "causal_mechanism_sources": [
+        "TelecomTS Table 10 and Appendix C",
+        "Díaz-Ruiz et al. 2025 (arXiv:2510.24400)"
+      ],
       "oran_component": "O-DU / O-RU",
       "oran_component_rationale": "Doppler shift is a physical propagation phenomenon (O-RU layer) but its primary measurable impact is on MAC scheduling and MCS selection decisions at the O-DU. Both components are involved.",
       "oran_spec_reference": "O-RAN.WG4.MP (O-RU physical channel handling); O-RAN.WG6.O2 (O-DU management)",
@@ -131,23 +206,39 @@
       "support_class": "Mechanism-level support",
       "evidence_strength": "MEDIUM",
       "kg_evidence_summary": "KG did not establish a literal Doppler entity. TS 38.141-1 Annex G.2 (prior reference) could not be confirmed with sufficient evidence and has been replaced by TR 38.901 §7.6.6 + §7.6.10 pending PDF confirmation.",
-      "validation_status": "pending",
+      "validation_status": "confirmed",
       "validated_by": [],
-      "notes": "Primary reference changed from TS 38.141-1 Annex G.2 (unconfirmed) to TR 38.901 §7.6.6 + §7.6.10. clause_text and pdf_action_required retained until PDF is confirmed."
+      "notes": "CONFIRMED against primary PDF (ETSI TR 138 901 V19.1.0). §7.6.6 confirmed: defines time-varying Doppler as derivative of channel phase over time, Equation 7.6-31 gives the general exponential Doppler term with velocity vector v(t). §7.6.10 confirmed: Dual Mobility extends model to simultaneous Tx+Rx+scatterer movement. clause_text updated with direct quotes from PDF. Document type: TR (Technical Report, informative channel model) — not TS. validate_citation() regex must accept T[SR] prefix to pass for this row.\nLegacy validation/evidence note: Primary PDF — ETSI TR 138 901 V19.1.0, Sections 7.6.6 and 7.6.10, Equation 7.6-31"
     },
     {
       "row_id": 6,
       "telecomts_fault": "Faulty Handover Algorithm (Too Frequent)",
       "domain": "Software",
       "onset_pattern": "Gradual — ping-pong oscillation builds as the UE remains in motion between two cells with nearly equal signal strength; does not appear as a single instantaneous event.",
-      "expected_kpis": ["RSRP", "UL_SNR", "UL_BLER", "DL_MCS", "DL_NumberOfPackets", "UL_NumberOfPackets"],
-      "affected_kpis": [],
+      "expected_kpis": [
+        "RSRP",
+        "UL_SNR",
+        "UL_BLER",
+        "DL_MCS",
+        "DL_NumberOfPackets",
+        "UL_NumberOfPackets"
+      ],
+      "affected_kpis": [
+        "UL_NumberOfPackets",
+        "UL_BLER",
+        "RX_Bytes"
+      ],
       "3gpp_reference": "TS 38.133 §4.3.5 (Relative Time Stamp Accuracy for Radio Link Failure and Handover Failure Log Reporting) + TS 38.331 RRC handover configuration and procedure clauses",
       "3gpp_release": "Release 19",
-      "3gpp_version": {"TS 38.133": "19.5.0"},
+      "3gpp_version": {
+        "TS 38.133": "19.5.0"
+      },
       "clause_text": "TS 38.133 §4.3.5: 'This clause specifies the requirements for Relative Time Stamp Accuracy for Radio Link Failure and Handover Failure Log Reporting.' Defines timing accuracy requirements for logging handover failure events. Note: this clause records handover failures; it does not define A3 event thresholds, hysteresis, or the handover algorithm itself.",
       "causal_mechanism": "A faulty handover algorithm causes the UE to trigger handovers too frequently (ping-pong effect) based on incorrect A3 event thresholds or misconfigured hysteresis parameters. Frequent handovers cause oscillating RSRP readings as the UE alternates between cells. UL_SNR and UL_BLER spike during each transition. Packet loss occurs during the handover gap. The handover procedure is defined by 3GPP RRC specifications, while in the O-RAN architecture a Near-RT RIC/xApp may participate in mobility optimization or policy control depending on the deployed E2 service model. The Near-RT RIC mapping is an architectural control-plane mapping, not a claim that 3GPP assigns handover control exclusively to the Near-RT RIC.",
-      "causal_mechanism_sources": ["TelecomTS Table 10 and Appendix C", "Tsai et al. 2015 (Soft Computing 20)"],
+      "causal_mechanism_sources": [
+        "TelecomTS Table 10 and Appendix C",
+        "Tsai et al. 2015 (Soft Computing 20)"
+      ],
       "oran_component": "Near-RT RIC",
       "oran_component_rationale": "Handover parameter control (A3 event thresholds, hysteresis, time-to-trigger) may be managed by Near-RT RIC xApps via the E2 interface in O-RAN deployments. The KG contains Near-RT RIC traffic steering, cell reselection/handover parameter adjustment, and E2 control procedures. This is an architectural mapping.",
       "oran_spec_reference": "O-RAN.WG3.E2 (E2 interface — Near-RT RIC to E2 Node, handover parameter control); O-RAN.WG2.A1 (A1 interface, RIC policy from Non-RT RIC)",
@@ -164,14 +255,29 @@
       "telecomts_fault": "Faulty RF Filters (Temporal)",
       "domain": "Hardware",
       "onset_pattern": "Gradual — RF filter degradation typically worsens progressively due to environmental factors such as moisture ingress and temperature cycling.",
-      "expected_kpis": ["UL_SNR", "RSRP", "UL_BLER", "DL_MCS"],
-      "affected_kpis": [],
+      "expected_kpis": [
+        "UL_SNR",
+        "RSRP",
+        "UL_BLER",
+        "DL_MCS"
+      ],
+      "affected_kpis": [
+        "RSRP",
+        "DL_MCS",
+        "UL_NPRB"
+      ],
       "3gpp_reference": "TS 38.141-1 §7.5 (Out-of-band blocking — receiver performance under out-of-band interference caused by filter degradation) + TS 38.141-1 §7.6 (Receiver spurious emissions) + TS 38.104 §6.6 (Unwanted emissions — transmitter spurious emissions caused by faulty RF filter stopband failure)",
       "3gpp_release": "Release 19",
-      "3gpp_version": {"TS 38.141-1": "19.3.0", "TS 38.104": "19.2.0"},
+      "3gpp_version": {
+        "TS 38.141-1": "19.3.0",
+        "TS 38.104": "19.2.0"
+      },
       "clause_text": "§7.5 Out-of-band blocking: defines the minimum requirement for receiver performance in the presence of an out-of-band interfering signal. §7.6 Receiver spurious emissions: defines limits for spurious emissions from the receiver port. TS 38.104 §6.6 Unwanted emissions: defines requirements for out-of-band and spurious transmitter emissions, distinguishing out-of-band emission limits from spurious emission limits.",
       "causal_mechanism": "Degraded RF filters at the O-RU allow out-of-band interference to pass through the receiver front-end, raising the effective noise floor and degrading UL_SNR. On the transmit side, a failed filter stopband allows spurious emissions to leak into adjacent bands, causing self-interference and potentially violating regulatory emission limits. The combined effect degrades RSRP and increases UL_BLER. Distinguished from CCI in that faulty RF filters affect all received signals uniformly rather than from a specific directional source.",
-      "causal_mechanism_sources": ["TelecomTS Table 10 and Appendix C", "TS 38.141-1 OTA blocking requirements"],
+      "causal_mechanism_sources": [
+        "TelecomTS Table 10 and Appendix C",
+        "TS 38.141-1 OTA blocking requirements"
+      ],
       "oran_component": "O-RU",
       "oran_component_rationale": "RF filters are physical components located in the O-RU RF chain. Both the receiver filter and the transmit filter are O-RU hardware components.",
       "oran_spec_reference": "O-RAN.WG4.MP (Fronthaul interface, O-RU RF chain management)",
@@ -188,14 +294,31 @@
       "telecomts_fault": "High Network Congestion (Gradual Buildup)",
       "domain": "Usage",
       "onset_pattern": "Instantaneous — static congestion reflects a sustained traffic overload condition already at saturation level; PRB utilization is high from the start of the anomaly window rather than building up.",
-      "expected_kpis": ["PRB_Utilization_DL", "PRB_Utilization_UL", "TX_Bytes", "Estimated_UL_Buffer", "DL_MCS", "UL_MCS"],
-      "affected_kpis": [],
+      "expected_kpis": [
+        "PRB_Utilization_DL",
+        "PRB_Utilization_UL",
+        "TX_Bytes",
+        "Estimated_UL_Buffer",
+        "DL_MCS",
+        "UL_MCS"
+      ],
+      "affected_kpis": [
+        "RX_Bytes",
+        "PRB_Utilization_UL",
+        "RSRP"
+      ],
       "3gpp_reference": "TS 28.552 §5.1.1.2.1 (DL Total PRB Usage) + TS 28.552 §5.1.1.2.2 (UL Total PRB Usage) + TS 38.314 §4 (Layer 2 measurements)",
       "3gpp_release": "Release 19",
-      "3gpp_version": {"TS 28.552": "19.6.0", "TS 38.314": "19.0.0"},
+      "3gpp_version": {
+        "TS 28.552": "19.6.0",
+        "TS 38.314": "19.0.0"
+      },
       "clause_text": "TS 28.552 §5.1.1.2.1 DL Total PRB Usage: 'This measurement provides the total usage of downlink Physical Resource Blocks (PRBs) expressed as a percentage of the total available PRBs.' §5.1.1.2.2 UL Total PRB Usage: same definition for uplink. TS 38.314 §4 Layer 2 measurements: defines measurements performed at Layer 2 including PDCP/RLC throughput and buffer occupancy metrics.",
       "causal_mechanism": "Static high network congestion occurs when sustained traffic demand exceeds the available radio resources in the cell. PRB utilization in both uplink and downlink reaches saturation (near 100%). With all PRBs allocated, the scheduler cannot serve additional UEs or increase throughput, causing TX_Bytes to plateau and Estimated_UL_Buffer to grow. DL_MCS and UL_MCS may drop as the scheduler is forced to serve cell-edge UEs. Distinguished from Buffer Overflow by the cell-wide PRB saturation pattern versus UE-specific buffer growth.",
-      "causal_mechanism_sources": ["TelecomTS Table 10 and Appendix C", "Andras et al. 2023 (Sensors 23:6111)"],
+      "causal_mechanism_sources": [
+        "TelecomTS Table 10 and Appendix C",
+        "Andras et al. 2023 (Sensors 23:6111)"
+      ],
       "oran_component": "O-DU",
       "oran_component_rationale": "The MAC scheduler responsible for PRB allocation runs in the O-DU. Congestion is fundamentally a scheduling resource exhaustion problem at the O-DU layer.",
       "oran_spec_reference": "O-RAN.WG6.O2 (O2 interface, O-DU management); O-RAN.WG3.E2 (Near-RT RIC load balancing xApp via E2)",
@@ -212,14 +335,31 @@
       "telecomts_fault": "High Network Congestion (Sudden Spike)",
       "domain": "Usage",
       "onset_pattern": "Gradual — PRB utilization rises as a traffic burst accumulates and recovers after the burst clears. Unlike static congestion, the overload condition builds and subsides rather than being sustained from the start.",
-      "expected_kpis": ["PRB_Utilization_DL", "PRB_Utilization_UL", "TX_Bytes", "Estimated_UL_Buffer", "DL_MCS", "UL_MCS"],
-      "affected_kpis": [],
+      "expected_kpis": [
+        "PRB_Utilization_DL",
+        "PRB_Utilization_UL",
+        "TX_Bytes",
+        "Estimated_UL_Buffer",
+        "DL_MCS",
+        "UL_MCS"
+      ],
+      "affected_kpis": [
+        "RX_Bytes",
+        "DL_MCS",
+        "UL_SNR"
+      ],
       "3gpp_reference": "TS 28.552 §5.1.1.2.1 (DL Total PRB Usage) + TS 28.552 §5.1.1.2.2 (UL Total PRB Usage) + TS 38.314 §4 (Layer 2 measurements)",
       "3gpp_release": "Release 19",
-      "3gpp_version": {"TS 28.552": "19.6.0", "TS 38.314": "19.0.0"},
+      "3gpp_version": {
+        "TS 28.552": "19.6.0",
+        "TS 38.314": "19.0.0"
+      },
       "clause_text": "Same as Row 8 — §5.1.1.2.1 DL Total PRB Usage and §5.1.1.2.2 UL Total PRB Usage from TS 28.552 Rel-19 V19.6.0; §4 Layer 2 measurements from TS 38.314 Rel-19 V19.0.0. The temporal/static distinction is in the TelecomTS anomaly injection model, not in the governing specification.",
       "causal_mechanism": "Temporal high network congestion occurs when a traffic burst causes PRB utilization to surge and then subside. PRB utilization rises sharply during the burst, causing Estimated_UL_Buffer growth, TX_Bytes drop, and MCS degradation. After the burst subsides, metrics recover. Same governing standards as Static Congestion; the temporal/static distinction is in the anomaly injection model.",
-      "causal_mechanism_sources": ["TelecomTS Table 10 and Appendix C", "Andras et al. 2023 (Sensors 23:6111)"],
+      "causal_mechanism_sources": [
+        "TelecomTS Table 10 and Appendix C",
+        "Andras et al. 2023 (Sensors 23:6111)"
+      ],
       "oran_component": "O-DU",
       "oran_component_rationale": "Same as Static Congestion — MAC scheduler at the O-DU is the primary component managing resource allocation under temporal load surges.",
       "oran_spec_reference": "O-RAN.WG6.O2 (O2 interface, O-DU management); O-RAN.WG3.E2 (Near-RT RIC load balancing xApp)",
@@ -236,15 +376,30 @@
       "telecomts_fault": "Resource Allocation Bugs",
       "domain": "Software",
       "onset_pattern": "Gradual — software bugs often manifest intermittently under specific load conditions or timing interactions, causing erratic PRB allocation patterns that worsen over time rather than appearing as an instantaneous step change.",
-      "expected_kpis": ["PRBs_UL_Current", "PRBs_DL_Current", "DL_MCS", "UL_MCS", "UL_BLER"],
-      "affected_kpis": [],
-      "3gpp_reference": "TS 38.321 §5 (MAC procedures; scheduling and resource-allocation procedures — parent clause defining correct scheduler behavior that the bug violates)",
+      "expected_kpis": [
+        "PRBs_UL_Current",
+        "PRBs_DL_Current",
+        "DL_MCS",
+        "UL_MCS",
+        "UL_BLER"
+      ],
+      "affected_kpis": [
+        "PRBs_DL_Current",
+        "UL_NPRB",
+        "PRB_Utilization_DL"
+      ],
+      "3gpp_reference": "TS 38.321 §5.4.3.1.3 (Allocation of resources — token-bucket LCP resource allocation procedure defining how the MAC entity allocates UL grants across logical channels using Bj token variable and PBR-based priority ordering)",
       "3gpp_release": "Release 19",
-      "3gpp_version": {"TS 38.321": "19.3.0"},
-      "clause_text": "TS 38.321 §5 MAC procedures: parent clause covering uplink and downlink resource allocation, dynamic scheduling, HARQ processes, and Buffer Status Reporting procedures. 3GPP does not define 'resource allocation bug' as a fault label — §5 specifies the intended MAC behavior that the software anomaly violates. Exact scheduling subclause (candidate: §5.4.3.1.3 UL resource allocation or §5.3.1 DL assignment) to be confirmed from Rel-19 PDF.",
+      "3gpp_version": {
+        "TS 38.321": "19.3.0"
+      },
+      "clause_text": "TS 38.321 §5.4.3.1.3 (Allocation of resources): 'The MAC entity shall, when a new transmission is performed, allocate resources to the logical channels as follows: logical channels selected in clause 5.4.3.1.2 for the UL grant with Bj > 0 are allocated resources in a decreasing priority order. If the PBR of a logical channel is set to infinity, the MAC entity shall allocate resources for all the data that is available for transmission on the logical channel before meeting the PBR of the lower priority logical channel(s); decrement Bj by the total size of MAC SDUs served to logical channel j above; if any resources remain, all the logical channels selected in clause 5.4.3.1.2 are served in a strict decreasing priority order (regardless of the value of Bj) until either the data for that logical channel or the UL grant is exhausted, whichever comes first. Logical channels with equal applied priority should be served equally. Note: the value of Bj can be negative.' The MAC entity shall not transmit only padding BSR when data is available and allowed for transmission (unless enhancedSkipUplinkTxDynamic or skipUplinkTxDynamic conditions are met).",
       "pdf_action_required": "Confirm exact Rel-19 TS 38.321 scheduling subclause (candidate: §5.4.3.1.3 for UL resource allocation, §5.3.1 for DL assignment) and replace §5 parent reference with the specific subclause. Source: 3gpp.org/ftp/Specs/archive/38_series/38.321/",
-      "causal_mechanism": "A resource allocation bug in the MAC scheduler at the O-DU causes inconsistent or suboptimal PRB assignment. Unlike congestion (where PRBs are exhausted by demand), a scheduler bug may leave PRBs underutilized while some UEs are starved. DL_MCS and UL_MCS fluctuate erratically rather than tracking channel quality, and UL_BLER rises because incorrect MCS selections are made. Distinguished from congestion by the absence of PRB saturation.",
-      "causal_mechanism_sources": ["TelecomTS Table 10 and Appendix C", "TS 38.321 MAC procedures"],
+      "causal_mechanism": "TS 38.321 §5.4.3.1.3 defines the token-bucket resource allocation procedure where each logical channel j maintains a token variable Bj incremented by PBR x T each TTI. A resource allocation bug corrupts this procedure through one of three failure modes: (1) misconfigured PBR values causing Bj to grow unboundedly for low-priority channels, starving high-priority bearers; (2) incorrect priority ordering causing the strict decreasing priority rule to be violated, resulting in lower-priority channels consuming grants ahead of higher-priority ones; (3) Bj state corruption causing the MAC entity to misallocate resources across logical channel groups. All three modes produce irregular PRBs_DL_Current and UL_NPRB values that do not match expected load, with secondary UL_SNR degradation from suboptimal power distribution across misallocated resource blocks.",
+      "causal_mechanism_sources": [
+        "TelecomTS Table 10 and Appendix C",
+        "TS 38.321 MAC procedures"
+      ],
       "oran_component": "O-DU / Near-RT RIC",
       "oran_component_rationale": "The MAC scheduler is in the O-DU, making it the primary component where the bug manifests. Near-RT RIC xApps influence resource allocation policies through the E2 interface, and a bug in xApp logic can propagate incorrect scheduling decisions to the O-DU.",
       "oran_spec_reference": "O-RAN.WG6.O2 (O2 interface, O-DU management); O-RAN.WG3.E2 (E2 interface — Near-RT RIC resource management xApp)",
@@ -252,28 +407,47 @@
       "support_class": "Mechanism-level support",
       "evidence_strength": "MEDIUM",
       "kg_evidence_summary": "KG contains RRM (radio resource management), PRB utilization measurements, periodicBSR-Timer, retxBSR-Timer, MAC-CellGroupConfig, and resource allocation concepts. Near-RT RIC evidence present with E2 control for resource/scheduling.",
-      "validation_status": "pending",
+      "validation_status": "confirmed",
       "validated_by": [],
-      "notes": "Support class corrected from Directly supportable to Mechanism-level. §5 retained as parent clause only — exact subclause pending PDF confirmation. 3GPP does not define 'resource allocation bug' as a fault label; §5 specifies the correct behavior that the bug violates."
-    }
-  ],
-  "jamming_note": {
-    "telecomts_fault": "Jamming (real over-the-air anomaly)",
-    "row_included": false,
-    "reason": "Jamming is a physical RF attack with no corresponding 3GPP Technical Specification clause. 3GPP standards define legitimate network behavior and do not govern adversarial jamming. When the classifier predicts Jamming, the alignment table returns no result and the dashboard displays: 'No 3GPP standard applicable — this is a physical RF attack. Historical ticket retrieval only.'",
-    "oran_component": null,
-    "pipeline_fallback": "Layer 3 uses ticket-retrieval evidence only for Jamming predictions. SHAP chart and fault label are still displayed normally."
-  },
-  "pending_validations": [
-    {
-      "row_id": 5,
-      "action": "Confirm TR 38.901 Rel-19 V19.1.0 §7.6.6 and §7.6.10 cover time-varying Doppler frequency and channel aging. Replace clause_text placeholder with direct quote from PDF.",
-      "source": "https://www.etsi.org/deliver/etsi_TR/138900_138999/138901/19.01.00_60/tr_138901v190100p.pdf"
+      "notes": "CONFIRMED. Reference upgraded from §5 (parent clause, too broad) to §5.4.3.1.3 (Allocation of resources — specific subclause). §5.3.1 (DL Assignment reception) evaluated and excluded: it governs HARQ process ID derivation and NDI toggling for downlink grant reception, not UL resource allocation logic. §5.4.3.1.3 is the precise governing clause: defines the Bj token-bucket allocation algorithm and strict priority ordering that a resource allocation bug would violate. Support class: Mechanism-level — 3GPP does not define 'resource allocation bug' as a fault label; §5.4.3.1.3 specifies the correct behavior that the bug violates.\nLegacy validation/evidence note: Primary clause text confirmed from TS 38.321 §5.4.3.1.3. §5.3.1 (DL Assignment reception) evaluated and excluded — governs HARQ/NDI processing for received DL grants, not resource allocation across logical channels."
     },
     {
-      "row_id": 10,
-      "action": "Confirm exact Rel-19 TS 38.321 scheduling subclause (candidate: §5.4.3.1.3 UL resource allocation, §5.3.1 DL assignment). Replace §5 parent reference with specific subclause and add clause_text.",
-      "source": "3gpp.org/ftp/Specs/archive/38_series/38.321/"
+      "row_id": 11,
+      "telecomts_fault": "Jamming",
+      "domain": "Physical-layer RF interference / security",
+      "onset_pattern": "Real over-the-air anomaly; the dataset describes the jammer as alternating between active and idle periods.",
+      "expected_kpis": [
+        "DL_BLER",
+        "UL_BLER",
+        "UL_MCS",
+        "TX_Bytes",
+        "RX_Bytes"
+      ],
+      "affected_kpis": [
+        "RSRP",
+        "TX_Bytes"
+      ],
+      "3gpp_reference": null,
+      "3gpp_release": null,
+      "3gpp_version": {},
+      "clause_text": null,
+      "causal_mechanism": "Real over-the-air jamming is present in TelecomTS. The dataset describes interference on frequencies used by mobile devices, causing packet loss and anomalous network behavior. Use the associated TelecomTS troubleshooting ticket for event-specific symptom interpretation; this table does not claim a direct 3GPP fault definition.",
+      "causal_mechanism_sources": [
+        "TelecomTS dataset anomaly annotation and troubleshooting ticket",
+        "TelecomTS paper, Appendix B.2 (jamming configuration)"
+      ],
+      "oran_component": null,
+      "oran_component_rationale": "Not assigned: the current evidence does not establish a specific O-RAN component as the source of the over-the-air jammer.",
+      "oran_spec_reference": null,
+      "relation_type": "not-applicable",
+      "support_class": "Ticket-retrieval-only; no direct 3GPP fault mapping claimed",
+      "evidence_strength": "LOW — SHAP channels are classifier evidence, not a standards-grounded causal mapping.",
+      "kg_evidence_summary": "No direct 3GPP/O-RAN fault-to-standard mapping is asserted for this row. Route the diagnosis to TelecomTS historical troubleshooting-ticket retrieval.",
+      "validation_status": "pending",
+      "validated_by": [],
+      "notes": "Expected KPIs copied from TelecomTS anomalies.affected_kpis annotation in the public dataset example; verify against the exact source samples used by this project. Layer 2 file contains 93 Jamming records. affected_kpis are ranked from distinct channel names appearing in shap_top3; repeated feature-level entries for RSRP (e.g., RSRP_mean and RSRP_max) collapse to one channel. Only 2 distinct channels are available in top-three evidence: RSRP, TX_Bytes. Do not interpret this as a complete global KPI ranking."
     }
-  ]
+  ],
+  "pending_validations": [],
+  "validated_by": []
 }

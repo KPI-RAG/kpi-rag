@@ -79,6 +79,39 @@ def run_track_c(
                 (payload_obj, window_idx)
             )
 
+    # Option A: Supplement undersupplied faults (e.g. Congestion) from handoff file
+    supplement_path = os.path.join(processed_dir, "layer2_rag_handoff_sessionsplit.json")
+    if os.path.exists(supplement_path):
+        data_cfg = cfg.get("data", {})
+        test_idx_path = os.path.join(
+            data_cfg.get("indices_path", "data/indices"),
+            data_cfg.get("test_idx_file", "test_idx_sessionsplit.npy"),
+        )
+        test_set = set()
+        if os.path.exists(test_idx_path):
+            import numpy as np
+            test_set = set(np.load(test_idx_path).tolist())
+        with open(supplement_path, "r", encoding="utf-8") as f:
+            supp_raw = json.load(f)
+        for ft in TRACK_C_FAULTS:
+            if len(by_fault.get(ft, [])) < n_per_fault:
+                existing_w = {w_idx for _, w_idx in by_fault.get(ft, [])}
+                for rec in supp_raw:
+                    w_idx = rec.get("window_index")
+                    if test_set and (w_idx is None or w_idx not in test_set):
+                        continue
+                    if w_idx in existing_w:
+                        continue
+                    try:
+                        p_obj = ClassifierOutput(**rec)
+                        if p_obj.anomaly_type == ft:
+                            by_fault.setdefault(ft, []).append((p_obj, w_idx))
+                            existing_w.add(w_idx)
+                            if len(by_fault[ft]) >= n_per_fault:
+                                break
+                    except Exception:
+                        pass
+
     # samples: list of (fault_type, ClassifierOutput, window_index)
     samples: list[tuple[AnomalyType, ClassifierOutput, int | None]] = []
     for ft in TRACK_C_FAULTS:
