@@ -24,6 +24,7 @@ dependencies = [
     "groq>=1.7.0",
     "python-pptx>=1.0.2",
     "huggingface-hub>=1.27.0",
+    "catboost>=1.2.10",
 ]
 
 [tool.pytest.ini_options]

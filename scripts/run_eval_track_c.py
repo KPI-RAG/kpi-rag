@@ -49,7 +49,16 @@ def run_track_c(
     import random
     from src.schema import ClassifierOutput
 
-    with open("data/processed/layer2_output_sessionsplit.json", "r") as f:
+    layer2_file = cfg.get("data", {}).get(
+        "layer2_output_file", "layer2_output_sessionsplit_phase2.json"
+    )
+    processed_dir = cfg.get("data", {}).get("processed_path", "data/processed")
+    layer2_path = (
+        layer2_file
+        if os.path.exists(layer2_file)
+        else os.path.join(processed_dir, layer2_file)
+    )
+    with open(layer2_path, "r", encoding="utf-8") as f:
         all_windows_raw = json.load(f)
 
     parsed_windows = []

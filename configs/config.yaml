@@ -26,6 +26,10 @@ data:
   train_idx_file: "train_idx_sessionsplit.npy"   # only these windows are indexed
   test_idx_file: "test_idx_sessionsplit.npy"
   rca_evidence_path: "data/processed/rca_evidence.json"
+  layer2_output_file: "layer2_output_sessionsplit_phase2.json"
+  alignment_table_path: "data/alignment_table.json"
+  n_features: 496
+  feature_dims: 496
   window_length: 128
   n_channels: 18
   n_anomalous: 1235       # 935 train + 300 test

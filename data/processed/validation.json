@@ -1,0 +1,44 @@
+{
+  "records": 6312,
+  "expected": 6312,
+  "schema_ok": true,
+  "normal": 5930,
+  "anomalous": 382,
+  "invalid_fields": 0,
+  "rejected_alarms_with_model1_shap": 0,
+  "ok": true,
+  "test_truth": {
+    "faults": 300,
+    "normal": 6012
+  },
+  "cascade": {
+    "flagged_as_fault": 382,
+    "true_faults_labelled_fault": 266,
+    "false_alarms_labelled_fault": 116,
+    "exact_fault_type_correct": 199,
+    "catchall_share_cci_mild_among_false_alarms": 0.647
+  },
+  "class_grouping_reporting_complement": {
+    "congestion_family": [
+      "Buffer Overflow (Gradual Buildup)",
+      "High Network Congestion (Gradual Buildup)",
+      "High Network Congestion (Sudden Spike)"
+    ],
+    "exact_11_class_accuracy_on_true_faults": 0.6633,
+    "family_level_accuracy_on_true_faults": 0.75,
+    "note": "labels in the JSON stay the 11 classes; the family metric is a reporting complement (Farida's next step 3)"
+  },
+  "idle_link_flagged_records": 50,
+  "phase1_json": {
+    "records": 6312,
+    "anomalous": 1374,
+    "normal": 4938
+  },
+  "phase1_report": {
+    "anomalous": 1374,
+    "normal": 4938,
+    "true_with_model2_shap": 269,
+    "false_positives": 1105
+  },
+  "reload_reproduces_predictions": true
+}
