@@ -29,16 +29,15 @@ def load_models(cfg: dict):
     m2 = CatBoostClassifier()
     m2.load_model(model2_path)
 
+    # Farida's model1_calibrator.pkl is degenerate: it collapses all probabilities
+    # between 0.30 and 0.9967 to a flat 0.0850 (8.5%), contradicting the test
+    # precision of 69.6% (266/382). Disabled — using raw probabilities.
     calibrator = None
-    if os.path.exists(calibrator_path):
-        with open(calibrator_path, "rb") as f:
-            calibrator = pickle.load(f)
-        logger.info("Loaded calibrator from %s", calibrator_path)
-    else:
-        logger.warning(
-            "Calibrator not found at %s — using raw probabilities",
-            calibrator_path,
-        )
+    logger.warning(
+        "Calibrator disabled — degenerate mapping detected "
+        "(all outputs collapse to %.3f). Using raw probabilities.",
+        0.085,
+    )
 
     return m1, m2, calibrator
 
