@@ -1,4 +1,4 @@
-# 12a_idle_ambiguity  |  2026-10-15 09:40 UTC  |  python 3.12.13 on jupyter-farida-gaber44
+# 12a_idle_ambiguity  |  2026-10-16 13:45 UTC  |  python 3.12.13 on jupyter-farida-gaber44
 == 1. idle_link indicator (TX_Bytes mean < 1000.0 B, PRB_Util_DL mean < 1.0 %, packets < 1.0/sample) ==
   training sessions with idle share > 5 %:
          windows  idle_share  faults
@@ -27,6 +27,9 @@ High Network Congestion (Gradual Buildup)    0.000
   ECE on OOF (train):  raw 0.199 -> calibrated 0.000
   ECE on test (post-hoc): raw 0.133 -> calibrated 0.018
   idle Normal windows of session 0: mean raw p = 0.972 -> calibrated 0.085
+  FLATNESS CHECK: 15 raw scores between 0.30 and 0.99 map to 1 distinct calibrated value(s): [np.float64(0.085)]
+  Why: OOF windows with raw >= 0.9: 3206, true fault rate 0.075; 2908 of them are Normal windows of the Normal-only sessions 0 and 5
+  VERDICT: isotonic calibration REJECTED - it erases the ranking information (a raw 0.99 and a raw 0.30 get the same value) and a 'probability' fitted across recordings is unstable (same reason as the unstable threshold, step 02). The pipeline keeps the raw Model 1 probability; reliability is reported empirically (precision at t = 0.5).
 
 == 3. Held-out sessions: the flag as a review queue (labels unchanged) ==
   flagged 382: idle 50 (true faults 5, false alarms 45); non-idle 332 (true faults 261, false alarms 71)

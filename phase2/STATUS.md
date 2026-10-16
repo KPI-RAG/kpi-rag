@@ -39,8 +39,8 @@ session-level split. Model 1 test P 0.196 / R 0.897; Model 2 test accuracy 0.677
 | 10b | Why session 0 fails for every detector | ✅ done | s0 "Normal" = idle link ≈ s2 Jamming; s0 Jamming = loaded link; every Normal session fingerprintable (AUC 1.0) → data limit |
 | 10 | Cascade + Raneem's reject option (hard negatives OOF vs random vs none) | ✅ done | Model 1 cascade reproduced (TP 266 / FP 116). Reject class: 16/116 FP rejected, residual catch-all 68 % (rule 41 % failed), 20 % of real faults rejected in CV → **not promoted** |
 | 10c | Reject policy by P(Normal) ≥ τ | ✅ done | no τ removes FPs without rejecting faults → **final has no reject class** |
-| 11 | Final pipeline + Layer 2 JSON (Phase 1 schema) + validation | ✅ done (re-run 2026-10-15) | 6,312 records, 382 fault labels (116 false), 0 invalid fields, NaN-safe normal means, calibrated confidence, 50 idle-flagged, reload reproduces |
-| 12a | Idle-link ambiguity flag + Model 1 calibration | ✅ done | ECE 0.133 → 0.018; flag = 45 FP + 5 TP of 116 FP |
+| 11 | Final pipeline + Layer 2 JSON (Phase 1 schema) + validation | ✅ done (re-run 2026-10-15) | 6,312 records, 382 fault labels (116 false), 0 invalid fields, NaN-safe normal means, raw Model 1 confidence (calibration rejected, 12a), 50 idle-flagged, reload reproduces |
+| 12a | Idle-link ambiguity flag (adopted); Model 1 isotonic calibration REJECTED (flat 8.5 %) | ✅ done | flag = 45 FP + 5 TP of 116 FP |
 | 12b | Specialist HNC-Gradual vs Buffer Overflow | ✅ done, not adopted | pair F1 0.30 → 0.25; test 30/37 unchanged |
 | 12c-1 | Session-level bootstrap CIs + power analysis | ✅ done | small gains need ≈ 31 folds (2–3× more fault sessions) |
 | 12 | Report `docs/phase2_results.md` + docx, `PROJECT_STORY.md`, `docs/future_work.md` | ✅ done | — |
