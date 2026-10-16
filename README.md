@@ -114,17 +114,17 @@ uv run python scripts/run_eval_track_b.py --output data/processed/ --n-samples 3
 
 | Condition | Context provided | Citation validity |
 |-----------|-----------------|-------------------|
-| C1 | Label + SHAP only | 6/30 (20%) |
+| C1 | Label + SHAP only | 8/30 (27%) |
 | C2 | Label + SHAP + retrieved tickets | 7/30 (23%) |
 | C3 | Full system (tickets + alignment table + RCA evidence) | 30/30 (100%) |
 
 Gemini 3.5 Flash Lite, 10 fault types × 3 windows, `random_state=42`, same 30
 windows in every condition, 0 template fallbacks. RCA evidence was injected for
-17/30 C3 samples — `rca_evidence.json` covers `window_index` 0–1234 only.
+30/30 C3 samples.
 
 > **What the C3 citation validity metric measures:**
 > C3 demonstrates that providing structured 3GPP standards context enables the
-> LLM to correctly incorporate domain references in 100% of cases (30/30). C1 (20%)
+> LLM to correctly incorporate domain references in 100% of cases (30/30). C1 (27%)
 > and C2 (23%) establish the baselines without this context. The delta C2→C3 (+77pp)
 > quantifies the contribution of the alignment-guided prompting strategy.
 >
