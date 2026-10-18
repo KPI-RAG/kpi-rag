@@ -211,8 +211,7 @@ project/
 │   └── processed/               # RCA evidence, layer-2 outputs, Track A metrics, track_c_v2/
 ├── docs/
 │   ├── KPI-RAG_Proposal_Group_15.pdf
-│   ├── KPI_RAG_Final_Report_v2.md   # final report, every number traced to a file
-│   ├── KPI_RAG_Final_Report.md      # superseded first draft (kept for history)
+│   ├── KPI_RAG_Final_Report.md      # final report, every number traced to a file
 │   ├── REVIEW_2026-10-06.md     # first end-to-end review
 │   └── REVIEW_2026-10-18.md     # second review + how each finding was resolved
 ├── pyproject.toml / uv.lock     # dev environment (uv)
