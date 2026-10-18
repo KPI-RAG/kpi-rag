@@ -14,14 +14,13 @@
   },
   "retrieval": {
     "queries": 382,
-    "p_at_1_vs_predicted": 0.8952879581151832,
-    "p_at_5_vs_predicted": 0.9256544502617801,
-    "queries_on_true_faults": 266,
-    "p_at_1_vs_true": 0.706766917293233,
-    "p_at_5_vs_true": 0.6857142857142857,
-    "top1_similarity_min": 0.6560331583023071,
-    "top1_similarity_median": 0.7933200299739838,
-    "top1_similarity_max": 0.8161068558692932,
-    "low_confidence_flags": 0
+    "system_top1_similarity_min": 0.5932562351226807,
+    "system_top1_similarity_median": 0.7186550796031952,
+    "system_top1_similarity_max": 0.7530661821365356,
+    "system_low_confidence_flags": 0,
+    "diagnostic_queries_on_true_faults": 266,
+    "diagnostic_label_free_p_at_1_vs_true": 0.45112781954887216,
+    "diagnostic_label_free_p_at_5_vs_true": 0.33458646616541354,
+    "diagnostic_majority_class_share": 0.3533834586466165
   }
 }

@@ -50,34 +50,42 @@ def compute_cascade_metrics(preds: dict[int, str], truth: dict[int, str]) -> dic
 
 
 def compute_retrieval_metrics(records: list[dict], truth: dict[int, str], cfg: dict) -> dict:
-    """P@1 / P@5 of the retrieved tickets' fault type vs the predicted and the true label."""
+    """System retrieval (filtered to the predicted class) plus a label-free diagnostic.
+
+    The diagnostic drops the class filter: P@k of the retrieved incidents' fault type
+    vs the TRUE label measures how much the KPI evidence alone identifies the fault.
+    """
     from src.kg_indexer import get_collection
-    from src.rag_query import query_from_classifier_output
+    from src.rag_query import build_query, query_from_classifier_output, retrieve
     from src.schema import ClassifierOutput
 
     collection = get_collection(cfg)
-    rows = []
+    rag = cfg["rag"]
+    system, unfiltered = [], []
     for r in records:
-        tickets, low_conf = query_from_classifier_output(ClassifierOutput(**r), collection, cfg)
-        rows.append((r, [t.anomaly_type for t in tickets], tickets[0].similarity_score, low_conf))
+        payload = ClassifierOutput(**r)
+        tickets, low_conf = query_from_classifier_output(payload, collection, cfg)
+        system.append((tickets[0].similarity_score, low_conf))
+        free, _ = retrieve(build_query(payload), collection, rag["embedding_model"], k=rag["top_k"],
+                           threshold=rag["cosine_threshold"])
+        if r["window_index"] in truth:
+            unfiltered.append((truth[r["window_index"]], [t.anomaly_type for t in free]))
 
     def precision(pairs, k):
         return statistics.mean(sum(t == label for t in types[:k]) / k for label, types in pairs)
 
-    vs_pred = [(r["anomaly_type"], types) for r, types, _, _ in rows]
-    vs_true = [(truth[r["window_index"]], types) for r, types, _, _ in rows if r["window_index"] in truth]
-    top1 = [s for _, _, s, _ in rows]
+    true_labels = [label for label, _ in unfiltered]
+    top1 = [s for s, _ in system]
     return {
-        "queries": len(rows),
-        "p_at_1_vs_predicted": precision(vs_pred, 1),
-        "p_at_5_vs_predicted": precision(vs_pred, 5),
-        "queries_on_true_faults": len(vs_true),
-        "p_at_1_vs_true": precision(vs_true, 1),
-        "p_at_5_vs_true": precision(vs_true, 5),
-        "top1_similarity_min": min(top1),
-        "top1_similarity_median": statistics.median(top1),
-        "top1_similarity_max": max(top1),
-        "low_confidence_flags": sum(lc for _, _, _, lc in rows),
+        "queries": len(system),
+        "system_top1_similarity_min": min(top1),
+        "system_top1_similarity_median": statistics.median(top1),
+        "system_top1_similarity_max": max(top1),
+        "system_low_confidence_flags": sum(lc for _, lc in system),
+        "diagnostic_queries_on_true_faults": len(unfiltered),
+        "diagnostic_label_free_p_at_1_vs_true": precision(unfiltered, 1),
+        "diagnostic_label_free_p_at_5_vs_true": precision(unfiltered, 5),
+        "diagnostic_majority_class_share": max(true_labels.count(c) for c in set(true_labels)) / len(true_labels),
     }
 
 

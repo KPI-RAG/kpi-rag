@@ -9,12 +9,14 @@ from src.data_loader import (
     apply_train_split,
     verify_ticket_order,
 )
-from src.kg_indexer import get_collection, index_tickets
+from src.kg_indexer import get_collection, index_tickets, clear_collection
 from src.utils import setup_logging
 
 logger = logging.getLogger(__name__)
 
-def build_index(cfg: dict) -> int:
+def build_index(cfg: dict, rebuild: bool = False) -> int:
+    """Index the train-split tickets. rebuild=True empties the collection first:
+    index_tickets() skips ids that exist, so without it a stale index survives."""
     raw_path = cfg["data"]["raw_path"]
     indices_path = cfg["data"]["indices_path"]
     embedding_model = cfg["rag"]["embedding_model"]
@@ -40,7 +42,10 @@ def build_index(cfg: dict) -> int:
     
     collection = get_collection(cfg)
     logger.info("Got collection %s", collection.name if hasattr(collection, 'name') else 'unknown')
-    
+    if rebuild:
+        clear_collection(collection)
+        logger.info("Cleared collection before rebuild")
+
     indexed_count = index_tickets(train_tickets, collection, embedding_model)
     logger.info("Indexed %d documents", indexed_count)
     
@@ -49,12 +54,13 @@ def build_index(cfg: dict) -> int:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build ChromaDB index from TelecomTS data")
     parser.add_argument("--config", type=str, default="configs/config.yaml", help="Path to config.yaml")
+    parser.add_argument("--rebuild", action="store_true", help="empty the collection before indexing")
     args = parser.parse_args()
-    
+
     setup_logging(__name__)
-    
+
     cfg = load_config(args.config)
-    indexed_count = build_index(cfg)
+    indexed_count = build_index(cfg, rebuild=args.rebuild)
     logger.info("Indexed %d tickets into ChromaDB", indexed_count)
 
 if __name__ == "__main__":

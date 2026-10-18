@@ -46,11 +46,12 @@ def build_query(payload: ClassifierOutput) -> str:
             
     protocol_state = ", ".join(proto_states) if proto_states else "N/A"
     
+    # No fault label in the query: the class is applied as a metadata filter in
+    # query_from_classifier_output(), so similarity ranks incidents by KPI evidence only.
     query = (
-        f"{payload.anomaly_type.value} anomaly detected.\n"
-        f"   Primary affected KPIs: {top3_channels}.\n"
-        f"   Signal direction: {directions}.\n"
-        f"   Protocol state: {protocol_state}."
+        f"Primary affected KPIs: {top3_channels}.\n"
+        f"Signal direction: {directions}.\n"
+        f"Protocol state: {protocol_state}."
     )
     return query
 
@@ -59,7 +60,8 @@ def retrieve(
     collection: chromadb.Collection,
     model_name: str,
     k: int = 5,
-    threshold: float = 0.45
+    threshold: float = 0.45,
+    where: dict | None = None,
 ) -> tuple[list[RetrievedTicket], bool]:
     """Retrieve similar tickets from ChromaDB using a text query.
     
@@ -75,7 +77,9 @@ def retrieve(
         Number of tickets to retrieve (default is 5).
     threshold : float, optional
         Minimum cosine similarity threshold to be considered high confidence (default is 0.45).
-        
+    where : dict, optional
+        ChromaDB metadata filter, e.g. {"anomaly_type": "Antenna Failure"}.
+
     Returns
     -------
     tuple[list[RetrievedTicket], bool]
@@ -86,7 +90,8 @@ def retrieve(
     
     results = collection.query(
         query_embeddings=[query_emb],
-        n_results=k
+        n_results=k,
+        where=where,
     )
     
     tickets = []
@@ -134,8 +139,12 @@ def query_from_classifier_output(
     collection: chromadb.Collection,
     cfg: dict
 ) -> tuple[list[RetrievedTicket], bool]:
-    """Build a query from a classifier payload and retrieve matching tickets.
-    
+    """Past incidents of the predicted fault type, ranked by KPI-evidence similarity.
+
+    Text retrieval cannot tell the fault classes apart (measured: P@1 vs the true
+    label 0.45 without the label, below the classifier's 0.75), so the class comes
+    from the classifier as a filter and retrieval only ranks evidence within it.
+
     Parameters
     ----------
     payload : ClassifierOutput
@@ -161,7 +170,8 @@ def query_from_classifier_output(
         collection=collection,
         model_name=model_name,
         k=k,
-        threshold=threshold
+        threshold=threshold,
+        where={"anomaly_type": payload.anomaly_type.value},
     )
 
 

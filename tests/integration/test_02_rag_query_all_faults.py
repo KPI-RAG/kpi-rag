@@ -4,16 +4,13 @@ from src.schema import ClassifierOutput
 from src.rag_query import build_query
 
 
-def test_build_query_contains_fault_type(all_payloads):
-    """build_query() output must contain the fault type and expected sections."""
+def test_build_query_is_evidence_only(all_payloads):
+    """build_query() carries KPI evidence but never the fault label (the label is a metadata filter)."""
     for fault_name, data in all_payloads.items():
         payload = ClassifierOutput(**data)
         query = build_query(payload)
-        assert payload.anomaly_type.value in query, (
-            f"Query for {fault_name} missing fault type"
-        )
-        assert "anomaly detected" in query, (
-            f"Query for {fault_name} missing 'anomaly detected'"
+        assert payload.anomaly_type.value not in query, (
+            f"Query for {fault_name} leaks the fault label"
         )
         assert "Primary affected KPIs" in query, (
             f"Query for {fault_name} missing 'Primary affected KPIs'"
@@ -35,11 +32,11 @@ def test_build_query_shap_direction_labels(all_payloads):
 
 
 def test_build_query_jamming_no_crash(all_payloads):
-    """Jamming payload must not crash build_query() and must contain 'Jamming'."""
+    """Jamming payload must not crash build_query()."""
     data = all_payloads["Jamming"]
     payload = ClassifierOutput(**data)
     query = build_query(payload)
-    assert "Jamming" in query
+    assert "Primary affected KPIs" in query and "Jamming" not in query
 
 
 def test_query_is_nonempty_string(all_payloads):

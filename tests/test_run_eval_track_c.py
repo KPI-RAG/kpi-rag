@@ -44,27 +44,25 @@ def test_run_track_c(mock_get_col, mock_load_align, mock_query, mock_explain, tm
     with caplog.at_level(logging.INFO):
         run_track_c(out_dir, cfg, n_per_fault=1)
 
-    # 9 faults have >= 1 verified window (Congestion Sudden Spike has none) × 3 conditions
-    assert mock_explain.call_count == 27
-
-    # Verify output files
     explanations_path = tmp_path / "output" / "track_c_explanations.jsonl"
     scores_path = tmp_path / "output" / "track_c_scores_template.jsonl"
-
-    assert explanations_path.exists()
-    assert scores_path.exists()
+    assert (tmp_path / "output" / "track_c_summary.json").exists()
 
     explanations = [json.loads(l) for l in explanations_path.read_text().strip().split("\n")]
     scores = [json.loads(l) for l in scores_path.read_text().strip().split("\n")]
 
-    assert len(explanations) == 27
-    assert len(scores) == 27
-
-    # Each condition should have exactly 9 explanations, with ids linking the conditions
+    # 10 true faults × 1 sample × 3 conditions; detector misses get a record but no LLM call
+    assert len(explanations) == 30
+    explained = [e for e in explanations if e["explanation"] is not None]
+    assert mock_explain.call_count == len(explained) == len(scores)
+    assert all(e["predicted_fault"] != "Normal" for e in explained)
+    assert all(e["citation_correct"] is False for e in explanations if e["explanation"] is None)
     for c in (1, 2, 3):
-        cond_items = [e for e in explanations if e["condition"] == c]
-        assert len(cond_items) == 9
-    assert all(s["explanation_id"] == f"w{e['window_index']}_c{e['condition']}" for e, s in zip(explanations, scores))
+        assert len([e for e in explanations if e["condition"] == c]) == 10
+    # ids link the three conditions of a window
+    assert all(s["explanation_id"] == f"w{e['window_index']}_c{e['condition']}" for e, s in zip(explained, scores))
+    # citation_correct is judged against the TRUE fault's row (mock table only has Antenna Failure)
+    assert all(e["citation_correct"] == (e["true_fault"] == "Antenna Failure") for e in explained)
 
     # Condition field validated
     conditions_seen = {e["condition"] for e in explanations}

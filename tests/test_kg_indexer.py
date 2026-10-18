@@ -19,21 +19,21 @@ def fake_tickets():
             "anomaly_type": "Antenna Failure",
             "ticket_text": "Antenna 1 is down.",
             "qna_trace": "Because of wind.",
-            "description": "test"
+            "description": "RSRP fell to -112 dB."
         },
         {
             "ticket_id": "2",
             "anomaly_type": "Jamming",
             "ticket_text": "Signal blocked.",
             "qna_trace": "Interference detected.",
-            "description": "test"
+            "description": "UL SNR collapsed."
         },
         {
             "ticket_id": "3",
             "anomaly_type": "Buffer Overflow (Gradual Buildup)",
             "ticket_text": "Buffer full.",
             "qna_trace": "Packets dropping.",
-            "description": "test"
+            "description": "UL buffer kept growing."
         }
     ]
 
@@ -53,7 +53,7 @@ def test_embed_tickets(fake_tickets):
     assert isinstance(embs[0], list)
     assert isinstance(embs[0][0], float)
     assert len(embs[0]) > 0
-    assert docs[0] == "Antenna 1 is down.\nBecause of wind."
+    assert docs[0] == "RSRP fell to -112 dB."   # the window-specific narrative, not the class template
     assert metas[0]["ticket_id"] == "1"
 
 def test_index_tickets(fake_cfg, fake_tickets):

@@ -136,7 +136,8 @@ def _prompt_header(payload: ClassifierOutput) -> str:
 
 
 def _tickets_block(tickets: list[RetrievedTicket]) -> str:
-    lines = [f"  [{i+1}] {t.content[:200]}..." for i, t in enumerate(tickets[:3])]
+    # content is the past incident's KPI narrative; 300 chars cover its radio-layer sentences
+    lines = [f"  [{i+1}] (similarity {t.similarity_score:.2f}) {t.content[:300]}..." for i, t in enumerate(tickets[:3])]
     return "\nRetrieved similar incidents:\n" + ("\n".join(lines) or "  No similar incidents retrieved.") + "\n"
 
 

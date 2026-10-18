@@ -52,7 +52,7 @@ def sample_payload():
 def test_build_query(sample_payload):
     query = build_query(sample_payload)
     assert isinstance(query, str)
-    assert "Antenna Failure anomaly detected." in query
+    assert "Antenna Failure" not in query   # the class is a metadata filter, not query text
     assert "RSRP, DL_BLER, DL_MCS" in query
     assert "RSRP: below normal" in query
     assert "DL_BLER: above normal" in query
@@ -93,6 +93,8 @@ def test_query_from_classifier_output(collection, sample_payload):
     assert isinstance(low_conf, bool)
     assert len(tickets) > 0
     assert low_conf is False
+    # only incidents of the predicted fault type come back
+    assert {t.anomaly_type for t in tickets} == {"Antenna Failure"}
 
 
 # unrelated query must come back low-confidence

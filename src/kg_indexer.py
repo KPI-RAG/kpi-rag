@@ -21,16 +21,24 @@ def get_collection(cfg: dict) -> chromadb.Collection:
     return collection
 
 def embed_tickets(tickets: list[dict], model_name: str) -> tuple[list[str], list[list[float]], list[dict], list[str]]:
-    """Embed ticket_text + qna_trace per ticket. Returns (documents, embeddings, metadatas, ids)."""
+    """Embed each ticket's window-specific KPI narrative (``description``).
+
+    ticket_text is one template per fault class (11 distinct texts) and the QnA's
+    root-cause answer is the class name, so neither says anything the label doesn't.
+    The description is the only per-incident evidence. Its first 256 tokens (MiniLM's
+    window) cover the radio KPIs; averaging all paragraphs was measured to retrieve
+    worse, so truncation is kept on purpose.
+    Returns (documents, embeddings, metadatas, ids).
+    """
     logger.info("Embedding %d tickets using model %s", len(tickets), model_name)
     model = get_model(model_name)
 
     documents = []
     metadatas = []
     ids = []
-    
+
     for ticket in tickets:
-        doc = f"{ticket['ticket_text']}\n{ticket['qna_trace']}"
+        doc = ticket["description"]
         documents.append(doc)
         metadatas.append({
             "ticket_id": ticket["ticket_id"],

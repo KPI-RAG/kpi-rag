@@ -139,26 +139,39 @@ def test_run_track_c_has_default_output():
 
 # ── Track C verified sampling ─────────────────────────────────────────────────
 
-def test_track_c_verified_sampling():
-    """Every sampled window is a test window whose prediction AND ground truth equal its fault."""
+def test_track_c_samples_by_ground_truth():
+    """3 test windows per TRUE fault; predictions are whatever Phase 2 said (incl. misses)."""
     import json, numpy as np
-    from scripts.run_eval_track_c import sample_verified_windows, TRACK_C_FAULTS
+    from scripts.run_eval_track_c import sample_by_ground_truth, TRACK_C_FAULTS
 
     test_idx = set(np.load("data/indices/test_idx_sessionsplit.npy").tolist())
     with open("data/processed/layer2_rag_handoff_sessionsplit.json", encoding="utf-8") as f:
         truth = {r["window_index"]: r["ground_truth_anomaly_type"] for r in json.load(f)}
 
-    result = sample_verified_windows(
+    samples = sample_by_ground_truth(
         phase2_path="data/processed/layer2_output_sessionsplit_phase2.json",
         handoff_path="data/processed/layer2_rag_handoff_sessionsplit.json",
         test_idx=test_idx, fault_types=TRACK_C_FAULTS, n_per_fault=3, seed=42,
     )
-    for ft, windows in result.items():
-        for w in windows:
-            assert w["window_index"] in test_idx
-            assert w["anomaly_type"] == ft.value
-            assert truth.get(w["window_index"]) == ft.value   # never a normal or misclassified window
-    assert sum(len(v) for v in result.values()) == 26     # Congestion: Gradual has 2, Sudden Spike 0
+    assert len(samples) == 30
+    for true_fault, rec in samples:
+        assert rec["window_index"] in test_idx
+        assert truth[rec["window_index"]] == true_fault          # never a normal window
+    # The detector misses every Sudden Spike test window — the sample must show that, not hide it
+    assert {rec["anomaly_type"] for t, rec in samples if t == "High Network Congestion (Sudden Spike)"} == {"Normal"}
+
+
+def test_track_c_summary_counts():
+    from scripts.run_eval_track_c import summarise
+    exp = {"template_generated": False}
+    recs = [
+        {"condition": 1, "true_fault": "A", "predicted_fault": "A", "explanation": exp, "reference_valid": True, "citation_correct": True},
+        {"condition": 1, "true_fault": "B", "predicted_fault": "A", "explanation": exp, "reference_valid": True, "citation_correct": False},
+        {"condition": 1, "true_fault": "C", "predicted_fault": "Normal", "explanation": None, "reference_valid": None, "citation_correct": False},
+    ]
+    s = summarise(recs)["C1"]
+    assert (s["n"], s["citation_correct"], s["correctly_classified"], s["citation_correct_when_classified"]) == (3, 1, 1, 1)
+    assert (s["explained"], s["reference_valid_vs_predicted"], s["missed_by_detector"]) == (2, 2, 1)
 
 
 # ── ChromaDB cosine metric ────────────────────────────────────────────────────
@@ -186,11 +199,18 @@ def test_chromadb_similarity_scores_positive():
     for r in results:
         assert 0.0 <= r["similarity"] <= 1.0, f"Negative similarity: {r['similarity']}"
 
-def test_no_legacy_l2_collection():
-    """Old L2 collection must be deleted."""
+def test_only_the_configured_collection_exists():
+    """Legacy collections (L2 'telecomts_tickets', template-based 'telecomts_tickets_cosine') are gone."""
     import yaml, chromadb
     cfg = yaml.safe_load(open("configs/config.yaml"))
     client = chromadb.PersistentClient(path=cfg["rag"]["chroma_db_path"])
     collections = [c.name for c in client.list_collections()]
-    assert "telecomts_tickets" not in collections
-    assert "telecomts_tickets_cosine" in collections
+    assert collections == [cfg["rag"]["collection_name"]]
+
+def test_index_documents_are_window_descriptions():
+    """Each indexed document is its window's KPI narrative, not one of the 11 class templates."""
+    import yaml, chromadb
+    cfg = yaml.safe_load(open("configs/config.yaml"))
+    c = chromadb.PersistentClient(path=cfg["rag"]["chroma_db_path"]).get_collection(cfg["rag"]["collection_name"])
+    docs = c.get(include=["documents"])["documents"]
+    assert len(set(docs)) == len(docs) == 935
