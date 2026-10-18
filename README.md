@@ -126,15 +126,15 @@ Retrieval diagnostic: with the label removed, the retrieved incidents' class mat
 class at P@1 = 0.451 (majority-class share 0.353) — text cannot identify the fault, which is
 why the class is applied as a filter.
 
-### Track B — human G-Eval
+### Track B — G-Eval (LLM judge, Rodina Khallaf)
 
 ```bash
 uv run python scripts/run_eval_track_b.py --scores <rated_scores.jsonl> --output data/processed/track_b_results.json
 ```
 
-Not done yet: `data/processed/track_c_v2/track_c_scores_template.jsonl` holds the 72 explanations
-to rate (1–5 on four dimensions). Un-rated rows (0.0) are rejected, so the template cannot be
-averaged by mistake.
+Pending re-run on the current explanations: `data/processed/track_c_v2/track_c_scores_template.jsonl`
+holds the 72 explanations to score (1–5 on four dimensions, citation judged against the true fault's
+alignment row). Un-scored rows (0.0) are rejected, so the template cannot be averaged by mistake.
 
 ### Track C — citation ablation (3 conditions)
 
@@ -174,7 +174,7 @@ Outputs (`data/processed/track_c_v2/`): `track_c_explanations.jsonl`, `track_c_s
 uv run pytest tests/ -q
 ```
 
-182 tests in 28 modules (20 unit, 8 integration): 179 pass, 3 skip without `GROQ_API_KEY`.
+183 tests in 28 modules (20 unit, 8 integration): 180 pass, 3 skip without `GROQ_API_KEY`.
 
 ## Project Structure
 

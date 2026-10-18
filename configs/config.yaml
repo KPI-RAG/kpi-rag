@@ -39,7 +39,7 @@ evaluation:
   citation_validity_threshold: 0.70   # Track B pass mark (pre-registered)
   n_eval_samples: 30
   samples_per_fault: 3                # default for run_eval_track_c.py --n-per-fault
-  g_eval_dimensions:                  # human-rated, 1-5 each; not automated yet
+  g_eval_dimensions:                  # 1-5 each; scored by Rodina's G-Eval LLM judge (Track B)
     - "Citation Validity"
     - "Fault Specificity"
     - "Actionability"

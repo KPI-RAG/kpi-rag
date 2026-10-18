@@ -155,3 +155,14 @@ def test_geval_score_rejects_unannotated_template_row():
     with pytest.raises(ValueError, match="outside 1-5"):
         GEvalScore(explanation_id="w1_c1", condition=1, fault_type="Antenna Failure",
                    citation_validity=0.0, fault_specificity=0.0, actionability=0.0, causal_soundness=0.0)
+
+
+def test_load_scores_ignores_judge_rationale(tmp_path):
+    """A G-Eval judge's extra fields (rationale) must not break loading."""
+    row = {"explanation_id": "w611_c3", "condition": 3, "fault_type": "Doppler Shift (Severe)",
+           "citation_validity": 4, "fault_specificity": 4, "actionability": 3, "causal_soundness": 4,
+           "reference_valid": True, "rationale": "cites TR 38.901 but no clause", "overall": 9.9}
+    p = tmp_path / "judged.jsonl"
+    p.write_text(json.dumps(row) + "\n", encoding="utf-8")
+    (s,) = load_scores_from_jsonl(str(p))
+    assert s.overall == 3.75 and s.reference_valid is True

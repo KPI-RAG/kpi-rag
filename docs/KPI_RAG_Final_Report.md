@@ -18,7 +18,7 @@
 **Repository:** https://github.com/KPI-RAG/kpi-rag
 
 > **Sources.** Every number below is read from a file in the repository; Appendix F lists them.
-> Results that do not exist yet (human G-Eval) are reported as pending, not estimated.
+> Results that do not exist yet (Track B G-Eval on these explanations) are reported as pending, not estimated.
 
 ---
 
@@ -38,7 +38,7 @@ correct for the **true** fault in 5/30 cases with label and SHAP only (C1), 7/30
 incidents (C2) and **21/30 with the alignment table and RCA evidence (C3)**; C2→C3 improves 14
 windows and worsens none (exact McNemar p = 1.2·10⁻⁴). When the classifier is right, C3 is 19/19.
 All C3 failures originate in Layer 2: six faults the detector missed and three misclassifications.
-Human quality rating (G-Eval) is pending.
+Explanation-quality scoring (G-Eval) is being re-run on these explanations and is reported as pending.
 
 ---
 
@@ -92,7 +92,7 @@ correct in C1).
   LLM given only the predicted label?
 - **RQ2:** Does grounding in a 3GPP alignment table make citations correct, and how much of the
   remaining error comes from the classifier rather than the grounding?
-- **RQ3:** Are the explanations specific, actionable and causally sound (human G-Eval)?
+- **RQ3:** Are the explanations specific, actionable and causally sound (G-Eval)?
 
 ### 1.5 Report Organization
 Chapter 2 covers background, Chapter 3 the method, Chapter 4 the implementation, Chapter 5 the
@@ -136,8 +136,10 @@ feature pushed toward the predicted class, not whether the KPI was high or low; 
 therefore reports direction separately (`feature_vs_normal`, Section 3.5).
 
 ### 2.6 G-Eval Framework
-G-Eval [3] scores generated text on explicit rubric dimensions with Likert scales. This project
-uses the rubric with **human** raters (Appendix C); automated LLM-as-judge scoring is not used.
+G-Eval [3] scores generated text with an LLM judge that follows explicit rubric dimensions on
+Likert scales. Track B applies it (Rodina Khallaf) to the Track C explanations on the four
+dimensions in Appendix C. A judge from the same model family as the generator can favour its own
+outputs, so a human spot-check of a subset is planned.
 
 ### 2.7 Gap Analysis
 Work on automated RAN fault management concentrates on classification accuracy; LLM assistants
@@ -242,7 +244,7 @@ alternatives.
   Each citation is scored against the **true** fault's row (`citation_correct`, end to end) and
   against the predicted row (`reference_valid`, what the validator reports). A window the detector
   misses produces no explanation and counts as incorrect.
-- **Track B (human G-Eval):** four 1–5 dimensions on every Track C explanation (Appendix C).
+- **Track B (G-Eval, LLM judge):** four 1–5 dimensions on every Track C explanation, judged against the true fault's alignment row (Appendix C).
 
 ---
 
@@ -357,9 +359,13 @@ The recomputed counts equal Farida's `validation.json` (checked by `tests/test_r
   reward a wrong row only if that row happened to cite the true fault's standard.
 
 ### 5.4 Track B — G-Eval Quality Assessment (pending)
-No human ratings exist yet. `data/processed/track_c_v2/track_c_scores_template.jsonl` lists the
-72 generated explanations, each tagged with its true fault, for rating on the four dimensions in
-Appendix C. `src/evaluator.py` rejects scores outside 1–5, so an un-rated template cannot be
+Pending. Rodina Khallaf's G-Eval judge was first run on the earlier Track C explanations, which
+were sampled by predicted label: of its three "Antenna Failure" windows one was CCI Severe and two
+were normal traffic, and its three "Sudden Spike" windows were two CCI Severe and one normal window.
+Those scores therefore describe a different, partly mislabelled sample and are not reported here.
+The judge is being re-run on the 72 explanations in
+`data/processed/track_c_v2/track_c_scores_template.jsonl` (each tagged with its true fault), using
+the alignment table v1.2 row of the true fault as the citation reference. `src/evaluator.py` rejects scores outside 1–5, so an un-rated template cannot be
 averaged by mistake. The planned aggregate is the equal-weight mean of the four dimensions per
 explanation, and the pre-registered pass mark (`citation_validity_threshold = 0.70`) applies to
 the rate of correct citations.
@@ -373,7 +379,7 @@ the rate of correct citations.
 | Deployed design (filter by predicted type), top-1 similarity on 382 alarms | 0.59 – 0.75 (median 0.72); low-confidence flag 0/382 |
 
 ### 5.6 Test Suite
-182 tests in 28 modules (20 unit, 8 integration): **179 pass, 3 skip** (the skipped tests need a
+183 tests in 28 modules (20 unit, 8 integration): **180 pass, 3 skip** (the skipped tests need a
 Groq key). Appendix E lists the modules.
 
 ---
@@ -385,11 +391,12 @@ Groq key). Appendix E lists the modules.
 (the overlapping CIs do not support a difference). **RQ2.** The alignment table does: 19/19 when the
 fault is classified correctly, 21/30 end to end, with every remaining error caused upstream by
 Layer 2. The grounding step is therefore not the bottleneck; detection and classification are.
-**RQ3** awaits the human rating.
+**RQ3** awaits the Track B re-run.
 
 ### 6.2 G-Eval Analysis
-Pending: no human ratings exist yet (Section 5.4). Once the 72 explanations are rated, this
-section reports the per-dimension means with inter-rater agreement and the per-fault breakdown.
+Pending the Track B re-run (Section 5.4). This section will report per-dimension and per-condition
+means, so the effect of grounding on specificity, actionability and causal soundness can be read
+alongside the citation result, and the per-fault breakdown on correctly labelled windows.
 
 ### 6.3 Key Technical Findings
 These were found by reviewing the system against its data, and each was fixed at its source.
@@ -427,7 +434,7 @@ These were found by reviewing the system against its data, and each was fixed at
 | Classification | 66.3 % exact (74.8 % of detected), 75.0 % family | 5.2 |
 | Attribution | top-3 SHAP with separate direction field | 3.5 |
 | Citation grounding | 21/30 end to end; 19/19 when classified correctly | 5.3 |
-| Explanation quality | pending human G-Eval | 5.4 |
+| Explanation quality | pending G-Eval re-run | 5.4 |
 
 ### 6.5 Limitations
 - **Sample size.** n = 30 per condition; the CIs in 5.3 are wide.
@@ -435,7 +442,7 @@ These were found by reviewing the system against its data, and each was fixed at
   confused with Buffer Overflow. This caps end-to-end correctness for those faults whatever the LLM does.
 - **C3 on correct classifications is prompt compliance**, by construction.
 - **Specification-level validation only:** clause numbers are not checked.
-- **No human G-Eval yet;** explanation quality beyond the citation is unmeasured.
+- **G-Eval pending** on the current explanations; explanation quality beyond the citation is not yet measured, and an LLM judge needs a human spot-check.
 - **Layer 2 is not reproducible from this branch alone:** it needs `phase2/` and its data caches; the
   model files store anonymous feature names.
 - **One LLM, one seed, free-tier quota** (15 requests/min; three 429s in the v2 run, all recovered).
@@ -466,7 +473,7 @@ check and the evidence behind each explanation, so an engineer can see when to d
   retrieval design that uses it for what it can do.
 
 ### 7.3 Future Work
-- Human G-Eval with two raters and inter-rater agreement on the 72 explanations.
+- G-Eval on the 72 explanations, with a human spot-check to measure judge–human agreement.
 - Improve detection of Sudden Spike and congestion (Layer 2).
 - Clause-level citation validation.
 - More windows and seeds for Track C; a second LLM.
@@ -532,7 +539,7 @@ Test window 611, true and predicted fault **Doppler Shift (Severe)** (`track_c_v
 C2 used the retrieved incidents' concrete RSRP range; only C3 cites the governing channel-model
 report and names the feature-level evidence from the RCA block.
 
-### Appendix C — G-Eval Rubric (human raters, 1–5)
+### Appendix C — G-Eval Rubric (1–5 per dimension)
 | Dimension | 1 | 3 | 5 |
 |---|---|---|---|
 | Citation Validity | fabricated or unrelated standard | real standard, wrong clause or overview document | specification and clause match the true fault's row |
@@ -575,7 +582,7 @@ models:
 | Module | Tests | Module | Tests |
 |---|---:|---|---:|
 | test_phase2_models | 23 | test_schema | 10 |
-| test_llm_explainer | 23 | test_evaluator | 9 |
+| test_llm_explainer | 23 | test_evaluator | 10 |
 | test_phase2_pipeline | 18 | test_data_loader | 6 |
 | test_phase2_data | 12 | test_run_eval_track_c | 6 |
 | test_rag_query | 5 | test_run_pipeline | 5 |
@@ -587,7 +594,7 @@ models:
 | integration/test_02 rag query | 4 | integration/test_06 evaluator | 4 |
 | integration/test_03 chromadb | 6 | integration/test_07 full pipeline | 4 |
 | integration/test_04 alignment | 6 | integration/test_08 real RAG cycle | 5 (3 skip) |
-| **Total** | **182** (179 pass, 3 skip) | | |
+| **Total** | **183** (180 pass, 3 skip) | | |
 
 ### Appendix F — Where Each Number Comes From
 | Result | File | Produced by |

@@ -1,7 +1,7 @@
 import json
 import logging
 import statistics
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field, fields, asdict
 from src.schema import LLMExplanation
 from src.utils import validate_3gpp_ref
 
@@ -160,17 +160,20 @@ def compute_track_c(scores: list[GEvalScore]) -> TrackCResults:
     )
 
 def load_scores_from_jsonl(path: str) -> list[GEvalScore]:
-    """GEvalScore per line of a JSONL file (a stored ``overall`` is dropped and recomputed)."""
+    """GEvalScore per line of a JSONL file.
+
+    Keys that are not GEvalScore inputs (a judge's rationale, a stored ``overall``,
+    which is recomputed) are ignored.
+    """
+    inputs = {f.name for f in fields(GEvalScore) if f.init}
     scores = []
-    with open(path, "r") as f:
+    with open(path, "r", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
             data = json.loads(line)
-            if "overall" in data:
-                del data["overall"]
-            scores.append(GEvalScore(**data))
+            scores.append(GEvalScore(**{k: v for k, v in data.items() if k in inputs}))
             
     logger.info("Loaded %d GEvalScores from %s", len(scores), path)
     return scores
