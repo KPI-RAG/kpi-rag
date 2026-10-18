@@ -7,7 +7,7 @@ from src.utils import validate_3gpp_ref
 
 @pytest.fixture(scope="module")
 def alignment():
-    return load_alignment_table("configs/alignment_table.json")
+    return load_alignment_table("data/alignment_table.json")
 
 
 def test_alignment_table_loads(alignment):

@@ -164,8 +164,7 @@ uv run pytest tests/ -v
 ```
 project/
 ├── configs/
-│   ├── config.yaml              # RAG, LLM, data, eval settings
-│   └── alignment_table.json     # 10-row fault→3GPP mapping (v1.0, status DRAFT — validation pending)
+│   └── config.yaml              # RAG, LLM, data, eval settings
 ├── src/
 │   ├── schema.py                # Pydantic models (11 fault types)
 │   ├── config_loader.py         # YAML config loader
@@ -189,6 +188,8 @@ project/
 │   ├── raw/                     # TelecomTS JSONL (gitignored)
 │   ├── indices/                 # train/test window indices (gitignored)
 │   ├── chroma_db/               # ChromaDB store (committed — Streamlit Cloud has no raw data to rebuild it)
+│   ├── models/                  # CatBoost model1.cbm / model2.cbm (Layer 2 runs offline)
+│   ├── alignment_table.json     # 11-row fault→3GPP mapping (v1.2; Jamming not-applicable)
 │   └── processed/               # RCA evidence, layer-2 outputs, Track C outputs
 ├── docs/
 │   ├── KPI-RAG_Proposal_Group_15.pdf

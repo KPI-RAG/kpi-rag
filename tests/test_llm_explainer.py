@@ -19,7 +19,7 @@ from src.llm_explainer import (
 
 @pytest.fixture
 def alignment():
-    return load_alignment_table("configs/alignment_table.json")
+    return load_alignment_table("data/alignment_table.json")
 
 @pytest.fixture
 def sample_payload():
@@ -108,7 +108,7 @@ def test_validate_citation(alignment):
     assert validate_3gpp_ref("TS 38.141-1") is True    # Antenna Failure / CCI / RF Filters
     assert validate_3gpp_ref("TR 38.901") is True       # Doppler Shift
     assert validate_3gpp_ref("TS 28.552") is True       # Congestion rows
-    assert validate_3gpp_ref("TS 38.133") is True       # Faulty Handover
+    assert validate_3gpp_ref("TS 38.133") is True       # well-formed (Handover moved to TS 38.331 in v1.2)
     assert validate_3gpp_ref("TS 38.321") is True       # Buffer Overflow / Resource Bugs
     assert validate_3gpp_ref("TS 39.999") is False      # series out of range
     assert validate_3gpp_ref("38.104") is False         # missing prefix
@@ -118,10 +118,11 @@ def test_validate_citation(alignment):
     assert validate_citation("TS 38.141-1", alignment) is True
     assert validate_citation("TS 38.321", alignment) is True
     assert validate_citation("TR 38.901", alignment) is True
-    assert validate_citation("TS 38.133", alignment) is True
+    assert validate_citation("TS 38.331", alignment) is True   # Faulty Handover (v1.2)
     assert validate_citation("TS 28.552", alignment) is True
     # Invalid: format ok but not in table
     assert validate_citation("TS 38.104", alignment) is False
+    assert validate_citation("TS 38.133", alignment) is False   # Handover before v1.2
     assert validate_citation("TS 38.999", alignment) is False
     # Invalid: format fails
     assert validate_citation("TS 39.999", alignment) is False

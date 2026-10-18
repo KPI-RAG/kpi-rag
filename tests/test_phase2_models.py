@@ -1,7 +1,6 @@
-"""Tests for Phase 2 model files and calibrator."""
+"""Tests for Phase 2 model files (the calibrator was removed)."""
 import os
 import json
-import pickle
 import pytest
 import math
 
@@ -67,22 +66,12 @@ def test_model2_classes_no_normal():
     assert "Normal" not in list(m.classes_)
 
 
-# ── model1_calibrator.pkl ─────────────────────────────────────────────────────
+# ── model1_calibrator.pkl (removed) ───────────────────────────────────────────
 
-def test_calibrator_exists():
-    assert os.path.exists("data/models/model1_calibrator.pkl")
-
-def test_calibrator_loads():
-    with open("data/models/model1_calibrator.pkl", "rb") as f:
-        cal = pickle.load(f)
-    assert cal is not None
-
-def test_calibrator_is_isotonic():
-    """Farida used IsotonicRegression as the calibrator."""
-    from sklearn.isotonic import IsotonicRegression
-    with open("data/models/model1_calibrator.pkl", "rb") as f:
-        cal = pickle.load(f)
-    assert isinstance(cal, IsotonicRegression)
+def test_calibrator_removed():
+    """Farida removed degenerate calibrator in Phase 2 final."""
+    assert not os.path.exists("data/models/model1_calibrator.pkl"), \
+        "Calibrator should not exist — was removed as degenerate"
 
 
 # ── normal_means.json ─────────────────────────────────────────────────────────
@@ -158,36 +147,17 @@ def test_feature_spec_model2_has_fft_features():
     assert len(fft_features) > 0
 
 
-# ── calibrator integration ───────────────────────────────────────────────────
+# ── load_models ──────────────────────────────────────────────────────────────
 
-def test_calibrator_produces_valid_probability():
-    """Calibrated confidence must be in [0, 1]."""
-    import pickle, numpy as np
-    with open("data/models/model1_calibrator.pkl", "rb") as f:
-        cal = pickle.load(f)
-    test_inputs = np.array([0.1, 0.3, 0.5, 0.7, 0.9])
-    outputs = cal.predict(test_inputs)
-    assert all(0.0 <= p <= 1.0 for p in outputs), f"Out of range: {outputs}"
-
-def test_calibrator_is_monotonic():
-    """Higher raw prob must give higher or equal calibrated prob."""
-    import pickle, numpy as np
-    with open("data/models/model1_calibrator.pkl", "rb") as f:
-        cal = pickle.load(f)
-    probs = np.linspace(0.1, 0.9, 9)
-    calibrated = cal.predict(probs)
-    for i in range(len(calibrated) - 1):
-        assert calibrated[i] <= calibrated[i+1] + 1e-6, \
-            f"Not monotonic at {probs[i]:.1f}: {calibrated[i]:.3f} > {calibrated[i+1]:.3f}"
-
-def test_load_models_returns_calibrator():
-    """load_models must return 3-tuple (m1, m2, calibrator); calibrator is None when disabled."""
+def test_load_models_returns_two_tuple():
+    """load_models returns (m1, m2) — no calibrator."""
     from src.config_loader import load_config
     from src.ml_model import load_models
     cfg = load_config()
     result = load_models(cfg)
-    assert len(result) == 3, f"Expected 3-tuple (m1, m2, cal), got {len(result)}"
-    m1, m2, cal = result
-    assert cal is None, "Degenerate calibrator should be disabled"
+    assert len(result) == 2, f"Expected (m1, m2) tuple, got {len(result)} items"
+    m1, m2 = result
+    assert m1 is not None
+    assert m2 is not None
 
 

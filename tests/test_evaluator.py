@@ -52,7 +52,7 @@ def test_score_explanation():
 def test_score_explanation_fault_specific_with_alignment():
     """With an alignment table, a well-formed but wrong-fault spec is invalid (same rule as Track C)."""
     from src.llm_explainer import load_alignment_table
-    alignment = load_alignment_table("configs/alignment_table.json")
+    alignment = load_alignment_table("data/alignment_table.json")
     wrong = score_explanation(create_mock_explanation("TS 38.104"), "1", 3, "Antenna Failure",
                               3.0, 3.0, 3.0, 3.0, alignment=alignment)
     right = score_explanation(create_mock_explanation("TS 38.141-1"), "2", 3, "Antenna Failure",

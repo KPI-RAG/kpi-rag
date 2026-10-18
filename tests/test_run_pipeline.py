@@ -52,7 +52,7 @@ def test_run_low_conf(mock_explain, mock_load_align, mock_query, mock_get_col, s
         
     mock_get_col.assert_called_once_with(fake_cfg)
     mock_query.assert_called_once_with(sample_payload, "fake_col", fake_cfg)
-    mock_load_align.assert_called_once_with("configs/alignment_table.json")
+    mock_load_align.assert_called_once_with("data/alignment_table.json")
     mock_explain.assert_called_once_with(sample_payload, ["ticket1"], fake_cfg, {"fake": "align"})
     
     assert isinstance(res, LLMExplanation)

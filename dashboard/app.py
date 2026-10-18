@@ -36,7 +36,7 @@ from src.schema import ClassifierOutput, SHAPEntry
 from src.utils import setup_logging
 from src.kg_indexer import get_collection
 from src.rag_query import query_from_classifier_output
-from src.llm_explainer import load_alignment_table, explain
+from src.llm_explainer import load_alignment_table, explain, alignment_path
 from src.rca_loader import RCALoader
 from dashboard.components.detection_panel import render_detection_panel
 from dashboard.components.shap_panel import render_shap_panel
@@ -83,8 +83,7 @@ def load_chromadb():
 @st.cache_data(show_spinner=False)
 def load_alignment():
     """Load alignment table once from disk and cache."""
-    alignment_path = os.path.join(REPO_ROOT, "configs", "alignment_table.json")
-    return load_alignment_table(alignment_path)
+    return load_alignment_table(os.path.join(REPO_ROOT, alignment_path(get_cfg())))
 
 
 @st.cache_resource(show_spinner=False)

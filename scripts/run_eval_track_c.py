@@ -11,7 +11,7 @@ from src.schema import AnomalyType
 from src.utils import setup_logging
 from src.kg_indexer import get_collection
 from src.rag_query import query_from_classifier_output
-from src.llm_explainer import load_alignment_table, explain_condition
+from src.llm_explainer import load_alignment_table, explain_condition, alignment_path
 from src.rca_loader import RCALoader
 
 logger = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ def run_track_c(
     scores_path = out / "track_c_scores_template.jsonl"
 
     collection = get_collection(cfg)
-    alignment = load_alignment_table("configs/alignment_table.json")
+    alignment = load_alignment_table(alignment_path(cfg))
 
     # Initialize RCALoader once — O(1) lookup per window during the eval loop
     rca_evidence_path = cfg.get("data", {}).get(
@@ -67,8 +67,9 @@ def run_track_c(
             payload_obj = ClassifierOutput(**w)
             window_idx = w.get("window_index")  # carry the join key for RCALoader
             parsed_windows.append((payload_obj, window_idx))
-        except Exception:
-            pass
+        except Exception as _skip_err:
+            # "Normal" windows land here too: Normal is not an AnomalyType
+            logger.debug("Skipping record window=%s: %s", w.get("window_index", "?"), _skip_err)
 
     random.seed(cfg.get("data", {}).get("random_state", 42))
 
@@ -109,8 +110,8 @@ def run_track_c(
                             existing_w.add(w_idx)
                             if len(by_fault[ft]) >= n_per_fault:
                                 break
-                    except Exception:
-                        pass
+                    except Exception as _skip_err:
+                        logger.debug("Skipping record window=%s: %s", rec.get("window_index", "?"), _skip_err)
 
     # samples: list of (fault_type, ClassifierOutput, window_index)
     samples: list[tuple[AnomalyType, ClassifierOutput, int | None]] = []
@@ -132,17 +133,21 @@ def run_track_c(
     test_idx_path = os.path.join(
         data_cfg.get("indices_path", "data/indices"), data_cfg.get("test_idx_file", "test_idx_sessionsplit.npy")
     )
-    if os.path.exists(test_idx_path):
-        import numpy as np
-        test_set = set(np.load(test_idx_path).tolist())
-        leaked = [w for _, _, w in samples if w is not None and w not in test_set]
-        if leaked:
-            raise ValueError(f"Track C sampled {len(leaked)} windows outside the test split: {leaked[:5]}")
-    n_without_rca = sum(1 for _, _, w in samples if w is None or rca_loader.get(w) is None)
+    if not os.path.exists(test_idx_path):
+        raise FileNotFoundError(f"Test index not found: {test_idx_path} — aborting.")
+    import numpy as np
+    test_set = set(np.load(test_idx_path).tolist())
+    leaked = [w for _, _, w in samples if w is None or w not in test_set]
+    if leaked:
+        raise ValueError(f"Track C sampled {len(leaked)} windows outside the test split: {leaked[:5]}")
+    n_without_rca = sum(
+        1 for ft, _, w in samples
+        if not (rca_loader.get(w) or {}).get("predicted_fault") == ft.value
+    )
     if n_without_rca:
         logger.warning(
-            "%d/%d sampled windows have no RCA record (window_index >= 1235 = normal windows "
-            "that Layer 2 flagged as faults); their C3 prompt will carry no RCA evidence",
+            "%d/%d sampled windows have no RCA record for their sampled fault; "
+            "their C3 prompt gets a representative record of another window",
             n_without_rca, len(samples),
         )
 
@@ -195,7 +200,7 @@ def run_track_c(
 
             # Build placeholder GEvalScore for human annotation
             score_record = {
-                "explanation_id": f"{ft.value}_c{condition}_{sample_idx}",
+                "explanation_id": f"w{window_index}_c{condition}",
                 "condition": condition,
                 "fault_type": ft.value,
                 "citation_validity": 0.0,

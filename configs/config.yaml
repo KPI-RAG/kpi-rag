@@ -51,6 +51,5 @@ dashboard:
 models:
   model1_path: "data/models/model1.cbm"
   model2_path: "data/models/model2.cbm"
-  calibrator_path: "data/models/model1_calibrator.pkl"
 
 

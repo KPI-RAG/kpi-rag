@@ -26,12 +26,26 @@ except ImportError:
     google_genai_types = None
     GeminiClientError = Exception
 
+from pydantic import ValidationError
+
 from src.schema import ClassifierOutput, RetrievedTicket, LLMExplanation
 from src.utils import validate_3gpp_ref
 
 logger = logging.getLogger(__name__)
 
-def load_alignment_table(path: str) -> dict[str, dict]:
+DEFAULT_ALIGNMENT_PATH = "data/alignment_table.json"
+
+
+class LLMResponseError(ValueError):
+    """The LLM replied, but not with the expected JSON — worth retrying."""
+
+
+def alignment_path(cfg: dict) -> str:
+    """The alignment table path from cfg["data"], or the default."""
+    return cfg.get("data", {}).get("alignment_table_path", DEFAULT_ALIGNMENT_PATH)
+
+
+def load_alignment_table(path: str = DEFAULT_ALIGNMENT_PATH) -> dict[str, dict]:
     """Load alignment_table.json as {fault_type: row}.
 
     Each row keeps its original fields and gains ``3gpp_ts`` (primary
@@ -221,6 +235,20 @@ def _is_rate_limit(e: Exception) -> bool:
     )
 
 
+def _is_non_retryable(e: Exception) -> bool:
+    """Config or auth errors (missing key, unknown backend, 401/403) — retrying cannot help.
+
+    A malformed LLM reply (LLMResponseError, pydantic ValidationError) is retried.
+    """
+    if isinstance(e, (LLMResponseError, ValidationError)):
+        return False
+    return (
+        isinstance(e, (ValueError, RuntimeError))
+        or getattr(e, "status_code", None) in (401, 403)
+        or getattr(e, "code", None) in (401, 403)   # google-genai ClientError
+    )
+
+
 def _backoff_wait(e: Exception, attempt: int, cfg: dict) -> float:
     """Server's Retry-After if it sent one, else exponential backoff with jitter."""
     retry_after = _extract_retry_after(e)
@@ -292,10 +320,10 @@ def parse_response(raw: str) -> dict:
     try:
         parsed = json.loads(json_str)
     except json.JSONDecodeError:
-        raise ValueError("No valid JSON found in response")
+        raise LLMResponseError("No valid JSON found in response")
     required_keys = {"root_cause", "3gpp_reference", "oran_component", "recommended_action", "reasoning_trace"}
-    if not required_keys.issubset(parsed.keys()):
-        raise ValueError("Missing required keys in JSON response")
+    if not isinstance(parsed, dict) or not required_keys.issubset(parsed.keys()):
+        raise LLMResponseError("Missing required keys in JSON response")
     ref = parsed.get("3gpp_reference", "")
     ts_match = re.search(r'T[SR]\s+\d{2}\.\d{3}(?:-\d+)?', ref)
     if ts_match:
@@ -363,11 +391,22 @@ def _run_with_retry(
                 template_generated=False,
             )
         except Exception as e:
+            logger.warning(
+                "LLM attempt %d/%d failed [%s]: %s",
+                attempt + 1, max_retries, type(e).__name__, e
+            )
+            if _is_non_retryable(e):
+                logger.error("Non-retryable error (%s) — stopping retries", type(e).__name__)
+                break
             if _is_rate_limit(e) and attempt < max_retries - 1:
                 wait = _backoff_wait(e, attempt, cfg)
-                logger.warning("Attempt failed (%s), waiting %.1fs before retry", e, wait)
+                logger.warning("Rate-limited, waiting %.1fs", wait)
                 time.sleep(wait)
-    logger.error("All %d LLM attempts failed, using template fallback", max_retries)
+            elif attempt < max_retries - 1:
+                wait = min(2 ** attempt, 10)
+                logger.warning("Transient error, waiting %.1fs", wait)
+                time.sleep(wait)
+    logger.error("LLM attempts exhausted or stopped, using template fallback")
     return _template_fallback(payload, alignment)
 
 
@@ -448,7 +487,7 @@ def explain_from_rca(
         except Exception as exc:
             logger.warning("Ticket retrieval failed (window %d): %s", window_index, exc)
 
-    alignment = load_alignment_table("configs/alignment_table.json")
+    alignment = load_alignment_table(alignment_path(cfg))
 
     return explain_condition(
         payload, tickets, cfg, alignment,

@@ -27,7 +27,7 @@ def collection(cfg):
 
 @pytest.fixture(scope="module")
 def alignment():
-    return load_alignment_table("configs/alignment_table.json")
+    return load_alignment_table("data/alignment_table.json")
 
 
 # TEST 1: Alignment table completeness

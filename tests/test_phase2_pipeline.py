@@ -8,7 +8,7 @@ from unittest.mock import patch, MagicMock
 def test_alignment_table_excludes_jamming_from_grounding():
     """Jamming has relation_type=not-applicable — must not appear in loaded table."""
     from src.llm_explainer import load_alignment_table
-    align = load_alignment_table("configs/alignment_table.json")
+    align = load_alignment_table("data/alignment_table.json")
     assert "Jamming" not in align
 
 def test_alignment_table_loads_11_rows_from_data():
@@ -19,10 +19,10 @@ def test_alignment_table_loads_11_rows_from_data():
     rows = d.get("rows", d) if isinstance(d, dict) else d
     assert len(rows) == 11
 
-def test_alignment_table_configs_has_10_after_jamming_filter():
-    """After load_alignment_table filters Jamming, configs/ yields 10 entries."""
+def test_alignment_table_has_10_after_jamming_filter():
+    """After load_alignment_table filters Jamming, 10 entries remain."""
     from src.llm_explainer import load_alignment_table
-    align = load_alignment_table("configs/alignment_table.json")
+    align = load_alignment_table("data/alignment_table.json")
     assert len(align) == 10
 
 def test_load_alignment_table_handles_null_3gpp_reference():

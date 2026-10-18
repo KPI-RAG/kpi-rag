@@ -3,7 +3,7 @@ from src.schema import ClassifierOutput, LLMExplanation
 from src.utils import setup_logging
 from src.kg_indexer import get_collection
 from src.rag_query import query_from_classifier_output
-from src.llm_explainer import load_alignment_table, explain
+from src.llm_explainer import load_alignment_table, explain, alignment_path
 import argparse, json, logging, sys
 
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ def run(payload: ClassifierOutput, cfg: dict) -> LLMExplanation:
     if low_conf:
         logger.warning("Low retrieval confidence for %s", payload.anomaly_type.value)
         
-    alignment = load_alignment_table("configs/alignment_table.json")
+    alignment = load_alignment_table(alignment_path(cfg))
     result = explain(payload, tickets, cfg, alignment)
     
     return result

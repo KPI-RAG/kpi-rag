@@ -21,7 +21,7 @@ MOCK_RESPONSE = json.dumps({
 
 @pytest.fixture(scope="module")
 def alignment():
-    return load_alignment_table("configs/alignment_table.json")
+    return load_alignment_table("data/alignment_table.json")
 
 
 NON_JAMMING_FAULTS = [

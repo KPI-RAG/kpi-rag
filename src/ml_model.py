@@ -1,103 +1,58 @@
-"""CatBoost model loading and calibrated inference for Layer 1 and Layer 2."""
+"""
+Offline inference utilities for KPI-RAG Phase 2.
+
+ARCHITECTURE NOTE:
+    Layer 2 (feature extraction + CatBoost + SHAP) is computed offline
+    by Farida/Raneem and saved to:
+    data/processed/layer2_output_sessionsplit_phase2.json
+
+    The pipeline, dashboard, and Track C consume this precomputed JSON.
+    This module is NOT imported by those scripts in the current architecture.
+
+    model1_calibrator.pkl was removed by Farida (Phase 2 final) because
+    the IsotonicRegression mapping was degenerate (all probs -> 0.085).
+    Raw model probabilities are used instead.
+
+    Feature names in both .cbm files are anonymous integers ('0','1','2').
+    Column order must be inferred from data/processed/feature_spec.json.
+
+FUTURE INTEGRATION:
+    To wire online inference: implement build_features(window_dict) -> np.ndarray
+    using feature_spec.json column ordering, then call predict().
+"""
 import logging
-import os
-import pickle
 import numpy as np
 from catboost import CatBoostClassifier
 
 logger = logging.getLogger(__name__)
 
 
-def load_models(cfg: dict):
-    """Load model1, model2, and the model1 calibrator.
-
-    Returns:
-        tuple[CatBoostClassifier, CatBoostClassifier, object | None]:
-            (model1, model2, calibrator)
-    """
+def load_models(cfg: dict) -> tuple[CatBoostClassifier, CatBoostClassifier]:
+    """Returns (model1, model2). Calibrator removed — see data/processed/log.txt."""
     models_cfg = cfg.get("models", {})
-    model1_path = models_cfg.get("model1_path", "data/models/model1.cbm")
-    model2_path = models_cfg.get("model2_path", "data/models/model2.cbm")
-    calibrator_path = models_cfg.get(
-        "calibrator_path",
-        "data/models/model1_calibrator.pkl",
-    )
-
     m1 = CatBoostClassifier()
-    m1.load_model(model1_path)
-
+    m1.load_model(models_cfg.get("model1_path", "data/models/model1.cbm"))
+    logger.info("Loaded model1: %d trees, %d features", m1.tree_count_, len(m1.feature_names_))
     m2 = CatBoostClassifier()
-    m2.load_model(model2_path)
-
-    # Farida's model1_calibrator.pkl is degenerate: it collapses all probabilities
-    # between 0.30 and 0.9967 to a flat 0.0850 (8.5%), contradicting the test
-    # precision of 69.6% (266/382). Disabled — using raw probabilities.
-    calibrator = None
-    logger.warning(
-        "Calibrator disabled — degenerate mapping detected "
-        "(all outputs collapse to %.3f). Using raw probabilities.",
-        0.085,
-    )
-
-    return m1, m2, calibrator
+    m2.load_model(models_cfg.get("model2_path", "data/models/model2.cbm"))
+    logger.info("Loaded model2: %d trees, %d features, %d classes",
+                m2.tree_count_, len(m2.feature_names_), len(m2.classes_))
+    return m1, m2
 
 
-def compute_confidence(model1: CatBoostClassifier, features, calibrator=None) -> float:
-    """Compute calibrated anomaly confidence from model1 binary probabilities.
+def compute_confidence(model1: CatBoostClassifier, features) -> float:
+    """Raw model1 P(anomalous) for one 64-feature row."""
+    return float(model1.predict_proba(features)[0][1])
 
-    Args:
-        model1: Binary CatBoostClassifier (Normal vs Anomalous).
-        features: Input feature vector/matrix matching model1 feature names (64 features).
-        calibrator: Fitted IsotonicRegression calibrator instance or None.
 
-    Returns:
-        float: Calibrated probability in [0.0, 1.0].
+def predict(model1: CatBoostClassifier, model2: CatBoostClassifier, features1, features2) -> tuple[str, float]:
+    """Two-stage cascade: ("Normal" or the model2 class, model1 P(anomalous)).
+
+    The returned confidence is model1's P(anomalous) even when a fault class is
+    returned; the Phase 2 JSON's ``confidence`` field is defined differently.
     """
-    proba = model1.predict_proba(features)[0]
-    raw_confidence = float(proba[1])
-    if calibrator is not None:
-        confidence = float(calibrator.predict(np.array([raw_confidence]))[0])
-        confidence = float(np.clip(confidence, 0.0, 1.0))
-    else:
-        confidence = raw_confidence
-    return confidence
-
-
-def calibrate_confidence(raw_confidence: float, calibrator=None) -> float:
-    """Calibrate a single raw confidence score using the isotonic calibrator."""
-    if calibrator is not None:
-        confidence = float(calibrator.predict(np.array([raw_confidence]))[0])
-        return float(np.clip(confidence, 0.0, 1.0))
-    return float(raw_confidence)
-
-
-def predict(
-    model1: CatBoostClassifier,
-    model2: CatBoostClassifier,
-    features1,
-    features2,
-    calibrator=None,
-) -> tuple[str, float]:
-    """Run full two-layer inference pipeline.
-
-    Args:
-        model1: Binary CatBoostClassifier for anomaly detection.
-        model2: 11-class CatBoostClassifier for fault classification.
-        features1: 64-feature input for model1.
-        features2: 496-feature input for model2.
-        calibrator: IsotonicRegression model1 calibrator or None.
-
-    Returns:
-        tuple[str, float]: (predicted_anomaly_type, calibrated_confidence)
-    """
-    confidence = compute_confidence(model1, features1, calibrator=calibrator)
-    raw_proba = model1.predict_proba(features1)[0]
-    raw_confidence = float(raw_proba[1])
-
-    if raw_confidence < 0.5:
+    confidence = compute_confidence(model1, features1)
+    if confidence < 0.5:
         return "Normal", confidence
-
-    m2_proba = model2.predict_proba(features2)[0]
-    fault_idx = int(np.argmax(m2_proba))
-    predicted_fault = model2.classes_[fault_idx]
-    return str(predicted_fault), confidence
+    fault_idx = int(np.argmax(model2.predict_proba(features2)[0]))
+    return str(model2.classes_[fault_idx]), confidence
