@@ -1,0 +1,930 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>KPI-RAG Final Report</title>
+<meta name="description" content="KPI-RAG: Explainable Root-Cause Analysis for 5G Networks via Standards-Grounded Retrieval-Augmented Generation — Phase 2 final report.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500;600&display=swap">
+
+<style>
+/* ─── Design tokens (shared with Rodina_Report.html) ─── */
+:root {
+  --bg:#f8f7f5; --bg-surface:#ffffff; --fg:#1c1c1e; --fg-muted:#5c5c66; --fg-subtle:#8e8e99;
+  --accent:#2b5ba8; --accent-dim:#dce6f7; --rule:#d8d6d0; --code-bg:#eeecea;
+  --ok:#1a7a45; --warn:#b7560a; --danger:#c0392b;
+  /* chart series — validated (dataviz validate_palette.js, light + dark) */
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#6250d6;
+  --ff-serif:"Source Serif 4", Georgia, serif;
+  --ff-sans:"Inter", system-ui, sans-serif;
+  --ff-mono:"SF Mono","Fira Code",Consolas,monospace;
+  --sz-xs:.72rem; --sz-sm:.85rem; --sz-base:1rem; --sz-md:1.12rem; --sz-lg:1.35rem; --sz-xl:1.65rem; --sz-2xl:2.1rem; --sz-3xl:2.6rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#16161a; --bg-surface:#1e1e24; --fg:#e8e6e1; --fg-muted:#9898a6; --fg-subtle:#6a6a7a;
+    --accent:#6b9fe4; --accent-dim:#1a2c47; --rule:#2e2e38; --code-bg:#252530;
+    --ok:#4caf7d; --warn:#e08b40; --danger:#e57068;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#9085e9;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#16161a; --bg-surface:#1e1e24; --fg:#e8e6e1; --fg-muted:#9898a6; --fg-subtle:#6a6a7a;
+  --accent:#6b9fe4; --accent-dim:#1a2c47; --rule:#2e2e38; --code-bg:#252530;
+  --ok:#4caf7d; --warn:#e08b40; --danger:#e57068;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#9085e9;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg); color:var(--fg); font-family:var(--ff-serif); font-size:var(--sz-base);
+  line-height:1.75; padding-inline:max(16px, env(safe-area-inset-left, 0px)); padding-block:3rem;
+}
+.doc { max-width:800px; margin:0 auto; }
+a { color:var(--accent); text-decoration-thickness:1px; text-underline-offset:2px; }
+a:hover { text-decoration-thickness:2px; }
+a:focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:2px; }
+
+/* ─── Title page ─── */
+.title-page { min-height:88vh; display:flex; flex-direction:column; justify-content:center; padding-bottom:3rem; border-bottom:1px solid var(--rule); margin-bottom:3rem; }
+.tp-kicker { font-family:var(--ff-sans); font-size:var(--sz-xs); font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-bottom:1rem; }
+.tp-title { font-size:var(--sz-3xl); font-weight:600; line-height:1.12; text-wrap:balance; margin-bottom:.8rem; }
+.tp-subtitle { font-size:var(--sz-lg); font-weight:300; color:var(--fg-muted); line-height:1.35; text-wrap:balance; margin-bottom:2.5rem; max-width:40ch; }
+.tp-grid { display:grid; grid-template-columns:11rem 1fr; gap:.55rem 1.25rem; font-family:var(--ff-sans); font-size:var(--sz-sm); }
+.tp-grid dt { color:var(--fg-subtle); font-weight:500; text-transform:uppercase; letter-spacing:.06em; font-size:var(--sz-xs); padding-top:.15rem; }
+.tp-grid dd { color:var(--fg); }
+.tp-grid dd span.id { color:var(--fg-subtle); font-variant-numeric:tabular-nums; }
+.tp-date { margin-top:2.5rem; font-family:var(--ff-sans); font-size:var(--sz-sm); color:var(--fg-muted); }
+
+/* ─── Chapter & section headings ─── */
+.chapter { margin-top:4rem; }
+.section-label { font-family:var(--ff-sans); font-size:var(--sz-xs); font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:.35rem; }
+h2.section-title { font-size:var(--sz-xl); font-weight:600; line-height:1.2; text-wrap:balance; margin-bottom:.25rem; scroll-margin-top:1rem; }
+.section-subtitle { font-family:var(--ff-sans); font-size:var(--sz-sm); color:var(--fg-muted); margin-bottom:2rem; padding-bottom:1rem; border-bottom:1px solid var(--rule); }
+h3 { font-size:var(--sz-md); font-weight:600; margin-top:2.2rem; margin-bottom:.5rem; text-wrap:balance; scroll-margin-top:1rem; }
+h4 { font-family:var(--ff-sans); font-size:var(--sz-sm); font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--fg-muted); margin-top:1.6rem; margin-bottom:.4rem; }
+h4 code { text-transform:none; letter-spacing:0; }
+#tab6 td.label { min-width:12rem; }
+p { max-width:68ch; margin-bottom:1rem; }
+ul, ol { max-width:66ch; margin:0 0 1.1rem 1.4rem; }
+li { margin-bottom:.35rem; }
+li::marker { color:var(--fg-subtle); }
+strong { font-weight:600; }
+.lead { font-size:var(--sz-md); line-height:1.7; }
+
+/* ─── Abstract ─── */
+.abstract { background:var(--bg-surface); border:1px solid var(--rule); border-radius:8px; padding:1.4rem 1.6rem; margin:1rem 0 2rem; }
+.abstract p { margin-bottom:.8rem; }
+.keywords { font-family:var(--ff-sans); font-size:var(--sz-xs); color:var(--fg-muted); margin-top:.6rem; }
+
+/* ─── Table of contents ─── */
+.toc { font-family:var(--ff-sans); font-size:var(--sz-sm); }
+.toc ol { list-style:none; margin:0; padding:0; max-width:none; }
+.toc > ol > li { margin:.6rem 0 .2rem; font-weight:600; }
+.toc li ol li { font-weight:400; margin:.15rem 0 .15rem 1.4rem; }
+.toc a { color:var(--fg); text-decoration:none; display:flex; gap:.5rem; }
+.toc a:hover { color:var(--accent); }
+.toc .n { color:var(--fg-subtle); min-width:2.6rem; font-variant-numeric:tabular-nums; }
+.toc-lists { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:2rem; }
+.toc-lists h4 { margin-top:0; }
+
+/* ─── Tables ─── */
+.table-wrap { overflow-x:auto; margin:1.4rem 0 .6rem; border-radius:6px; border:1px solid var(--rule); }
+table { width:100%; border-collapse:collapse; font-family:var(--ff-sans); font-size:var(--sz-sm); background:var(--bg-surface); }
+thead tr { background:var(--accent-dim); border-bottom:2px solid var(--rule); }
+thead th { padding:.6rem .85rem; text-align:left; font-weight:600; white-space:nowrap; }
+thead th.num, td.num { text-align:right; }
+tbody tr { border-bottom:1px solid var(--rule); }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:color-mix(in srgb, var(--accent-dim) 40%, transparent); }
+td { padding:.5rem .85rem; font-variant-numeric:tabular-nums; vertical-align:top; }
+td.label { font-weight:500; }
+tr.total td { font-weight:600; border-top:2px solid var(--rule); }
+tr.emph td { background:color-mix(in srgb, var(--accent-dim) 55%, var(--bg-surface)); }
+.caption { font-family:var(--ff-sans); font-size:var(--sz-xs); color:var(--fg-muted); font-style:italic; margin:0 0 2rem; max-width:72ch; }
+.caption b { font-style:normal; color:var(--fg); }
+.yes { color:var(--ok); font-weight:600; }
+.no { color:var(--danger); font-weight:600; }
+.partial { color:var(--warn); font-weight:600; }
+
+/* ─── Callouts ─── */
+.finding { background:var(--bg-surface); border-left:3px solid var(--accent); border-radius:0 6px 6px 0; padding:.9rem 1.1rem; margin:1.6rem 0; font-size:var(--sz-sm); font-family:var(--ff-sans); max-width:70ch; }
+.finding > strong:first-child { display:block; color:var(--accent); margin-bottom:.3rem; font-size:var(--sz-xs); letter-spacing:.08em; text-transform:uppercase; }
+.finding p { font-size:var(--sz-sm); margin-bottom:.4rem; }
+.finding.note { border-left-color:var(--warn); }
+.finding.note > strong:first-child { color:var(--warn); }
+
+code { font-family:var(--ff-mono); font-size:.86em; background:var(--code-bg); padding:.1em .35em; border-radius:3px; }
+pre { font-family:var(--ff-mono); font-size:.8rem; line-height:1.55; background:var(--code-bg); border:1px solid var(--rule); border-radius:6px; padding:.85rem 1rem; margin:1rem 0 1.4rem; overflow-x:auto; }
+pre code { background:none; padding:0; font-size:inherit; }
+.section-rule { border:none; border-top:1px solid var(--rule); margin:3rem 0; }
+
+/* ─── Figures ─── */
+figure { margin:1.8rem 0 2.2rem; }
+figcaption { font-family:var(--ff-sans); font-size:var(--sz-xs); color:var(--fg-muted); font-style:italic; margin-top:.8rem; max-width:72ch; }
+figcaption b { font-style:normal; color:var(--fg); }
+.chart { background:var(--bg-surface); border:1px solid var(--rule); border-radius:8px; padding:1.1rem 1.2rem 1rem; }
+.chart-title { font-family:var(--ff-sans); font-size:var(--sz-sm); font-weight:600; margin-bottom:.15rem; }
+.chart-sub { font-family:var(--ff-sans); font-size:var(--sz-xs); color:var(--fg-muted); margin-bottom:1rem; }
+
+/* horizontal bars */
+.bars { display:flex; flex-direction:column; gap:.55rem; }
+.bar-row { display:grid; grid-template-columns:minmax(9rem, 15rem) 1fr 4.5rem; align-items:center; gap:.7rem; }
+.bar-label { font-family:var(--ff-sans); font-size:var(--sz-xs); color:var(--fg-muted); text-align:right; line-height:1.3; }
+.bar-track { position:relative; height:16px; background:color-mix(in srgb, var(--rule) 45%, transparent); border-radius:0 4px 4px 0; }
+.bar-fill { height:100%; border-radius:0 4px 4px 0; transition:opacity .15s ease; }
+.bar-row:hover .bar-fill { opacity:.82; }
+.bar-value { font-family:var(--ff-sans); font-size:var(--sz-xs); font-weight:600; font-variant-numeric:tabular-nums; }
+.bar-gap { height:.35rem; }
+.f-s1 { background:var(--s1); } .f-s2 { background:var(--s2); } .f-s3 { background:var(--s3); } .f-s4 { background:var(--s4); } .f-s5 { background:var(--s5); }
+.ref-line { position:absolute; top:-4px; bottom:-4px; width:0; border-left:2px dashed var(--fg-muted); }
+.legend { display:flex; flex-wrap:wrap; gap:.4rem 1.2rem; margin-top:.9rem; font-family:var(--ff-sans); font-size:var(--sz-xs); color:var(--fg-muted); }
+.legend span { display:inline-flex; align-items:center; gap:.4rem; }
+.dot { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+.dash { width:14px; height:0; border-top:2px dashed var(--fg-muted); }
+
+/* stacked bar */
+.stack { display:flex; gap:2px; height:30px; margin:.4rem 0 .3rem; }
+.stack div { display:flex; align-items:center; justify-content:center; color:#fff; font-family:var(--ff-sans); font-size:var(--sz-xs); font-weight:600; min-width:1.6rem; transition:opacity .15s ease; }
+.stack div:first-child { border-radius:4px 0 0 4px; } .stack div:last-child { border-radius:0 4px 4px 0; }
+.stack div:hover { opacity:.82; }
+.stack-scale { display:flex; justify-content:space-between; font-family:var(--ff-sans); font-size:var(--sz-xs); color:var(--fg-subtle); }
+
+/* architecture diagram */
+.arch { display:flex; flex-direction:column; gap:0; font-family:var(--ff-sans); }
+.layer { display:grid; grid-template-columns:7.5rem 1fr; border:1px solid var(--rule); border-radius:8px; background:var(--bg-surface); overflow:hidden; }
+.layer-tag { background:var(--accent-dim); padding:.7rem .8rem; font-size:var(--sz-xs); font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); display:flex; flex-direction:column; justify-content:center; }
+.layer-tag small { font-weight:400; letter-spacing:0; text-transform:none; color:var(--fg-muted); margin-top:.2rem; }
+.layer-body { padding:.65rem .9rem; display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; }
+.node { border:1px solid var(--rule); border-radius:5px; padding:.25rem .55rem; font-size:var(--sz-xs); background:var(--bg); }
+.node.key { border-color:var(--accent); color:var(--accent); font-weight:600; }
+.arrow { font-size:var(--sz-sm); color:var(--fg-subtle); }
+.flow-down { text-align:center; color:var(--fg-subtle); font-size:var(--sz-sm); line-height:1.6; }
+
+/* sample explanations */
+.sample { border:1px solid var(--rule); border-radius:8px; background:var(--bg-surface); padding:.9rem 1.1rem; margin:1rem 0; font-family:var(--ff-sans); font-size:var(--sz-sm); }
+.sample-head { display:flex; flex-wrap:wrap; justify-content:space-between; gap:.5rem; margin-bottom:.5rem; font-weight:600; }
+.sample blockquote { font-family:var(--ff-serif); font-size:var(--sz-base); color:var(--fg); border-left:2px solid var(--rule); padding-left:.9rem; margin:.3rem 0; }
+.pill { font-size:var(--sz-xs); font-weight:600; padding:.1rem .5rem; border-radius:99px; border:1px solid currentColor; white-space:nowrap; }
+
+.ref-list { font-family:var(--ff-sans); font-size:var(--sz-sm); list-style:none; margin:0; max-width:none; }
+.ref-list li { display:grid; grid-template-columns:2.6rem 1fr; gap:.3rem; margin-bottom:.55rem; line-height:1.55; }
+.ref-list .rn { color:var(--fg-subtle); font-variant-numeric:tabular-nums; }
+
+.foot { font-family:var(--ff-sans); font-size:var(--sz-xs); color:var(--fg-subtle); border-top:1px solid var(--rule); padding-top:1rem; margin-top:4rem; }
+
+@media (max-width:600px) {
+  .tp-title { font-size:var(--sz-2xl); }
+  .tp-grid { grid-template-columns:1fr; gap:.1rem; } .tp-grid dd { margin-bottom:.6rem; }
+  .bar-row { grid-template-columns:7.5rem 1fr 3.6rem; }
+  .layer { grid-template-columns:1fr; }
+  .toc-lists { grid-template-columns:1fr; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior:auto; } .bar-fill, .stack div { transition:none; } }
+
+/* ─── Print / PDF export ─── */
+@page { size:A4; margin:22mm 20mm 24mm; @bottom-center { content:counter(page); font-family:Inter, sans-serif; font-size:9pt; color:#777; } }
+@media print {
+  :root { --bg:#fff; --bg-surface:#fff; }
+  body { padding:0; font-size:10.5pt; }
+  .doc { max-width:none; }
+  .title-page { min-height:auto; height:245mm; border:none; margin:0; page-break-after:always; }
+  .chapter, .front { page-break-before:always; margin-top:0; }
+  figure, .table-wrap, .finding, .sample, .layer, pre { break-inside:avoid; }
+  h2, h3, h4 { break-after:avoid; }
+  a { color:inherit; text-decoration:none; }
+  .table-wrap { overflow:visible; }
+  * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}
+</style>
+</head>
+<body>
+<main class="doc">
+
+<!-- ═══════════════════════════ TITLE PAGE ═══════════════════════════ -->
+<header class="title-page" aria-labelledby="report-title">
+  <div class="tp-kicker">Phase 2 Final Report · Master Project</div>
+  <h1 class="tp-title" id="report-title">KPI-RAG: Explainable Root-Cause Analysis for 5G Networks</h1>
+  <p class="tp-subtitle">via Standards-Grounded Retrieval-Augmented Generation</p>
+  <dl class="tp-grid">
+    <dt>Students</dt>
+    <dd>Ahmed Mohamed Al Shobaki <span class="id">(20596291)</span> — Team Leader · RAG Pipeline, LLM &amp; Dashboard<br>
+        Farida El Ghabary <span class="id">(20595451)</span> — Data Pipeline &amp; Feature Engineering<br>
+        Raneem Alnaghy <span class="id">(20596302)</span> — ML Models &amp; SHAP Attribution<br>
+        Rodina Khallaf <span class="id">(20596324)</span> — Standards Grounding &amp; Evaluation</dd>
+    <dt>Supervisor</dt><dd>Prof. Yuanzhu Chen</dd>
+    <dt>Program</dt><dd>M.S. / Professional Master’s in Computer Science (AI &amp; Data Science) — DiGiLiANS Master Program, Round 1</dd>
+    <dt>University</dt><dd>Queen’s University, in partnership with the National Telecommunication Institute (NTI)</dd>
+    <dt>Industry partner</dt><dd>Capgemini</dd>
+    <dt>Code &amp; demo</dt><dd><a href="https://github.com/KPI-RAG/kpi-rag/tree/master">github.com/KPI-RAG/kpi-rag</a> (branch <code>master</code>) · <a href="https://kpi-rag-group15.streamlit.app">kpi-rag-group15.streamlit.app</a></dd>
+  </dl>
+  <p class="tp-date">Submitted October 20, 2026 · Group 15</p>
+</header>
+
+<!-- ═══════════════════════════ ABSTRACT ═══════════════════════════ -->
+<section class="front" id="abstract" aria-labelledby="h-abstract">
+  <div class="section-label">Front matter</div>
+  <h2 class="section-title" id="h-abstract">Abstract</h2>
+  <div class="abstract">
+    <p><strong>Problem.</strong> Diagnosing a 5G fault means relating an anomalous pattern across dozens of KPIs to its physical cause and to the 3GPP specification that governs it — a manual, expertise-bound task in today’s network operations centres. Classifiers name a fault without explaining it; language models explain fluently but cite the wrong standards.</p>
+    <p><strong>Objective and method.</strong> KPI-RAG is an end-to-end pipeline that detects, classifies and explains faults with verifiable standards grounding. On the TelecomTS dataset (32,000 windows of 18 KPI channels, 12.8 s each), a two-stage CatBoost cascade detects and classifies 11 fault types; TreeSHAP identifies the KPIs behind each decision; past incidents of the predicted type are retrieved from a train-only ChromaDB index; and an LLM (Gemini 3.5 Flash Lite) writes a structured explanation grounded in a curated fault-to-3GPP alignment table (Release 19) and per-window evidence, with every citation checked automatically.</p>
+    <p><strong>Results.</strong> On a session-based test split, the cascade reaches <strong>88.7 % binary recall</strong> (precision 69.6 %, F1 0.780) and <strong>66.3 % exact 11-class accuracy</strong>. In a 30-window ablation sampled by ground truth, the cited standard is correct for the true fault in 5/30 explanations with label and SHAP only, 7/30 with retrieved incidents, and <strong>21/30 with alignment-table grounding (+47 points)</strong>. When the fault is classified correctly, the grounded system cites the right standard in <strong>19/19</strong> cases; all nine misses trace to detection or classification errors upstream.</p>
+    <p><strong>Conclusion.</strong> A curated alignment table plus a citation validator makes standards citations dependable once the fault is identified; the remaining error budget sits in fault detection, which is where future work should go. Explanation-quality scoring (G-Eval) is in progress.</p>
+    <p class="keywords"><b>Keywords:</b> 5G, root-cause analysis, retrieval-augmented generation, 3GPP, O-RAN, SHAP, CatBoost, explainable AI</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ ACKNOWLEDGEMENTS ═══════════════════════════ -->
+<section class="front" id="acknowledgements" aria-labelledby="h-ack">
+  <div class="section-label">Front matter</div>
+  <h2 class="section-title" id="h-ack">Acknowledgements</h2>
+  <p>We thank our supervisor, <strong>Prof. Yuanzhu Chen</strong>, for his guidance and for pushing us to evaluate what we claimed. We thank <strong>Capgemini</strong> for the operational perspective on network-operations troubleshooting, the <strong>National Telecommunication Institute (NTI)</strong> and the Ministry of Communications and Information Technology of Egypt for the <strong>DiGiLiANS Master Program</strong>, and <strong>Queen’s University</strong> for the academic programme and compute resources. Finally, we thank the authors of the <strong>TelecomTS</strong> dataset [2], whose public release made this work possible.</p>
+</section>
+
+<!-- ═══════════════════════════ TABLE OF CONTENTS ═══════════════════════════ -->
+<nav class="front toc" id="contents" aria-labelledby="h-toc">
+  <div class="section-label">Front matter</div>
+  <h2 class="section-title" id="h-toc">Table of Contents</h2>
+  <p class="section-subtitle">Chapters link to their sections; page numbers appear in the printed / PDF version.</p>
+  <ol>
+    <li><a href="#abstract"><span class="n"></span>Abstract</a></li>
+    <li><a href="#acknowledgements"><span class="n"></span>Acknowledgements</a></li>
+    <li><a href="#ch1"><span class="n">1</span>Introduction</a>
+      <ol><li><a href="#s1-1"><span class="n">1.1</span>Background and motivation</a></li><li><a href="#s1-2"><span class="n">1.2</span>Problem statement</a></li><li><a href="#s1-3"><span class="n">1.3</span>Objectives and research questions</a></li><li><a href="#s1-4"><span class="n">1.4</span>Scope</a></li><li><a href="#s1-5"><span class="n">1.5</span>Report organisation</a></li></ol></li>
+    <li><a href="#ch2"><span class="n">2</span>Background and Literature Review</a>
+      <ol><li><a href="#s2-1"><span class="n">2.1</span>5G, O-RAN and network KPIs</a></li><li><a href="#s2-2"><span class="n">2.2</span>Anomaly detection on TelecomTS</a></li><li><a href="#s2-3"><span class="n">2.3</span>LLM-based root-cause analysis</a></li><li><a href="#s2-4"><span class="n">2.4</span>Retrieval and telecom knowledge</a></li><li><a href="#s2-5"><span class="n">2.5</span>Explainability and explanation evaluation</a></li><li><a href="#s2-6"><span class="n">2.6</span>Gap addressed</a></li></ol></li>
+    <li><a href="#ch3"><span class="n">3</span>Methodology</a>
+      <ol><li><a href="#s3-1"><span class="n">3.1</span>Approach overview</a></li><li><a href="#s3-2"><span class="n">3.2</span>Dataset and split</a></li><li><a href="#s3-3"><span class="n">3.3</span>Features and detection cascade</a></li><li><a href="#s3-4"><span class="n">3.4</span>SHAP attribution</a></li><li><a href="#s3-5"><span class="n">3.5</span>Retrieval of past incidents</a></li><li><a href="#s3-6"><span class="n">3.6</span>Standards grounding and RCA evidence</a></li><li><a href="#s3-7"><span class="n">3.7</span>Explanation generation and citation check</a></li><li><a href="#s3-8"><span class="n">3.8</span>Evaluation design</a></li><li><a href="#s3-9"><span class="n">3.9</span>Tools</a></li></ol></li>
+    <li><a href="#ch4"><span class="n">4</span>Design and Implementation</a>
+      <ol><li><a href="#s4-1"><span class="n">4.1</span>System architecture</a></li><li><a href="#s4-2"><span class="n">4.2</span>Components</a></li><li><a href="#s4-3"><span class="n">4.3</span>Dashboard</a></li><li><a href="#s4-4"><span class="n">4.4</span>Key design decisions</a></li><li><a href="#s4-5"><span class="n">4.5</span>Testing, packaging and deployment</a></li></ol></li>
+    <li><a href="#ch5"><span class="n">5</span>Results and Evaluation</a>
+      <ol><li><a href="#s5-1"><span class="n">5.1</span>Track A — detection and classification</a></li><li><a href="#s5-2"><span class="n">5.2</span>Comparison with published baselines</a></li><li><a href="#s5-3"><span class="n">5.3</span>Track C — citation ablation</a></li><li><a href="#s5-4"><span class="n">5.4</span>Track B — explanation quality (G-Eval)</a></li><li><a href="#s5-5"><span class="n">5.5</span>Retrieval quality</a></li><li><a href="#s5-6"><span class="n">5.6</span>Software testing</a></li></ol></li>
+    <li><a href="#ch6"><span class="n">6</span>Discussion</a>
+      <ol><li><a href="#s6-1"><span class="n">6.1</span>Interpretation of results</a></li><li><a href="#s6-2"><span class="n">6.2</span>Were the objectives met?</a></li><li><a href="#s6-3"><span class="n">6.3</span>Lessons from building the system</a></li><li><a href="#s6-4"><span class="n">6.4</span>Practical implications</a></li><li><a href="#s6-5"><span class="n">6.5</span>Limitations</a></li></ol></li>
+    <li><a href="#ch7"><span class="n">7</span>Conclusion and Future Work</a></li>
+    <li><a href="#references"><span class="n"></span>References</a></li>
+    <li><a href="#appendices"><span class="n"></span>Appendices A–G</a></li>
+  </ol>
+  <div class="toc-lists">
+    <div>
+      <h4>List of Figures</h4>
+      <ol>
+        <li><a href="#fig1"><span class="n">Fig. 1</span>System architecture</a></li>
+        <li><a href="#fig2"><span class="n">Fig. 2</span>Classification by true fault type</a></li>
+        <li><a href="#fig3"><span class="n">Fig. 3</span>Citation correctness by condition</a></li>
+        <li><a href="#fig4"><span class="n">Fig. 4</span>C3 outcome for the 30 windows</a></li>
+        <li><a href="#fig5"><span class="n">Fig. 5</span>Retrieval design comparison</a></li>
+      </ol>
+    </div>
+    <div>
+      <h4>List of Tables</h4>
+      <ol>
+        <li><a href="#tab1"><span class="n">Tab. 1</span>Dataset and split</a></li>
+        <li><a href="#tab2"><span class="n">Tab. 2</span>Detection and classification models</a></li>
+        <li><a href="#tab3"><span class="n">Tab. 3</span>Detection results</a></li>
+        <li><a href="#tab4"><span class="n">Tab. 4</span>Classification results</a></li>
+        <li><a href="#tab5"><span class="n">Tab. 5</span>Comparison with TelecomTS baselines</a></li>
+        <li><a href="#tab6"><span class="n">Tab. 6</span>Track C results</a></li>
+        <li><a href="#tab7"><span class="n">Tab. 7</span>Objectives assessment</a></li>
+        <li><a href="#tabA"><span class="n">Tab. A</span>Alignment table v1.2</a></li>
+        <li><a href="#tabB"><span class="n">Tab. B</span>Per-window Track C results</a></li>
+      </ol>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════ 1 INTRODUCTION ═══════════════════════════ -->
+<section class="chapter" id="ch1" aria-labelledby="h-ch1">
+  <div class="section-label">Chapter 1</div>
+  <h2 class="section-title" id="h-ch1">Introduction</h2>
+  <p class="section-subtitle">Why fault explanations need verifiable standards, and what this project set out to do</p>
+
+  <h3 id="s1-1">1.1 Background and motivation</h3>
+  <p>5G New Radio and Open RAN split the base station into radio, distributed and central units connected by open interfaces. This flexibility multiplies the number of components and Key Performance Indicators (KPIs) an operations team must watch. When KPIs degrade, engineers correlate raw measurements against technical specifications by hand — slow, inconsistent and dependent on individual expertise [6], which lengthens the mean time to repair and raises operating cost.</p>
+  <p>Two families of tools address parts of this. Machine-learning classifiers detect and label faults accurately but give no reason an engineer can act on. Large language models produce fluent explanations, but without grounding they cite specifications that do not govern the fault (Section 5.3: 5 of 30 correct). Telecom operators, NOC engineers and researchers all benefit from a pipeline that joins the two and makes every citation checkable.</p>
+
+  <h3 id="s1-2">1.2 Problem statement</h3>
+  <p>Given a window of 5G KPI measurements, the project addresses three connected sub-problems: <strong>(1)</strong> detect whether the window is anomalous; <strong>(2)</strong> classify the fault among eleven categories (ten synthetically injected, one real over-the-air jamming event); and <strong>(3)</strong> generate a root-cause explanation that cites the governing 3GPP specification and O-RAN component, in a form that can be verified automatically. To our knowledge no published system addresses all three in one evaluable pipeline on public data.</p>
+
+  <h3 id="s1-3">1.3 Objectives and research questions</h3>
+  <p>The primary objective is to design, implement and evaluate an end-to-end pipeline that detects and explains 5G network faults with verifiable standards grounding. The proposal set five objectives:</p>
+  <ul>
+    <li><strong>O1 Detection and classification:</strong> a two-stage cascade on TelecomTS across 11 fault types, with binary F1 comparable to the strongest published result (Mantis, F1 = 0.800 [1]).</li>
+    <li><strong>O2 Fault-to-standard alignment:</strong> a validated table linking the 10 synthetic fault types to specific 3GPP clauses and O-RAN components.</li>
+    <li><strong>O3 Retrieval:</strong> retrieval of relevant past incidents driven by the SHAP attributions.</li>
+    <li><strong>O4 Grounded explanation:</strong> at least 70 % of explanations pass the 3GPP citation check (pre-registered threshold).</li>
+    <li><strong>O5 Evaluation:</strong> a joint protocol for detection and explanation, including a controlled ablation.</li>
+  </ul>
+  <p>These lead to three research questions:</p>
+  <ul>
+    <li><strong>RQ1</strong> How well does a two-stage CatBoost cascade detect and classify faults on a session-based split, compared with published baselines?</li>
+    <li><strong>RQ2</strong> Does alignment-table grounding produce more correct standards citations than ticket-only and ungrounded generation — and how much remaining error comes from the classifier?</li>
+    <li><strong>RQ3</strong> Are the explanations specific, actionable and causally sound (G-Eval)?</li>
+  </ul>
+
+  <h3 id="s1-4">1.4 Scope</h3>
+  <p>The system targets single-cell, KPI time-series fault diagnosis on the TelecomTS testbed: 10 synthetically injected fault types and one real jamming event, all from one indoor 5G testbed. Multi-cell correlation, cross-domain diagnosis across RAN, core and transport, and live production deployment are out of scope. Generalising to multi-vendor operator networks would require re-evaluation on operator data with naturally occurring fault labels.</p>
+
+  <h3 id="s1-5">1.5 Report organisation</h3>
+  <p>Chapter 2 reviews related work and the gap addressed. Chapter 3 describes the methodology and evaluation design, Chapter 4 the architecture and implementation, and Chapter 5 the results. Chapter 6 interprets them against the objectives and states the limitations, and Chapter 7 concludes. The appendices hold the alignment table, per-window results, sample explanations, the evaluation rubric, configuration, user instructions and the test inventory.</p>
+</section>
+
+<!-- ═══════════════════════════ 2 LITERATURE ═══════════════════════════ -->
+<section class="chapter" id="ch2" aria-labelledby="h-ch2">
+  <div class="section-label">Chapter 2</div>
+  <h2 class="section-title" id="h-ch2">Background and Literature Review</h2>
+  <p class="section-subtitle">Concepts the system builds on, prior approaches, and the gap between them</p>
+
+  <h3 id="s2-1">2.1 5G, O-RAN and network KPIs</h3>
+  <p>The O-RAN Alliance [21] splits the gNB into the <strong>O-RU</strong> (RF front end, low PHY), the <strong>O-DU</strong> (high PHY, MAC, RLC, schedulers, buffers) and the <strong>O-CU</strong> (PDCP, SDAP, RRC), with the <strong>Near-RT RIC</strong> hosting control loops between 10 ms and 1 s for mobility, traffic steering and resource allocation. Localising a fault to one of these components is part of an actionable diagnosis.</p>
+  <p>TelecomTS [2] records 18 channels per window: 16 numeric KPIs — <code>RSRP</code>, <code>DL_BLER</code>, <code>UL_BLER</code>, <code>DL_MCS</code>, <code>UL_MCS</code>, <code>UL_NPRB</code>, <code>UL_SNR</code>, <code>TX_Bytes</code>, <code>RX_Bytes</code>, <code>Estimated_UL_Buffer</code>, <code>PRBs_DL_Current</code>, <code>PRBs_UL_Current</code>, <code>PRB_Utilization_DL</code>, <code>PRB_Utilization_UL</code>, <code>UL_NumberOfPackets</code>, <code>DL_NumberOfPackets</code> — and two protocol fields. Each anomalous window also carries a natural-language KPI narrative, a troubleshooting ticket and a Q&amp;A trace. The eleven fault types are Antenna Failure, Buffer Overflow, Co-Channel Interference (Mild and Severe), Doppler Shift, Faulty Handover Algorithm, Faulty RF Filters, High Network Congestion (Gradual Buildup and Sudden Spike), Resource Allocation Bugs, and Jamming — the only real over-the-air anomaly.</p>
+
+  <h3 id="s2-2">2.2 Anomaly detection on TelecomTS</h3>
+  <p>TelecomTS introduced the dataset and benchmarks for detection and root-cause classification [2]. Mantis, a lightweight calibrated foundation model for time-series classification, reports the strongest binary detection on it (F1 = 0.800) but gives fault labels only, with no KPI attribution or standards reference [1]. NuTime shows the value of scale-preserving embeddings for time series [3], a principle reflected in our feature design, and graph-attention models have shown KPI anomaly detection is viable at operator scale [4].</p>
+
+  <h3 id="s2-3">2.3 LLM-based root-cause analysis</h3>
+  <p>A recent survey of LLMs for AIOps covers 183 papers and finds that standards-grounded explanation remains under-explored [6]. RCACopilot uses retrieval-augmented LLMs for cloud incidents in production (micro F1 0.766) but works on cloud metrics with no 3GPP citations [7]; Roy et al. study LLM agents for root-cause analysis and their groundedness [8]. In telecom, TN-AutoRCA builds an alarm-based RCA benchmark with an agentic framework [9], reasoning LLMs fine-tuned for 5G RCA outperform general models on drive-test data [10], and GALA augments LLM agents with graphs for RCA [12]. None of these links KPI-level detection to verifiable 3GPP clauses.</p>
+
+  <h3 id="s2-4">2.4 Retrieval and telecom knowledge</h3>
+  <p>Retrieval-augmented generation (RAG) conditions a language model on passages from an external store [13], usually embedded with a bi-encoder such as Sentence-BERT [16] and searched with approximate nearest neighbours [22]. TeleQnA shows RAG improves LLM accuracy on telecom-standards questions [5]. GSMA’s 3GPP Release 19 and O-RAN knowledge graphs [D2, D3] provide structured access to specification content, which the team used to discover candidate clauses before confirming them against primary specification text. A finding of this project (Section 5.5) is that RAG only helps when the corpus contains information the model lacks.</p>
+
+  <h3 id="s2-5">2.5 Explainability and explanation evaluation</h3>
+  <p>SHAP assigns each feature an additive Shapley contribution to a prediction [14]; TreeSHAP computes it exactly for tree ensembles such as CatBoost [15]. A SHAP value’s sign says whether a feature pushed toward the predicted class, not whether the KPI was high or low, so the system reports KPI direction separately. G-Eval scores generated text with an LLM judge following explicit rubric dimensions on Likert scales [11]; this project uses it with four telecom-specific dimensions (Appendix D).</p>
+
+  <h3 id="s2-6">2.6 Gap addressed</h3>
+  <div class="finding">
+    <strong>Gap</strong>
+    <p>No published system connects KPI-level anomaly detection to a root-cause explanation that cites a specific, automatically verified 3GPP clause in one evaluable pipeline on public data, and no published work maps the TelecomTS fault taxonomy to 3GPP clauses and O-RAN components. KPI-RAG addresses both and measures the citation end to end against ground truth.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ 3 METHODOLOGY ═══════════════════════════ -->
+<section class="chapter" id="ch3" aria-labelledby="h-ch3">
+  <div class="section-label">Chapter 3</div>
+  <h2 class="section-title" id="h-ch3">Methodology</h2>
+  <p class="section-subtitle">Data, models, retrieval, grounding and the evaluation protocol — and why each choice was made</p>
+
+  <h3 id="s3-1">3.1 Approach overview</h3>
+  <p>The pipeline has three stages. <strong>Detection</strong>: a binary model flags anomalous windows and an 11-class model names the fault, with TreeSHAP attributions. <strong>Grounding</strong>: past incidents of the predicted fault are retrieved, the fault’s row of the alignment table supplies the governing standard and O-RAN component, and a per-window evidence block summarises what drove the decision. <strong>Explanation</strong>: an LLM produces a structured JSON explanation whose citation is validated against the table. Figure 1 (Chapter 4) shows the architecture.</p>
+
+  <h3 id="s3-2">3.2 Dataset and split</h3>
+  <div class="table-wrap" id="tab1"><table>
+    <thead><tr><th>Item</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td class="label">Windows</td><td>32,000 — 1,235 anomalous, 30,765 normal</td></tr>
+      <tr><td class="label">Window</td><td>128 samples at 100 ms (12.8 s), 18 channels (16 numeric + 2 protocol)</td></tr>
+      <tr><td class="label">Train split</td><td>25,688 windows (935 anomalous)</td></tr>
+      <tr><td class="label">Test split</td><td>6,312 windows (300 anomalous, 6,012 normal)</td></tr>
+      <tr><td class="label">Split rule</td><td>by recording session — no session appears in both parts</td></tr>
+    </tbody>
+  </table></div>
+  <p class="caption"><b>Table 1.</b> TelecomTS [2] as used in this project (<code>data/indices/*_sessionsplit.npy</code>).</p>
+  <p>The proposal planned a window-level split, under which adjacent train and test windows overlap by 75 %. Phase 2 adopted a session-based split instead, which removes that overlap and gives a stricter estimate. Only the 935 anomalous <em>training</em> windows are ever indexed for retrieval, so no test window can retrieve itself; the build fails if the split file is missing or the dataset order does not match the ground truth.</p>
+
+  <h3 id="s3-3">3.3 Features and detection cascade</h3>
+  <p>The Layer 2 models were built by the ML team (Farida El Ghabary, Raneem Alnaghy). Model 1 uses 64 base features (mean, standard deviation, minimum and maximum of the 16 numeric KPIs). Model 2 uses 496: the 64 base statistics; 256 temporal-patch statistics (8 patches × 16 KPIs × mean and standard deviation); 80 spectral features (four FFT band energies plus total energy per KPI); 84 temporal-shape features (shift, log-std ratio, trend, convexity, S-shape); and 10 onset, cross-KPI correlation, difference and radio-share features.</p>
+  <div class="table-wrap" id="tab2"><table>
+    <thead><tr><th>Stage</th><th>Model</th><th class="num">Features</th><th class="num">Trees</th><th class="num">Training rows</th></tr></thead>
+    <tbody>
+      <tr><td class="label">1 · detect</td><td>binary CatBoost, threshold 0.5</td><td class="num">64</td><td class="num">200</td><td class="num">4,675 (80/20 rebalanced)</td></tr>
+      <tr><td class="label">2 · classify</td><td>11-class CatBoost</td><td class="num">496</td><td class="num">1,000</td><td class="num">5,185 (training faults + synthetic windows)</td></tr>
+    </tbody>
+  </table></div>
+  <p class="caption"><b>Table 2.</b> Layer 2 models (<code>data/models/*.cbm</code>, <code>data/processed/log.txt</code>). Stage 2 runs only on windows Stage 1 flags.</p>
+  <p>CatBoost [15] was chosen over the proposal’s Random Forest after comparison by the ML team; it keeps exact TreeSHAP support. Models were selected on internal validation criteria; because the same test sessions were also consulted during model development, the detection figures are best read as a test-split estimate. An isotonic calibrator was evaluated and rejected, so the reported confidence is uncalibrated: for an alarm it is Model 2’s probability of the predicted fault type.</p>
+
+  <h3 id="s3-4">3.4 SHAP attribution</h3>
+  <p>For each alarm, TreeSHAP values are computed for the predicted class and the top three single-KPI features kept. Each entry records the magnitude |SHAP|, its effect (<em>toward</em> or <em>away from</em> the predicted class) and whether the window’s value lies above or below the normal-traffic mean (<code>feature_vs_normal</code>, from training normals). Prompts show all three — e.g. “RSRP: below normal (|SHAP| = 0.42, toward predicted class)” — so neither direction nor effect is read from a sign; 97 of the 1,146 top-3 entries point away from the class.</p>
+
+  <h3 id="s3-5">3.5 Retrieval of past incidents</h3>
+  <p>The corpus is the 935 anomalous training windows, one document per window: its own KPI narrative. Documents are embedded with <code>all-MiniLM-L6-v2</code> [16, 17] in a cosine-space ChromaDB index [18]. The query carries the window’s KPI evidence (top SHAP channels, their directions, uplink/downlink means) but <em>not</em> the fault label; results are filtered to incidents of the <em>predicted</em> fault type, and the top three are shown to the LLM.</p>
+  <div class="finding">
+    <strong>Why this design</strong>
+    <p>It is a measured result, not a preference (Section 5.5). The dataset’s tickets are one template per fault class, so retrieving on tickets only repeated the label. Text evidence alone identifies the true class only modestly above chance, so the class comes from the classifier as a filter and retrieval ranks comparable incidents within it.</p>
+  </div>
+
+  <h3 id="s3-6">3.6 Standards grounding and RCA evidence</h3>
+  <p>The <strong>3GPP alignment table v1.2</strong> (Rodina Khallaf) maps each of the 10 synthetic fault types to Release 19 clauses and an O-RAN component (Appendix A); all ten rows are confirmed against primary specification text, and Jamming is marked not-applicable because no conformance clause governs an external over-the-air attack. The table is the single source of standards in every prompt. A citation counts as valid for a fault if it is a well-formed TS/TR number listed in that fault’s row; a fault without a row can never have a valid citation.</p>
+  <p>The <strong>RCA evidence</strong> file holds 289 records, one per non-Jamming alarm on the test split. For a window whose record matches its predicted fault, a compact block (537–659 characters) is injected into the grounded prompt: the top-3 SHAP features with magnitude, direction and effect, the observed means of the KPIs behind them, and the fault’s causal mechanism. The record never contains the window’s true label.</p>
+
+  <h3 id="s3-7">3.7 Explanation generation and citation check</h3>
+  <p>Gemini 3.5 Flash Lite [19] runs at temperature 0.1 with native JSON output, returning five fields: root cause, 3GPP reference, O-RAN component, recommended action and reasoning trace. The reference is normalised to <code>TS/TR XX.XXX</code> and validated in two steps (format, then membership of the fault’s table row). Calls are rate-limited (≥ 2 s apart); rate-limit responses wait for the server’s Retry-After up to 60 s; configuration and authentication errors stop immediately; malformed replies are retried; after three attempts a template explanation is returned, labelled with its cause and always counted as invalid. Groq and Ollama are supported alternatives.</p>
+
+  <h3 id="s3-8">3.8 Evaluation design</h3>
+  <ul>
+    <li><strong>Track A — detection and classification.</strong> Recall, precision, F1 and exact and family-level accuracy on the 6,312 test windows, recomputed from the Layer 2 predictions and ground truth and checked against the ML team’s own validation file.</li>
+    <li><strong>Track C — citation ablation.</strong> Three test windows per <em>true</em> fault type (10 types, seed 42), each run through the full system under three conditions that share one instruction block and differ only in context: <strong>C1</strong> label + SHAP; <strong>C2</strong> + three past incidents; <strong>C3</strong> + alignment row + RCA evidence. Each citation is scored against the <em>true</em> fault’s row, so a misclassification that injects the wrong row counts as wrong; a detector miss produces no explanation and counts as incorrect. Two rules that need no LLM are scored identically: <em>always cite the single best standard</em>, and <em>cite the predicted fault’s table row</em>.</li>
+    <li><strong>Track B — explanation quality.</strong> G-Eval [11] with four 1–5 dimensions (citation validity, fault specificity, actionability, causal soundness; Appendix D) on every Track C explanation.</li>
+    <li><strong>Retrieval diagnostics.</strong> Precision@1 and @5 of the retrieved incidents’ fault type against the true class, for alternative document and query designs.</li>
+  </ul>
+  <p>With n = 30 per condition drawn from a small number of recording sessions, Wilson 95 % intervals and exact McNemar tests are reported as descriptive measures of effect size rather than significance tests.</p>
+
+  <h3 id="s3-9">3.9 Tools</h3>
+  <p>Python 3.11 managed with uv; CatBoost and SHAP (Layer 2, offline); sentence-transformers and ChromaDB 1.5 (retrieval); google-genai, groq and openai clients (LLM); pydantic schemas; Streamlit 1.61 (dashboard); pytest (testing). All software is open source; the only paid-tier service is optional.</p>
+</section>
+
+<!-- ═══════════════════════════ 4 DESIGN ═══════════════════════════ -->
+<section class="chapter" id="ch4" aria-labelledby="h-ch4">
+  <div class="section-label">Chapter 4</div>
+  <h2 class="section-title" id="h-ch4">Design and Implementation</h2>
+  <p class="section-subtitle">Architecture, components, the dashboard, and the engineering decisions behind them</p>
+
+  <h3 id="s4-1">4.1 System architecture</h3>
+  <figure id="fig1">
+    <div class="arch" role="img" aria-label="Four-layer architecture from data ingestion to dashboard">
+      <div class="layer"><div class="layer-tag">Layer 1<small>Data</small></div>
+        <div class="layer-body"><span class="node">TelecomTS JSONL</span><span class="arrow">→</span><span class="node">session split (train / test indices)</span><span class="arrow">→</span><span class="node">tickets &amp; KPI narratives</span></div></div>
+      <div class="flow-down" aria-hidden="true">↓</div>
+      <div class="layer"><div class="layer-tag">Layer 2<small>Detection · offline</small></div>
+        <div class="layer-body"><span class="node">Model 1 · 64 f</span><span class="arrow">→</span><span class="node">Model 2 · 496 f</span><span class="arrow">→</span><span class="node">TreeSHAP top-3</span><span class="arrow">→</span><span class="node key">Layer 2 JSON · 6,312 windows</span></div></div>
+      <div class="flow-down" aria-hidden="true">↓</div>
+      <div class="layer"><div class="layer-tag">Layer 3<small>Grounding</small></div>
+        <div class="layer-body"><span class="node">KPI-evidence query</span><span class="arrow">→</span><span class="node">ChromaDB · train-only · filtered by predicted type</span><span class="node key">Alignment table v1.2</span><span class="node">RCA evidence block</span></div></div>
+      <div class="flow-down" aria-hidden="true">↓</div>
+      <div class="layer"><div class="layer-tag">Layer 4<small>Reasoning</small></div>
+        <div class="layer-body"><span class="node">Gemini · JSON</span><span class="arrow">→</span><span class="node key">citation validator</span><span class="arrow">→</span><span class="node">Streamlit dashboard · 6 panels</span></div></div>
+    </div>
+    <figcaption><b>Figure 1.</b> KPI-RAG architecture. Layer 2 is trained and run offline by the ML pipeline; Layers 3 and 4 run on demand for each window.</figcaption>
+  </figure>
+
+  <h3 id="s4-2">4.2 Components</h3>
+  <h4>Data pipeline — <code>src/data_loader.py</code>, <code>scripts/build_index.py</code></h4>
+  <p>Reads the JSONL files in sorted order and flattens anomalous records into tickets. Because raw records carry no identifier, a ticket’s id is its position; <code>verify_ticket_order()</code> checks every ticket’s label against the ground truth before indexing, and the build refuses to clear the index when no tickets were loaded.</p>
+  <h4>Layer 2 interface — <code>src/ml_model.py</code></h4>
+  <p>The models are trained offline by the ML pipeline and consumed here as a JSON of predictions, SHAP entries and window statistics; <code>ml_model.py</code> loads the CatBoost files for verification and future online inference.</p>
+  <h4>Retrieval — <code>src/kg_indexer.py</code>, <code>src/rag_query.py</code></h4>
+  <p>Embeds each training window’s narrative; builds the label-free evidence query; applies the predicted-type metadata filter; flags low similarity (threshold 0.35).</p>
+  <h4>Explanation — <code>src/llm_explainer.py</code>, <code>src/rca_loader.py</code></h4>
+  <p>Builds the prompt from shared parts (header with label, confidence and SHAP; optional incidents, evidence and standards blocks; one common instruction block), calls the LLM with retries, parses and normalises the JSON, and validates the citation. The RCA loader formats the evidence block of Section 3.6.</p>
+  <h4>Evaluation — <code>scripts/run_eval_track_a.py</code>, <code>run_eval_track_c.py</code>, <code>experiment_retrieval_design.py</code></h4>
+  <p>Track A recomputes all detection and classification metrics; Track C samples by ground truth, runs the three conditions, scores both the conditions and the no-LLM rules, writes a summary, and refuses to overwrite an earlier run; the retrieval experiment reproduces the design comparison of Section 5.5.</p>
+
+  <h3 id="s4-3">4.3 Dashboard</h3>
+  <p>The Streamlit dashboard (<code>dashboard/app.py</code>) presents six panels:</p>
+  <ol>
+    <li><strong>Detection</strong> — predicted fault and Model 2 probability;</li>
+    <li><strong>SHAP</strong> — top contributing KPIs;</li>
+    <li><strong>KPI window statistics</strong>;</li>
+    <li><strong>Explanation</strong> — root cause, action, reasoning, and a ✅/❌ citation badge (with the cause if a template was used);</li>
+    <li><strong>Sources</strong> — retrieved past incidents with similarity, flagged when weakly similar;</li>
+    <li><strong>RCA evidence</strong> — standard and O-RAN component from the alignment table, model attribution and KPI coverage.</li>
+  </ol>
+  <p>Inputs come from an example, an uploaded <code>ClassifierOutput</code> JSON, or by browsing the 382 test windows the detector flagged (filtered by fault type). All are test windows, so none has its own ticket in the index. Uploads are keyed by content so a new file never shows a previous explanation; the required API key follows the configured LLM backend.</p>
+
+  <h3 id="s4-4">4.4 Key design decisions</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Decision</th><th>Choice</th><th>Reason</th></tr></thead>
+    <tbody>
+      <tr><td class="label">Retrieval corpus</td><td>per-window KPI narratives, class filter</td><td>ticket text is one template per class; text alone cannot identify the class (Section 5.5)</td></tr>
+      <tr><td class="label">Standards source</td><td>one alignment table, injected and validated</td><td>a single, auditable source; citation check is deterministic</td></tr>
+      <tr><td class="label">Index metric</td><td>cosine space, rebuilt from scratch</td><td>an early L2 index distorted similarity scores</td></tr>
+      <tr><td class="label">Confidence</td><td>uncalibrated model probability</td><td>the candidate calibrator collapsed most probabilities to one value</td></tr>
+      <tr><td class="label">Ablation design</td><td>ground-truth sampling, shared instructions, no-LLM rules</td><td>separates the grounding effect from classifier errors and from prompt wording</td></tr>
+      <tr><td class="label">Failure handling</td><td>fail closed; labelled template fallback</td><td>a missing split or broken key must never silently produce plausible output</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 id="s4-5">4.5 Testing, packaging and deployment</h3>
+  <p>The test suite has 209 tests in 29 modules (21 unit, 8 integration) covering schemas, retrieval, prompt construction, citation validation, retry behaviour, both evaluation scripts, the index builder and every dashboard panel, including a headless run of the app. Dependencies are locked with uv, with CPU-only PyTorch (no GPU is used); <code>requirements.txt</code> is exported from the same lock; the split indices and the 17 MB index are committed so a clean clone can run the tests and the dashboard. The dashboard deploys on Streamlit Community Cloud from branch <code>master</code>.</p>
+</section>
+
+<!-- ═══════════════════════════ 5 RESULTS ═══════════════════════════ -->
+<section class="chapter" id="ch5" aria-labelledby="h-ch5">
+  <div class="section-label">Chapter 5</div>
+  <h2 class="section-title" id="h-ch5">Results and Evaluation</h2>
+  <p class="section-subtitle">Every number is read from a committed result file (Appendix F lists them)</p>
+
+  <h3 id="s5-1">5.1 Track A — detection and classification</h3>
+  <div class="table-wrap" id="tab3"><table>
+    <thead><tr><th>Metric</th><th class="num">All faults</th><th class="num">Excluding Jamming</th></tr></thead>
+    <tbody>
+      <tr><td class="label">Test windows / true faults</td><td class="num">6,312 / 300</td><td class="num">— / 206</td></tr>
+      <tr><td class="label">Windows flagged by Stage 1</td><td class="num">382</td><td class="num">—</td></tr>
+      <tr><td class="label">True faults detected</td><td class="num">266</td><td class="num">172</td></tr>
+      <tr><td class="label">False alarms</td><td class="num">116</td><td class="num">—</td></tr>
+      <tr class="emph"><td class="label">Binary recall</td><td class="num"><b>88.7 %</b></td><td class="num">83.5 %</td></tr>
+      <tr class="emph"><td class="label">Binary precision</td><td class="num"><b>69.6 %</b></td><td class="num">—</td></tr>
+      <tr><td class="label">Binary F1</td><td class="num">0.780</td><td class="num">—</td></tr>
+    </tbody>
+  </table></div>
+  <p class="caption"><b>Table 3.</b> Detection on the test split (<code>data/processed/track_a_metrics.json</code>). 64.7 % of false alarms are labelled Co-Channel Interference (Mild).</p>
+
+  <div class="table-wrap" id="tab4"><table>
+    <thead><tr><th>Metric</th><th class="num">Value</th></tr></thead>
+    <tbody>
+      <tr class="emph"><td class="label">Exact 11-class accuracy, all true faults</td><td class="num"><b>66.3 %</b> (199/300)</td></tr>
+      <tr><td class="label">Exact accuracy on detected faults</td><td class="num">74.8 % (199/266)</td></tr>
+      <tr><td class="label">Accuracy with the congestion family merged</td><td class="num">75.0 % (225/300)</td></tr>
+      <tr><td class="label">Exact accuracy excluding Jamming</td><td class="num">51.5 % (106/206)</td></tr>
+    </tbody>
+  </table></div>
+  <p class="caption"><b>Table 4.</b> Classification. The congestion family merges Buffer Overflow and both congestion types. Jamming is 94 of the 300 test faults and 93 of the 199 correct classifications.</p>
+
+  <figure id="fig2">
+    <div class="chart">
+      <div class="chart-title">Correctly classified test windows, by true fault type</div>
+      <div class="chart-sub">Bar = correctly classified ÷ true test windows of that type</div>
+      <div class="bars" role="list">
+        <div class="bar-row" role="listitem" title="Jamming: 93 of 94 correct"><span class="bar-label">Jamming</span><span class="bar-track"><span class="bar-fill f-s1" style="display:block;width:98.9%"></span></span><span class="bar-value">93 / 94</span></div>
+        <div class="bar-row" role="listitem" title="Resource Allocation Bugs: 17 of 17 correct"><span class="bar-label">Resource Allocation Bugs</span><span class="bar-track"><span class="bar-fill f-s1" style="display:block;width:100%"></span></span><span class="bar-value">17 / 17</span></div>
+        <div class="bar-row" role="listitem" title="Doppler Shift: 9 of 9 correct"><span class="bar-label">Doppler Shift</span><span class="bar-track"><span class="bar-fill f-s1" style="display:block;width:100%"></span></span><span class="bar-value">9 / 9</span></div>
+        <div class="bar-row" role="listitem" title="Antenna Failure: 7 of 9 correct"><span class="bar-label">Antenna Failure</span><span class="bar-track"><span class="bar-fill f-s1" style="display:block;width:77.8%"></span></span><span class="bar-value">7 / 9</span></div>
+        <div class="bar-row" role="listitem" title="Faulty RF Filters: 25 of 33 correct"><span class="bar-label">Faulty RF Filters</span><span class="bar-track"><span class="bar-fill f-s1" style="display:block;width:75.8%"></span></span><span class="bar-value">25 / 33</span></div>
+        <div class="bar-row" role="listitem" title="Buffer Overflow: 15 of 21 correct"><span class="bar-label">Buffer Overflow</span><span class="bar-track"><span class="bar-fill f-s1" style="display:block;width:71.4%"></span></span><span class="bar-value">15 / 21</span></div>
+        <div class="bar-row" role="listitem" title="Faulty Handover: 10 of 19 correct"><span class="bar-label">Faulty Handover</span><span class="bar-track"><span class="bar-fill f-s1" style="display:block;width:52.6%"></span></span><span class="bar-value">10 / 19</span></div>
+        <div class="bar-row" role="listitem" title="CCI Mild: 9 of 20 correct"><span class="bar-label">CCI (Mild)</span><span class="bar-track"><span class="bar-fill f-s1" style="display:block;width:45%"></span></span><span class="bar-value">9 / 20</span></div>
+        <div class="bar-row" role="listitem" title="CCI Severe: 12 of 30 correct"><span class="bar-label">CCI (Severe)</span><span class="bar-track"><span class="bar-fill f-s1" style="display:block;width:40%"></span></span><span class="bar-value">12 / 30</span></div>
+        <div class="bar-row" role="listitem" title="Congestion Gradual: 2 of 37 correct"><span class="bar-label">Congestion (Gradual)</span><span class="bar-track"><span class="bar-fill f-s1" style="display:block;width:5.4%"></span></span><span class="bar-value">2 / 37</span></div>
+        <div class="bar-row" role="listitem" title="Congestion Sudden Spike: 0 of 11 correct (none detected)"><span class="bar-label">Congestion (Sudden Spike)</span><span class="bar-track"><span class="bar-fill f-s1" style="display:block;width:0%"></span></span><span class="bar-value">0 / 11</span></div>
+      </div>
+    </div>
+    <figcaption><b>Figure 2.</b> Per-class accuracy on the test split. Congestion is mostly predicted as Buffer Overflow, and Stage 1 flags none of the 11 Sudden Spike windows.</figcaption>
+  </figure>
+
+  <h3 id="s5-2">5.2 Comparison with published baselines</h3>
+  <div class="table-wrap" id="tab5"><table>
+    <thead><tr><th>System</th><th>Task</th><th class="num">Reported</th><th>Protocol</th></tr></thead>
+    <tbody>
+      <tr><td class="label">Mantis [1]</td><td>binary detection</td><td class="num">F1 0.800</td><td>TelecomTS benchmark [2]</td></tr>
+      <tr class="emph"><td class="label">KPI-RAG (ours)</td><td>binary detection</td><td class="num">F1 0.780</td><td>session split</td></tr>
+      <tr><td class="label">Toto [2]</td><td>root-cause classification</td><td class="num">acc. 0.848</td><td>TelecomTS benchmark [2]</td></tr>
+      <tr><td class="label">Mantis [1, 2]</td><td>root-cause classification</td><td class="num">acc. 0.590</td><td>TelecomTS benchmark [2]</td></tr>
+      <tr><td class="label">GPT-4.1 with context [2]</td><td>root-cause classification</td><td class="num">acc. 0.227</td><td>TelecomTS benchmark [2]</td></tr>
+      <tr class="emph"><td class="label">KPI-RAG (ours)</td><td>11-class classification</td><td class="num">acc. 0.663</td><td>session split</td></tr>
+    </tbody>
+  </table></div>
+  <p class="caption"><b>Table 5.</b> Reference points from the TelecomTS benchmark (Tables 2 and 4 of [2]). The comparison is indicative, not like-for-like: the benchmark uses its own split and models, while our split is by recording session.</p>
+  <p>Detection is close to the strongest published result, and classification lies between the published models. Unlike all of them, KPI-RAG also explains each decision and cites a verified standard.</p>
+
+  <h3 id="s5-3">5.3 Track C — citation ablation</h3>
+  <p>Run v3 (<code>data/processed/track_c_v3/</code>): 30 windows, 3 per true fault type, 72 LLM calls, 0 template fallbacks, alignment table v1.2. An earlier run (v2, before the evidence block was refined) gave identical counts on the same windows.</p>
+  <div class="table-wrap" id="tab6"><table>
+    <thead><tr><th>Answer rule</th><th class="num">Correct<br>(n = 30)</th><th>Wilson<br>95 % CI</th><th class="num">Classified<br>right (n = 19)</th><th class="num">Valid vs<br>predicted (n = 24)</th></tr></thead>
+    <tbody>
+      <tr><td class="label">C1 LLM: label + SHAP</td><td class="num">5/30 (16.7 %)</td><td>7.3–33.6 %</td><td class="num">4/19</td><td class="num">7/24</td></tr>
+      <tr><td class="label">C2 LLM: + past incidents</td><td class="num">7/30 (23.3 %)</td><td>11.8–40.9 %</td><td class="num">6/19</td><td class="num">9/24</td></tr>
+      <tr class="emph"><td class="label">C3 LLM: + alignment row + RCA evidence</td><td class="num"><b>21/30 (70.0 %)</b></td><td>52.1–83.3 %</td><td class="num"><b>19/19</b></td><td class="num">24/24</td></tr>
+      <tr><td class="label">No LLM: always cite TS 38.141-1</td><td class="num">12/30 (40.0 %)</td><td>—</td><td class="num">—</td><td class="num">—</td></tr>
+      <tr><td class="label">No LLM: cite the predicted fault’s row</td><td class="num">21/30 (70.0 %)</td><td>—</td><td class="num">19/19</td><td class="num">24/24</td></tr>
+    </tbody>
+  </table></div>
+  <p class="caption"><b>Table 6.</b> Track C (<code>track_c_v3/track_c_summary.json</code>). “Correct” is scored against the true fault’s row; “valid vs predicted” against the row of the fault the classifier named, over the 24 windows that received an explanation. Per-window outcomes are in Appendix B.</p>
+
+  <figure id="fig3">
+    <div class="chart">
+      <div class="chart-title">Citation correct for the true fault, out of 30 windows</div>
+      <div class="chart-sub">LLM conditions vs. answer rules that need no LLM</div>
+      <div class="bars" role="list">
+        <div class="bar-row" role="listitem" title="C1 label + SHAP: 5 of 30 (16.7 %)"><span class="bar-label">C1 · label + SHAP</span><span class="bar-track"><span class="bar-fill f-s1" style="display:block;width:16.7%"></span></span><span class="bar-value">5 / 30</span></div>
+        <div class="bar-row" role="listitem" title="C2 + past incidents: 7 of 30 (23.3 %)"><span class="bar-label">C2 · + past incidents</span><span class="bar-track"><span class="bar-fill f-s1" style="display:block;width:23.3%"></span></span><span class="bar-value">7 / 30</span></div>
+        <div class="bar-row" role="listitem" title="C3 + alignment row + evidence: 21 of 30 (70.0 %)"><span class="bar-label">C3 · + alignment + evidence</span><span class="bar-track"><span class="bar-fill f-s1" style="display:block;width:70%"></span><span class="ref-line" style="left:70%" title="Pre-registered 70 % threshold"></span></span><span class="bar-value">21 / 30</span></div>
+        <div class="bar-gap"></div>
+        <div class="bar-row" role="listitem" title="Always cite TS 38.141-1: 12 of 30 (40.0 %)"><span class="bar-label">Always TS 38.141-1</span><span class="bar-track"><span class="bar-fill f-s2" style="display:block;width:40%"></span></span><span class="bar-value">12 / 30</span></div>
+        <div class="bar-row" role="listitem" title="Cite the predicted fault's row: 21 of 30 (70.0 %)"><span class="bar-label">Cite predicted row</span><span class="bar-track"><span class="bar-fill f-s2" style="display:block;width:70%"></span></span><span class="bar-value">21 / 30</span></div>
+      </div>
+      <div class="legend"><span><span class="dot f-s1"></span>LLM condition</span><span><span class="dot f-s2"></span>Rule without an LLM</span><span><span class="dash"></span>Pre-registered 70 % threshold (O4)</span></div>
+    </div>
+    <figcaption><b>Figure 3.</b> Alignment-table grounding lifts end-to-end citation correctness from 7/30 to 21/30 (+47 points) and reaches the pre-registered 70 % threshold.</figcaption>
+  </figure>
+
+  <ul>
+    <li><strong>Alignment-table grounding is effective.</strong> When the correct standard is provided (the 19 correctly classified windows), the LLM incorporates it in 19/19 cases (Wilson 83.2–100 %); end to end it is 21/30. C2→C3 improves 14 windows and worsens none (exact McNemar p = 1.2·10⁻⁴); C1→C3 improves 16 and worsens none.</li>
+    <li><strong>The copy-row rule confirms the mechanism.</strong> C3 equals the rule that cites the predicted fault’s row (21/30): the alignment table is the grounding mechanism, and the LLM reliably adopts the provided standard (24/24 against the predicted row) — the intended behaviour. C3’s end-to-end accuracy therefore rises with classifier accuracy.</li>
+    <li><strong>Without the table, citations are unreliable.</strong> C1 and C2 fall below a fixed answer. C1 mostly cites TS 38.104 (11), TS 38.331 (8) and TS 38.214 (4), plus one LTE specification (TS 36.104). Retrieved incidents change little (C2 improves 2 windows over C1 and worsens none).</li>
+  </ul>
+
+  <figure id="fig4">
+    <div class="chart">
+      <div class="chart-title">What happened to each of the 30 windows under C3</div>
+      <div class="chart-sub">Every C3 error originates upstream of the grounding step</div>
+      <div class="stack" role="img" aria-label="19 correct and classified correctly; 2 correct despite misclassification; 3 misclassified with wrong row; 6 missed by the detector">
+        <div class="f-s1" style="flex:19" title="19 windows: classified correctly, citation correct">19</div>
+        <div class="f-s3" style="flex:2" title="2 windows: misclassified, but the wrong row cites the same specification">2</div>
+        <div class="f-s4" style="flex:3" title="3 windows: misclassified, wrong row injected">3</div>
+        <div class="f-s5" style="flex:6" title="6 windows: missed by the detector, no explanation">6</div>
+      </div>
+      <div class="stack-scale" aria-hidden="true"><span>0</span><span>30 windows</span></div>
+      <div class="legend">
+        <span><span class="dot f-s1"></span>Classified correctly · citation correct (19)</span>
+        <span><span class="dot f-s3"></span>Misclassified · shared specification (2)</span>
+        <span><span class="dot f-s4"></span>Misclassified · wrong row (3)</span>
+        <span><span class="dot f-s5"></span>Missed by detector (6)</span>
+      </div>
+    </div>
+    <figcaption><b>Figure 4.</b> The six misses are all three Sudden Spike samples, one Congestion (Gradual), one Buffer Overflow and one Handover window; the three wrong rows come from Congestion predicted as Buffer Overflow (2) and Handover predicted as RF Filters (1).</figcaption>
+  </figure>
+
+  <h3 id="s5-4">5.4 Track B — explanation quality (G-Eval)</h3>
+  <div class="finding note">
+    <strong>In progress</strong>
+    <p>G-Eval scoring (Rodina Khallaf) is being run on the 72 explanations of Track C v3 (<code>track_c_v3/track_c_scores_template.jsonl</code>), each tagged with its true fault and judged against that fault’s alignment row on the four dimensions of Appendix D. A first scoring pass was made on an earlier explanation set sampled by predicted label, which mixed in normal and misclassified windows; those scores are not reported here. The scoring tool rejects un-scored rows, so incomplete results cannot be averaged by mistake.</p>
+  </div>
+
+  <h3 id="s5-5">5.5 Retrieval quality</h3>
+  <figure id="fig5">
+    <div class="chart">
+      <div class="chart-title">Does the retrieved incident have the window’s true fault type? (precision@1)</div>
+      <div class="chart-sub">266 detected true faults · dashed lines: majority-class share 0.353 and classifier accuracy 0.748</div>
+      <div class="bars" role="list">
+        <div class="bar-row" role="listitem" title="Previous design (class templates, label in query): P@1 0.707, P@5 0.686"><span class="bar-label">Template docs · label in query</span><span class="bar-track"><span class="bar-fill f-s1" style="display:block;width:70.7%"></span><span class="ref-line" style="left:35.3%"></span><span class="ref-line" style="left:74.8%"></span></span><span class="bar-value">0.707</span></div>
+        <div class="bar-row" role="listitem" title="Template docs, label removed: P@1 0.102, P@5 0.069"><span class="bar-label">Template docs · label-free</span><span class="bar-track"><span class="bar-fill f-s1" style="display:block;width:10.2%"></span><span class="ref-line" style="left:35.3%"></span><span class="ref-line" style="left:74.8%"></span></span><span class="bar-value">0.102</span></div>
+        <div class="bar-row" role="listitem" title="KPI narratives, label-free (deployed ranking): P@1 0.451, P@5 0.335"><span class="bar-label">KPI narratives · label-free</span><span class="bar-track"><span class="bar-fill f-s1" style="display:block;width:45.1%"></span><span class="ref-line" style="left:35.3%"></span><span class="ref-line" style="left:74.8%"></span></span><span class="bar-value">0.451</span></div>
+        <div class="bar-row" role="listitem" title="KPI narratives averaged over paragraphs: P@1 0.049, P@5 0.201"><span class="bar-label">Narratives · paragraph-averaged</span><span class="bar-track"><span class="bar-fill f-s1" style="display:block;width:4.9%"></span><span class="ref-line" style="left:35.3%"></span><span class="ref-line" style="left:74.8%"></span></span><span class="bar-value">0.049</span></div>
+      </div>
+      <div class="legend"><span><span class="dot f-s1"></span>Precision@1 vs true class</span><span><span class="dash"></span>Majority share (0.353) · classifier accuracy (0.748)</span></div>
+    </div>
+    <figcaption><b>Figure 5.</b> Retrieval design comparison (<code>scripts/experiment_retrieval_design.py</code>). With the label in the query, retrieval only echoed it and scored below the classifier; text evidence alone is modestly above chance.</figcaption>
+  </figure>
+  <p>The dataset’s ticket text has 11 distinct values — one template per class — and the Q&amp;A’s root-cause answer is the class name, so ticket retrieval cannot add information beyond the label. The deployed design therefore takes the class from the classifier as a filter and ranks incidents by KPI evidence. Embedding whole narratives by averaging paragraphs performed much worse, because the first paragraph carries the radio-layer evidence. In deployment, the top retrieved incident’s similarity ranges 0.59–0.75 (median 0.72) over the 382 alarms, and the low-confidence flag never fired.</p>
+
+  <h3 id="s5-6">5.6 Software testing</h3>
+  <p><strong>206 of 209 tests pass</strong>; the 3 skipped tests need a Groq API key. The suite also reproduces the ML team’s validation counts from the committed predictions (Appendix G lists the modules).</p>
+</section>
+
+<!-- ═══════════════════════════ 6 DISCUSSION ═══════════════════════════ -->
+<section class="chapter" id="ch6" aria-labelledby="h-ch6">
+  <div class="section-label">Chapter 6</div>
+  <h2 class="section-title" id="h-ch6">Discussion</h2>
+  <p class="section-subtitle">What the results mean, how they compare with the objectives, and where they stop</p>
+
+  <h3 id="s6-1">6.1 Interpretation of results</h3>
+  <p><strong>RQ1.</strong> The cascade detects 88.7 % of test faults with 69.6 % precision (F1 0.780, close to the strongest published 0.800) and classifies 66.3 % exactly. Performance is uneven: Jamming, Doppler and Resource Allocation Bugs are near-perfect, while congestion is largely confused with Buffer Overflow and the detector misses every Sudden Spike window.</p>
+  <p><strong>RQ2.</strong> Yes. Alignment-table grounding makes the citation correct whenever the fault is classified correctly (19/19) and lifts end-to-end correctness from 7/30 to 21/30. C3 matches the copy-row rule exactly, which confirms that the curated table and the validator are what make the citation dependable — the LLM reliably uses the standard it is given, while on its own it does worse than a fixed answer. Every remaining error comes from Layer 2, so improving detection directly improves the explanations.</p>
+  <p><strong>RQ3</strong> awaits the Track B scoring (Section 5.4). What the LLM adds beyond the citation — specificity, actionability, causal soundness — is exactly what that track measures.</p>
+
+  <h3 id="s6-2">6.2 Were the objectives met?</h3>
+  <div class="table-wrap" id="tab7"><table>
+    <thead><tr><th>Objective</th><th>Evidence</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td class="label">O1 Detection and classification</td><td>binary F1 0.780 vs reference 0.800; 66.3 % exact accuracy</td><td class="yes">Met</td></tr>
+      <tr><td class="label">O2 Fault-to-standard alignment</td><td>table v1.2: 10 rows confirmed (Release 19), Jamming not-applicable</td><td class="yes">Met</td></tr>
+      <tr><td class="label">O3 Retrieval</td><td>implemented and measured; text alone cannot identify the fault, so retrieval was redesigned around the classifier’s label</td><td class="partial">Partly met</td></tr>
+      <tr><td class="label">O4 Grounded explanation ≥ 70 %</td><td>21/30 = 70.0 % end to end; 19/19 when classified correctly</td><td class="yes">Met</td></tr>
+      <tr><td class="label">O5 Joint evaluation</td><td>Tracks A and C complete with no-LLM baselines; Track B in progress</td><td class="partial">Partly met</td></tr>
+    </tbody>
+  </table></div>
+  <p class="caption"><b>Table 7.</b> Objectives from the project proposal.</p>
+
+  <h3 id="s6-3">6.3 Lessons from building the system</h3>
+  <ol>
+    <li><strong>Check what the corpus contains before building retrieval on it.</strong> The tickets were class templates, so retrieval with the label in the query only repeated the label; measuring this redirected the design.</li>
+    <li><strong>Sample evaluations by ground truth.</strong> An early ablation sampled by predicted label and mixed normal and misclassified windows into the results; sampling by true fault separated the grounding effect from classifier errors.</li>
+    <li><strong>Keep ablation conditions identical except for the variable.</strong> All three conditions now share one instruction block, so the C2→C3 difference is due to context alone.</li>
+    <li><strong>Baselines without an LLM make a citation metric interpretable.</strong> They show the gain comes from the table, as designed.</li>
+    <li><strong>One source of truth for standards.</strong> Injecting standards from both the alignment table and the RCA records produced conflicting references once the table was updated; the table is now the only source.</li>
+    <li><strong>Present model attributions with their meaning.</strong> Layer 2 stores |SHAP|; showing it as a signed value hid that some top features pushed against the predicted class.</li>
+    <li><strong>Fail closed.</strong> Missing split files, an empty raw-data folder or an invalid API key now stop the pipeline instead of producing plausible but wrong output.</li>
+  </ol>
+
+  <h3 id="s6-4">6.4 Practical implications</h3>
+  <p>For a network operations centre, the results show where the value is: a curated fault-to-standard table plus a validator makes citations dependable once the fault is identified, while an ungrounded LLM often cites the wrong specification. The next gains come from detection (Sudden Spike, congestion) and from extending the table, and the LLM’s contribution is the explanation it writes around the standard. The dashboard shows the citation check, the retrieved precedents and the evidence behind each explanation, so an engineer can see when to trust it and when not to.</p>
+
+  <h3 id="s6-5">6.5 Limitations</h3>
+  <ul>
+    <li><strong>Specification-level, prompt-supported citation metric.</strong> Clause numbers are not checked, and in C3 the standard is in the prompt, so C3 measures how reliably the grounded system cites the right standard rather than what the LLM knows unaided (C1 covers that).</li>
+    <li><strong>Small, clustered sample.</strong> n = 30 per condition, 3 per class, from a few recording sessions; intervals and p-values are descriptive.</li>
+    <li><strong>Test-split estimate.</strong> Detection figures come from the test sessions, which were also consulted during model development; precision depends on which recording sessions fall in the test split.</li>
+    <li><strong>Jamming weight.</strong> Without the Jamming class, exact accuracy is 51.5 %.</li>
+    <li><strong>Undetected fault types.</strong> Sudden Spike congestion is never detected and gradual congestion is mostly mislabelled, which caps end-to-end correctness for those faults whatever the LLM does.</li>
+    <li><strong>Grounding amplifies classifier errors.</strong> A misclassified window receives confident-looking evidence for the wrong class.</li>
+    <li><strong>Explanation quality pending.</strong> G-Eval is in progress, and an LLM judge from the generator’s family should be checked against human ratings.</li>
+    <li><strong>Single testbed and model.</strong> One indoor testbed, ten synthetic fault types, one LLM and one seed on a free-tier quota.</li>
+    <li><strong>No resolution text in the corpus.</strong> Retrieval contributes comparable KPI patterns, not past fixes.</li>
+  </ul>
+</section>
+
+<!-- ═══════════════════════════ 7 CONCLUSION ═══════════════════════════ -->
+<section class="chapter" id="ch7" aria-labelledby="h-ch7">
+  <div class="section-label">Chapter 7</div>
+  <h2 class="section-title" id="h-ch7">Conclusion and Future Work</h2>
+  <p class="section-subtitle">What was achieved, what it contributes, and where to go next</p>
+
+  <h3>7.1 Main achievements</h3>
+  <ol>
+    <li>An end-to-end pipeline from KPI windows to standards-cited explanations, with a six-panel dashboard deployed on Streamlit Community Cloud.</li>
+    <li>A session-split detection cascade with 88.7 % recall (F1 0.780) and 66.3 % exact accuracy over 11 fault types.</li>
+    <li>Grounded explanations whose citation is correct for the true fault in 21 of 30 sampled faults and in 19 of 19 correctly classified ones, meeting the pre-registered 70 % threshold.</li>
+    <li>A reproducible evaluation — 209 automated tests, committed result files and scripts that regenerate every reported number.</li>
+  </ol>
+
+  <h3>7.2 Contributions</h3>
+  <ul>
+    <li><strong>Artifact:</strong> the first Release 19 fault-to-3GPP / O-RAN alignment table for the TelecomTS taxonomy.</li>
+    <li><strong>Method:</strong> a three-condition citation ablation sampled and scored by ground truth, with no-LLM baselines that show what the metric can and cannot measure.</li>
+    <li><strong>Empirical finding:</strong> on TelecomTS, retrieval over the dataset’s tickets cannot substitute for the classifier; grounding value comes from curated standards, and end-to-end quality is bounded by detection.</li>
+  </ul>
+
+  <h3>7.3 Future work</h3>
+  <ul>
+    <li>Complete G-Eval on the 72 explanations with a human spot-check of judge–human agreement.</li>
+    <li>Improve detection of Sudden Spike and gradual congestion, and re-estimate Track A on sessions untouched by model development.</li>
+    <li>Validate citations at clause level, and add a test the prompt cannot answer (e.g. hold the table out for some faults).</li>
+    <li>Scale Track C to more windows, sessions, seeds and a second LLM.</li>
+    <li>Run Layer 2 inference inside the repository (named features, a feature builder), and regenerate the RCA evidence from table v1.2.</li>
+    <li>Extend to multi-cell and cross-domain diagnosis, and evaluate on operator data with naturally occurring faults.</li>
+  </ul>
+</section>
+
+<!-- ═══════════════════════════ REFERENCES ═══════════════════════════ -->
+<section class="chapter" id="references" aria-labelledby="h-ref">
+  <div class="section-label">Back matter</div>
+  <h2 class="section-title" id="h-ref">References</h2>
+  <p class="section-subtitle">IEEE style</p>
+  <ol class="ref-list">
+    <li><span class="rn">[1]</span><span>V. Feofanov, S. Wen, M. Alonso, R. Ilbert, H. Guo, M. Tiomoko, L. Pan, J. Zhang, and I. Redko, “Mantis: Lightweight calibrated foundation model for user-friendly time series classification,” arXiv:2502.15637, Feb. 2025.</span></li>
+    <li><span class="rn">[2]</span><span>A. Feng, A. Varvarigos, I. Panitsas, D. Fernandez, J. Wei, Y. Guo, J. Chen, A. Maatouk, L. Tassiulas, and R. Ying, “TelecomTS: A multi-modal observability dataset for time series and language analysis,” arXiv:2510.06063, Oct. 2025.</span></li>
+    <li><span class="rn">[3]</span><span>C. Lin, X. Wen, W. Cao, C. Huang, J. Bian, S. Lin, and Z. Wu, “NuTime: Numerically multi-scaled embedding for large-scale time-series pretraining,” <i>Trans. Mach. Learn. Res.</i>, 2024.</span></li>
+    <li><span class="rn">[4]</span><span>S. Malacarne, E. Hoel-Høiseth, E. Aune, D. Z. Biró, and M. Ruocco, “Scalable context-aware graph attention for unsupervised anomaly detection in large-scale mobile networks,” arXiv:2605.00482, May 2026.</span></li>
+    <li><span class="rn">[5]</span><span>A. Maatouk, F. Ayed, N. Piovesan, A. De Domenico, M. Debbah, and Z.-Q. Luo, “TeleQnA: A benchmark dataset to assess large language models telecommunications knowledge,” <i>IEEE Network</i>, 2025.</span></li>
+    <li><span class="rn">[6]</span><span>L. Zhang, T. Jia, M. Jia, Y. Wu, A. Liu, Y. Yang, Z. Wu, X. Hu, P. Yu, and Y. Li, “A survey of AIOps in the era of large language models,” <i>ACM Comput. Surv.</i>, 2025, doi: 10.1145/3746635.</span></li>
+    <li><span class="rn">[7]</span><span>Y. Chen <i>et al.</i>, “Automatic root cause analysis via large language models for cloud incidents,” in <i>Proc. EuroSys</i>, 2024.</span></li>
+    <li><span class="rn">[8]</span><span>D. Roy, X. Zhang, R. Bhave, C. Bansal, P. Las-Casas, R. Fonseca, and S. Rajmohan, “Exploring LLM-based agents for root cause analysis,” in <i>Proc. FSE</i>, 2024.</span></li>
+    <li><span class="rn">[9]</span><span>K. Wu, Q. Yu, M. Mei, R. Liu, J. Wang, K. Zhang, and Y. Bao, “TN-AutoRCA: Benchmark construction and agentic framework for self-improving alarm-based root cause analysis in telecommunication networks,” arXiv:2507.18190, Jul. 2025.</span></li>
+    <li><span class="rn">[10]</span><span>M. Sana, N. Piovesan, A. De Domenico, Y. Kang, H. Zhang, M. Debbah, and F. Ayed, “Reasoning language models for root cause analysis in 5G wireless networks,” arXiv:2507.21974, Jul. 2025.</span></li>
+    <li><span class="rn">[11]</span><span>Y. Liu, D. Iter, Y. Xu, S. Wang, R. Xu, and C. Zhu, “G-Eval: NLG evaluation using GPT-4 with better human alignment,” in <i>Proc. EMNLP</i>, 2023, pp. 2511–2522, doi: 10.18653/v1/2023.emnlp-main.153.</span></li>
+    <li><span class="rn">[12]</span><span>Y. Tian, Y. Liu, Z. Chong, Z. Huang, and H.-A. Jacobsen, “GALA: Can graph-augmented large language model agentic workflows elevate root cause analysis?,” arXiv:2508.12472, 2025.</span></li>
+    <li><span class="rn">[13]</span><span>P. Lewis <i>et al.</i>, “Retrieval-augmented generation for knowledge-intensive NLP tasks,” in <i>Proc. NeurIPS</i>, 2020.</span></li>
+    <li><span class="rn">[14]</span><span>S. M. Lundberg and S.-I. Lee, “A unified approach to interpreting model predictions,” in <i>Proc. NeurIPS</i>, 2017.</span></li>
+    <li><span class="rn">[15]</span><span>L. Prokhorenkova, G. Gusev, A. Vorobev, A. V. Dorogush, and A. Gulin, “CatBoost: Unbiased boosting with categorical features,” in <i>Proc. NeurIPS</i>, 2018.</span></li>
+    <li><span class="rn">[16]</span><span>N. Reimers and I. Gurevych, “Sentence-BERT: Sentence embeddings using Siamese BERT-networks,” in <i>Proc. EMNLP-IJCNLP</i>, 2019.</span></li>
+    <li><span class="rn">[17]</span><span>3GPP TS 38.141-1, TS 38.104, TS 38.321, TS 38.331, TS 28.552 and TR 38.901, Release 19, 3rd Generation Partnership Project.</span></li>
+    <li><span class="rn">[18]</span><span>Chroma, “Chroma: The open-source embedding database.” [Online]. Available: https://github.com/chroma-core/chroma</span></li>
+    <li><span class="rn">[19]</span><span>Google, “Gemini API documentation.” [Online]. Available: https://ai.google.dev</span></li>
+    <li><span class="rn">[20]</span><span>Streamlit, “Streamlit documentation.” [Online]. Available: https://docs.streamlit.io</span></li>
+    <li><span class="rn">[21]</span><span>O-RAN Alliance, “O-RAN architecture description,” O-RAN.WG1 technical specification.</span></li>
+    <li><span class="rn">[22]</span><span>Y. A. Malkov and D. A. Yashunin, “Efficient and robust approximate nearest neighbor search using hierarchical navigable small world graphs,” <i>IEEE Trans. Pattern Anal. Mach. Intell.</i>, vol. 42, no. 4, pp. 824–836, 2020.</span></li>
+    <li><span class="rn">[D1]</span><span>A. Feng <i>et al.</i>, “TelecomTS,” Hugging Face dataset, 2026. [Online]. Available: https://huggingface.co/datasets/AliMaatouk/TelecomTS</span></li>
+    <li><span class="rn">[D2]</span><span>Y. Yang, L. Bariah, Y. Lu, and M. Debbah, “telecom-kg-rel19: A 3GPP Release 19 knowledge graph,” Hugging Face dataset, 2026. [Online]. Available: https://huggingface.co/datasets/GSMA/telecom-kg-rel19</span></li>
+    <li><span class="rn">[D3]</span><span>GSMA, “oran_spec_knowledge_graph: An O-RAN Alliance specification knowledge graph,” Hugging Face dataset, 2026. [Online]. Available: https://huggingface.co/datasets/GSMA/oran_spec_knowledge_graph</span></li>
+  </ol>
+</section>
+
+<!-- ═══════════════════════════ APPENDICES ═══════════════════════════ -->
+<section class="chapter" id="appendices" aria-labelledby="h-app">
+  <div class="section-label">Back matter</div>
+  <h2 class="section-title" id="h-app">Appendices</h2>
+  <p class="section-subtitle">A Alignment table · B Per-window Track C results · C Sample explanations · D G-Eval rubric · E Configuration · F Reproduction and user instructions · G Test inventory</p>
+
+  <h3 id="appA">Appendix A — 3GPP alignment table v1.2</h3>
+  <div class="table-wrap" id="tabA"><table>
+    <thead><tr><th>Fault type</th><th>3GPP reference (Release 19)</th><th>O-RAN component</th><th>Relation</th></tr></thead>
+    <tbody>
+      <tr><td class="label">Antenna Failure</td><td>TS 38.141-1 §4.2.1 + §7.2</td><td>O-RU</td><td>governed-by</td></tr>
+      <tr><td class="label">Buffer Overflow (Gradual Buildup)</td><td>TS 38.321 §6.1.3.1 + §5.4.5</td><td>O-DU</td><td>specified-in</td></tr>
+      <tr><td class="label">Co-Channel Interference (Mild)</td><td>TS 38.141-1 §7.8</td><td>O-RU</td><td>governed-by</td></tr>
+      <tr><td class="label">Co-Channel Interference (Severe)</td><td>TS 38.141-1 §7.8 + TS 38.104 §4.9</td><td>O-RU</td><td>governed-by</td></tr>
+      <tr><td class="label">Doppler Shift (Severe)</td><td>TR 38.901 §7.6.6 + §7.6.10</td><td>O-DU / O-RU</td><td>measured-by</td></tr>
+      <tr><td class="label">Faulty Handover Algorithm (Too Frequent)</td><td>TS 38.331 §5.5.4.4 + §5.5.4.1</td><td>Near-RT RIC</td><td>specified-in</td></tr>
+      <tr><td class="label">Faulty RF Filters (Temporal)</td><td>TS 38.141-1 §7.5 + §7.6 + TS 38.104 §6.6</td><td>O-RU</td><td>governed-by</td></tr>
+      <tr><td class="label">High Network Congestion (Gradual Buildup)</td><td>TS 28.552 §5.1.1.2.1 + §5.1.1.2.2</td><td>O-DU</td><td>measured-by</td></tr>
+      <tr><td class="label">High Network Congestion (Sudden Spike)</td><td>TS 28.552 §5.1.1.2.1 + §5.1.1.2.2</td><td>O-DU</td><td>measured-by</td></tr>
+      <tr><td class="label">Resource Allocation Bugs</td><td>TS 38.321 §5.4.3.1.3</td><td>O-DU / Near-RT RIC</td><td>specified-in</td></tr>
+      <tr><td class="label">Jamming</td><td>none — external over-the-air event</td><td>—</td><td>not-applicable</td></tr>
+    </tbody>
+  </table></div>
+  <p class="caption"><b>Table A.</b> <code>data/alignment_table.json</code> (Rodina Khallaf). A citation is valid for a fault if its TS/TR number appears in that fault’s row.</p>
+
+  <h3 id="appB">Appendix B — Per-window Track C results (run v3)</h3>
+  <div class="table-wrap" id="tabB"><table>
+    <thead><tr><th class="num">Window</th><th>True fault</th><th>Predicted</th><th>C1</th><th>C2</th><th>C3</th></tr></thead>
+    <tbody>
+      <tr><td class="num">597</td><td>CCI (Mild)</td><td>CCI (Mild)</td><td class="no">✗ 38.214</td><td class="no">✗ 38.214</td><td class="yes">✓ 38.141-1</td></tr>
+      <tr><td class="num">592</td><td>CCI (Mild)</td><td>CCI (Mild)</td><td class="no">✗ 38.214</td><td class="no">✗ 38.214</td><td class="yes">✓ 38.141-1</td></tr>
+      <tr><td class="num">645</td><td>CCI (Mild)</td><td>RF Filters</td><td class="no">✗ 38.104</td><td class="no">✗ 38.104</td><td class="yes">✓ 38.141-1</td></tr>
+      <tr><td class="num">835</td><td>Buffer Overflow</td><td>Buffer Overflow</td><td class="no">✗ 38.331</td><td class="no">✗ 38.331</td><td class="yes">✓ 38.321</td></tr>
+      <tr><td class="num">893</td><td>Buffer Overflow</td><td>Buffer Overflow</td><td class="no">✗ 38.331</td><td class="no">✗ 38.331</td><td class="yes">✓ 38.321</td></tr>
+      <tr><td class="num">717</td><td>Buffer Overflow</td><td>Normal (missed)</td><td class="no">✗ —</td><td class="no">✗ —</td><td class="no">✗ —</td></tr>
+      <tr><td class="num">703</td><td>CCI (Severe)</td><td>RF Filters</td><td class="yes">✓ 38.104</td><td class="yes">✓ 38.104</td><td class="yes">✓ 38.141-1</td></tr>
+      <tr><td class="num">607</td><td>CCI (Severe)</td><td>CCI (Severe)</td><td class="no">✗ 38.214</td><td class="no">✗ 38.214</td><td class="yes">✓ 38.141-1</td></tr>
+      <tr><td class="num">700</td><td>CCI (Severe)</td><td>CCI (Severe)</td><td class="no">✗ 38.214</td><td class="no">✗ 38.214</td><td class="yes">✓ 38.141-1</td></tr>
+      <tr><td class="num">864</td><td>Antenna Failure</td><td>Antenna Failure</td><td class="no">✗ 38.104</td><td class="no">✗ 38.104</td><td class="yes">✓ 38.141-1</td></tr>
+      <tr><td class="num">622</td><td>Antenna Failure</td><td>Antenna Failure</td><td class="no">✗ 38.104</td><td class="no">✗ 38.104</td><td class="yes">✓ 38.141-1</td></tr>
+      <tr><td class="num">687</td><td>Antenna Failure</td><td>Antenna Failure</td><td class="no">✗ 38.104</td><td class="no">✗ 38.104</td><td class="yes">✓ 38.141-1</td></tr>
+      <tr><td class="num">697</td><td>RF Filters</td><td>RF Filters</td><td class="yes">✓ 38.104</td><td class="yes">✓ 38.104</td><td class="yes">✓ 38.141-1</td></tr>
+      <tr><td class="num">610</td><td>RF Filters</td><td>RF Filters</td><td class="yes">✓ 38.104</td><td class="yes">✓ 38.104</td><td class="yes">✓ 38.141-1</td></tr>
+      <tr><td class="num">605</td><td>RF Filters</td><td>RF Filters</td><td class="yes">✓ 38.104</td><td class="yes">✓ 38.104</td><td class="yes">✓ 38.141-1</td></tr>
+      <tr><td class="num">682</td><td>Congestion (Gradual)</td><td>Normal (missed)</td><td class="no">✗ —</td><td class="no">✗ —</td><td class="no">✗ —</td></tr>
+      <tr><td class="num">845</td><td>Congestion (Gradual)</td><td>Buffer Overflow</td><td class="no">✗ 38.331</td><td class="no">✗ 38.331</td><td class="no">✗ 38.321</td></tr>
+      <tr><td class="num">846</td><td>Congestion (Gradual)</td><td>Buffer Overflow</td><td class="no">✗ 38.331</td><td class="no">✗ 38.331</td><td class="no">✗ 38.321</td></tr>
+      <tr><td class="num">713</td><td>Doppler Shift</td><td>Doppler Shift</td><td class="no">✗ 38.104</td><td class="no">✗ 38.104</td><td class="yes">✓ TR 38.901</td></tr>
+      <tr><td class="num">611</td><td>Doppler Shift</td><td>Doppler Shift</td><td class="no">✗ 38.104</td><td class="no">✗ 38.104</td><td class="yes">✓ TR 38.901</td></tr>
+      <tr><td class="num">658</td><td>Doppler Shift</td><td>Doppler Shift</td><td class="no">✗ 36.104</td><td class="no">✗ 38.104</td><td class="yes">✓ TR 38.901</td></tr>
+      <tr><td class="num">648</td><td>Faulty Handover</td><td>RF Filters</td><td class="no">✗ 38.104</td><td class="no">✗ 38.104</td><td class="no">✗ 38.141-1</td></tr>
+      <tr><td class="num">879</td><td>Faulty Handover</td><td>Normal (missed)</td><td class="no">✗ —</td><td class="no">✗ —</td><td class="no">✗ —</td></tr>
+      <tr><td class="num">715</td><td>Faulty Handover</td><td>Faulty Handover</td><td class="yes">✓ 38.331</td><td class="yes">✓ 38.331</td><td class="yes">✓ 38.331</td></tr>
+      <tr><td class="num">684</td><td>Resource Alloc. Bugs</td><td>Resource Alloc. Bugs</td><td class="no">✗ 38.331</td><td class="yes">✓ 38.321</td><td class="yes">✓ 38.321</td></tr>
+      <tr><td class="num">710</td><td>Resource Alloc. Bugs</td><td>Resource Alloc. Bugs</td><td class="no">✗ 38.331</td><td class="no">✗ 38.331</td><td class="yes">✓ 38.321</td></tr>
+      <tr><td class="num">686</td><td>Resource Alloc. Bugs</td><td>Resource Alloc. Bugs</td><td class="no">✗ 38.331</td><td class="yes">✓ 38.321</td><td class="yes">✓ 38.321</td></tr>
+      <tr><td class="num">866</td><td>Congestion (Sudden Spike)</td><td>Normal (missed)</td><td class="no">✗ —</td><td class="no">✗ —</td><td class="no">✗ —</td></tr>
+      <tr><td class="num">827</td><td>Congestion (Sudden Spike)</td><td>Normal (missed)</td><td class="no">✗ —</td><td class="no">✗ —</td><td class="no">✗ —</td></tr>
+      <tr><td class="num">843</td><td>Congestion (Sudden Spike)</td><td>Normal (missed)</td><td class="no">✗ —</td><td class="no">✗ —</td><td class="no">✗ —</td></tr>
+      <tr class="total"><td class="num"></td><td>Total correct</td><td></td><td>5 / 30</td><td>7 / 30</td><td>21 / 30</td></tr>
+    </tbody>
+  </table></div>
+  <p class="caption"><b>Table B.</b> Cited specification per condition (TS prefix omitted unless TR) and whether it is valid for the true fault. “—”: the detector missed the window, so no explanation was produced.</p>
+
+  <h3 id="appC">Appendix C — Sample explanations: one window under the three conditions</h3>
+  <p>Test window 611, true and predicted fault <strong>Doppler Shift (Severe)</strong> (<code>track_c_v3/track_c_explanations.jsonl</code>).</p>
+  <div class="sample"><div class="sample-head"><span>C1 · label + SHAP · cites TS 38.104</span><span class="pill no">incorrect</span></div>
+    <blockquote>“Severe Doppler shift is induced by extremely high-speed user equipment movement, leading to above-normal RSRP variations and degraded DL MCS due to rapid channel decorrelation.”</blockquote>
+    O-RAN component: Near-RT RIC</div>
+  <div class="sample"><div class="sample-head"><span>C2 · + past incidents · cites TS 38.104</span><span class="pill no">incorrect</span></div>
+    <blockquote>“…heavily influenced by above-normal RSRP exhibiting sharp variability (spanning from −120.7 dB to −107.2 dB across similar historical traces) and suppressed downlink modulation…”</blockquote>
+    O-RAN component: RIC xApp / gNB-DU</div>
+  <div class="sample"><div class="sample-head"><span>C3 · + alignment row + evidence · cites TR 38.901</span><span class="pill yes">correct</span></div>
+    <blockquote>“Severe Doppler shift is induced by high UE velocity, causing rapid channel phase variations reflected by elevated RSRP standard deviation (RSRP_std |SHAP| = 0.654) and FFT energy alongside degraded downlink modulation (DL_MCS_mean = 6).”</blockquote>
+    Recommended action: “Enable advanced channel estimation and robust Doppler compensation algorithms at the O-DU/O-RU to handle high-velocity UE trajectories.” O-RAN component: O-DU / O-RU</div>
+  <p>C2 draws on the retrieved incidents’ concrete RSRP range; C3 cites the governing channel-model report and names the feature-level evidence from the RCA block.</p>
+
+  <h3 id="appD">Appendix D — G-Eval rubric (1–5 per dimension)</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Dimension</th><th>1</th><th>3</th><th>5</th></tr></thead>
+    <tbody>
+      <tr><td class="label">Citation validity</td><td>fabricated or unrelated standard</td><td>real standard, wrong clause or overview document</td><td>specification and clause match the true fault’s row</td></tr>
+      <tr><td class="label">Fault specificity</td><td>generic (“network issue”)</td><td>right fault, generic symptoms</td><td>exact mechanism with the window’s KPI directions</td></tr>
+      <tr><td class="label">Actionability</td><td>trivial (“restart”)</td><td>sensible but not localised</td><td>concrete action at the responsible O-RAN component</td></tr>
+      <tr><td class="label">Causal soundness</td><td>illogical chain</td><td>plausible but incomplete</td><td>cause → protocol symptom → KPI observation</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 id="appE">Appendix E — Configuration (<code>configs/config.yaml</code>, excerpt)</h3>
+<pre><code>rag:
+  embedding_model: "all-MiniLM-L6-v2"
+  collection_name: "telecomts_descriptions"   # per-window KPI narratives, cosine
+  top_k: 5
+  cosine_threshold: 0.35
+llm:
+  backend: "gemini"
+  gemini_model: "gemini-3.5-flash-lite"
+  temperature: 0.1
+  max_retries: 3
+  min_request_interval_s: 2.0
+  backoff_base_s: 5
+  backoff_max_s: 60
+data:
+  train_idx_file: "train_idx_sessionsplit.npy"
+  test_idx_file: "test_idx_sessionsplit.npy"
+  layer2_output_file: "layer2_output_sessionsplit_phase2.json"
+  alignment_table_path: "data/alignment_table.json"
+  rca_evidence_path: "data/processed/rca_evidence.json"
+  random_state: 42
+evaluation:
+  citation_validity_threshold: 0.70
+  samples_per_fault: 3</code></pre>
+
+  <h3 id="appF">Appendix F — Reproduction and user instructions</h3>
+  <h4>Install and test</h4>
+<pre><code>git clone -b master https://github.com/KPI-RAG/kpi-rag.git
+cd kpi-rag
+uv sync                      # CPU-only torch
+cp .env.example .env         # add GEMINI_API_KEY
+uv run pytest tests/ -q      # 206 passed, 3 skipped</code></pre>
+  <h4>Reproduce the reported numbers</h4>
+<pre><code>uv run python scripts/run_eval_track_a.py                           # -> data/processed/track_a_metrics.json
+uv run python scripts/run_eval_track_c.py --output data/processed/my_run   # 72 LLM calls
+uv run python scripts/run_eval_track_c.py --output data/processed/track_c_v3 --summarise-only
+uv run python scripts/experiment_retrieval_design.py                # needs data/raw (TelecomTS)</code></pre>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Result</th><th>File</th></tr></thead>
+    <tbody>
+      <tr><td class="label">Detection, classification, retrieval metrics</td><td><code>data/processed/track_a_metrics.json</code></td></tr>
+      <tr><td class="label">Track C counts, baselines and explanations</td><td><code>data/processed/track_c_v3/</code></td></tr>
+      <tr><td class="label">Layer 2 predictions and validation counts</td><td><code>data/processed/layer2_output_sessionsplit_phase2.json</code>, <code>validation.json</code></td></tr>
+      <tr><td class="label">Alignment table</td><td><code>data/alignment_table.json</code></td></tr>
+    </tbody>
+  </table></div>
+  <h4>Using the dashboard</h4>
+<pre><code>uv run streamlit run dashboard/app.py --server.fileWatcherType none</code></pre>
+  <ol>
+    <li>Choose an input in the sidebar: <em>Use example</em>, <em>Browse Dataset Windows</em> (filter by fault type, then pick a window) or <em>Upload JSON</em>.</li>
+    <li>Click <strong>Generate Explanation</strong>.</li>
+    <li>Read the diagnosis and its citation badge, then check the retrieved incidents and the RCA evidence before acting.</li>
+  </ol>
+
+  <h3 id="appG">Appendix G — Test inventory</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Module</th><th class="num">Tests</th><th>Module</th><th class="num">Tests</th></tr></thead>
+    <tbody>
+      <tr><td>test_review3_fixes</td><td class="num">26</td><td>test_schema</td><td class="num">10</td></tr>
+      <tr><td>test_phase2_models</td><td class="num">23</td><td>test_evaluator</td><td class="num">10</td></tr>
+      <tr><td>test_llm_explainer</td><td class="num">23</td><td>test_data_loader</td><td class="num">6</td></tr>
+      <tr><td>test_phase2_pipeline</td><td class="num">18</td><td>test_run_eval_track_c</td><td class="num">6</td></tr>
+      <tr><td>test_phase2_data</td><td class="num">12</td><td>test_run_pipeline</td><td class="num">5</td></tr>
+      <tr><td>test_rag_query</td><td class="num">5</td><td>test_run_eval_track_b</td><td class="num">4</td></tr>
+      <tr><td>test_kg_indexer</td><td class="num">4</td><td>test_config_loader</td><td class="num">3</td></tr>
+      <tr><td>test_build_index</td><td class="num">3</td><td>test_explanation_panel</td><td class="num">3</td></tr>
+      <tr><td>test_run_eval_track_a</td><td class="num">2</td><td>detection / KPI / SHAP / sources panels</td><td class="num">2 each</td></tr>
+      <tr><td>integration · schema, RAG query, ChromaDB, alignment</td><td class="num">3 · 4 · 6 · 6</td><td>integration · explainer, evaluator, pipeline, live RAG</td><td class="num">6 · 4 · 4 · 5</td></tr>
+      <tr class="total"><td>Total</td><td class="num">209</td><td>passing / skipped (Groq key)</td><td class="num">206 / 3</td></tr>
+    </tbody>
+  </table></div>
+
+  <p class="foot">KPI-RAG · Group 15 · Phase 2 final report · October 2026. Source: <code>docs/KPI_RAG_Final_Report.html</code> in the project repository (branch <code>master</code>).</p>
+</section>
+
+</main>
+</body>
+</html>
