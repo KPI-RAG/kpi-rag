@@ -5,6 +5,7 @@ from src.kg_indexer import get_collection
 from src.rag_query import query_from_classifier_output
 from src.llm_explainer import load_alignment_table, explain, alignment_path
 import argparse, json, logging, sys
+from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -45,21 +46,19 @@ def main() -> None:
         sys.exit(1)
         
     try:
-        data = json.loads(open(args.input).read())
-        payload = ClassifierOutput(**data)
+        with open(args.input, encoding="utf-8") as f:
+            payload = ClassifierOutput(**json.load(f))
     except FileNotFoundError as e:
         logger.error(str(e))
         sys.exit(1)
-    except Exception as e:
-        if type(e).__name__ == "ValidationError":
-            logger.error("Validation Error: %s", e)
-            sys.exit(1)
-        raise e
+    except (json.JSONDecodeError, ValidationError) as e:
+        logger.error("Invalid ClassifierOutput JSON in %s: %s", args.input, e)
+        sys.exit(1)
         
     result = run(payload, cfg)
     
     try:
-        with open(args.output, "w") as f:
+        with open(args.output, "w", encoding="utf-8") as f:
             f.write(result.model_dump_json(indent=2))
     except Exception as e:
         logger.error("Error writing output: %s", e)

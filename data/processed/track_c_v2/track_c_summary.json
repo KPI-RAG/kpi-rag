@@ -28,5 +28,11 @@
     "reference_valid_vs_predicted": 24,
     "missed_by_detector": 6,
     "template_fallbacks": 0
+  },
+  "baselines": {
+    "n": 30,
+    "constant_best_standard": "TS 38.141-1",
+    "constant_correct": 12,
+    "copy_predicted_row_correct": 21
   }
 }

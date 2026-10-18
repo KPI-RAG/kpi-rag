@@ -89,6 +89,8 @@ def test_main_success(mock_run, mock_load_config, mock_setup, mock_args):
     args.config = "config.yaml"
     args.n_per_fault = 3
     args.dry_run = False
+    args.force = True
+    args.summarise_only = False
     mock_args.return_value = args
 
     main()
@@ -108,6 +110,8 @@ def test_main_dry_run(mock_run, mock_load_config, mock_setup, mock_args):
     args.config = "config.yaml"
     args.n_per_fault = 3
     args.dry_run = True
+    args.force = True
+    args.summarise_only = False
     mock_args.return_value = args
 
     main()
@@ -127,6 +131,8 @@ def test_main_value_error(mock_run, mock_load_config, mock_setup, mock_args):
     args.config = "config.yaml"
     args.n_per_fault = 3
     args.dry_run = False
+    args.force = True
+    args.summarise_only = False
     mock_args.return_value = args
 
     mock_run.side_effect = ValueError("Empty")
@@ -146,6 +152,8 @@ def test_main_file_not_found(mock_run, mock_load_config, mock_setup, mock_args):
     args.config = "config.yaml"
     args.n_per_fault = 3
     args.dry_run = False
+    args.force = True
+    args.summarise_only = False
     mock_args.return_value = args
 
     mock_run.side_effect = FileNotFoundError("File not found")

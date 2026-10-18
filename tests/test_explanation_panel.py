@@ -42,7 +42,7 @@ def test_render_explanation_panel_valid(mock_cap, mock_err, mock_succ, mock_writ
     
     mock_succ.assert_called_once_with("✅ TS 38.104")
     mock_err.assert_not_called()
-    mock_cap.assert_called_once_with("📋 Generated from alignment table template (LLM parse failed)")
+    mock_cap.assert_called_once_with("📋 Generated from alignment table template (LLM call failed)")
 
 @patch("dashboard.components.explanation_panel.st.warning")
 @patch("dashboard.components.explanation_panel.st.info")

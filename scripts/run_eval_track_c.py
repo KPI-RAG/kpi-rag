@@ -64,6 +64,29 @@ def sample_by_ground_truth(
     return samples
 
 
+def citation_baselines(records: list[dict], alignment: dict[str, dict]) -> dict:
+    """Citation scores of two answer rules that need no LLM, on the same windows and scoring.
+
+    constant  — always cite the one standard that scores best on this sample
+    copy_row  — cite the primary standard of the PREDICTED fault's alignment row (what C3 scores
+                if the LLM copies the injected row); detector misses score 0 for both.
+    """
+    windows = {(r["window_index"], r["true_fault"], r["predicted_fault"]) for r in records}
+    n = len(windows)
+
+    def score(answer) -> int:
+        return sum(p != "Normal" and validate_citation(answer(p), alignment, t) for _, t, p in windows)
+
+    candidates = sorted({ref for row in alignment.values() for ref in (row.get("valid_refs") or [row.get("3gpp_ts", "")]) if ref})
+    best = max(candidates, key=lambda ref: score(lambda p: ref))
+    return {
+        "n": n,
+        "constant_best_standard": best,
+        "constant_correct": score(lambda p: best),
+        "copy_predicted_row_correct": score(lambda p: alignment.get(p, {}).get("3gpp_ts", "")),
+    }
+
+
 def summarise(records: list[dict]) -> dict:
     """Per-condition counts: end-to-end correctness, the correctly-classified subset, compliance."""
     out = {}
@@ -163,10 +186,20 @@ def run_track_c(
                     "reference_valid": r["citation_correct"],
                 }, ensure_ascii=False) + "\n")
 
+    return write_summary(out, records, alignment)
+
+
+def write_summary(out: Path, records: list[dict], alignment: dict[str, dict]) -> dict:
     summary = summarise(records)
+    summary["baselines"] = citation_baselines(records, alignment)
     with open(out / "track_c_summary.json", "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
+    b = summary["baselines"]
+    logger.info("No-LLM baselines: always %s = %d/%d | copy predicted row = %d/%d",
+                b["constant_best_standard"], b["constant_correct"], b["n"], b["copy_predicted_row_correct"], b["n"])
     for c, s in summary.items():
+        if c == "baselines":
+            continue
         logger.info("Condition %s: citation_correct=%d/%d | when classified correctly=%d/%d | "
                     "valid vs predicted row=%d/%d | missed=%d | templates=%d",
                     c[1], s["citation_correct"], s["n"], s["citation_correct_when_classified"],
@@ -181,18 +214,6 @@ def main() -> None:
     if os.path.exists(".env"):
         load_dotenv()
 
-    # Pre-load config to wire defaults
-    config_path = "configs/config.yaml"
-    for i, arg in enumerate(sys.argv):
-        if arg == "--config" and i + 1 < len(sys.argv):
-            config_path = sys.argv[i + 1]
-
-    try:
-        cfg = load_config(config_path)
-    except FileNotFoundError as e:
-        logger.error("File not found: %s", e)
-        sys.exit(1)
-
     parser = argparse.ArgumentParser(
         description="Run Track C evaluation — generate explanations under 3 ablation conditions",
     )
@@ -200,24 +221,41 @@ def main() -> None:
         "--output", type=str, default="data/processed",
         help="directory for output files (explanations, scores template, summary; default: data/processed)",
     )
+    parser.add_argument("--config", type=str, default="configs/config.yaml", help="path to config.yaml")
     parser.add_argument(
-        "--config", type=str, default="configs/config.yaml",
-        help="path to config.yaml",
+        "--n-per-fault", type=int, default=None,
+        help="samples per true fault type (default: evaluation.samples_per_fault in the config)",
     )
-    parser.add_argument(
-        "--n-per-fault", type=int, default=cfg.get("evaluation", {}).get("samples_per_fault", 3),
-        help="samples per true fault type (default: from config)",
-    )
-    parser.add_argument(
-        "--dry-run", action="store_true",
-        help="generate 1 sample per fault instead of n-per-fault",
-    )
-
+    parser.add_argument("--dry-run", action="store_true", help="generate 1 sample per fault instead of n-per-fault")
+    parser.add_argument("--force", action="store_true", help="overwrite an existing run in --output")
+    parser.add_argument("--summarise-only", action="store_true",
+                        help="re-score an existing run in --output against the current alignment table "
+                             "(no LLM calls) and rewrite its summary")
     args = parser.parse_args()
     setup_logging(__name__)
 
-    n = 1 if args.dry_run else args.n_per_fault
+    try:
+        cfg = load_config(args.config)
+    except FileNotFoundError as e:
+        logger.error("File not found: %s", e)
+        sys.exit(1)
 
+    explanations_path = Path(args.output) / "track_c_explanations.jsonl"
+    if args.summarise_only:
+        alignment = load_alignment_table(alignment_path(cfg))
+        with open(explanations_path, encoding="utf-8") as f:
+            records = [json.loads(line) for line in f if line.strip()]
+        for r in records:
+            if r["explanation"] is not None:
+                r["citation_correct"] = (not r["explanation"]["template_generated"]) and validate_citation(
+                    r["explanation"]["gpp_reference"], alignment, r["true_fault"])
+        write_summary(Path(args.output), records, alignment)
+        return
+    if explanations_path.exists() and not args.force:
+        logger.error("%s already holds a run; choose another --output or pass --force", explanations_path)
+        sys.exit(1)
+
+    n = 1 if args.dry_run else (args.n_per_fault or cfg.get("evaluation", {}).get("samples_per_fault", 3))
     try:
         run_track_c(args.output, cfg, n_per_fault=n)
     except FileNotFoundError as e:

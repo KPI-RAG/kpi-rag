@@ -3,7 +3,7 @@ from src.schema import LLMExplanation
 
 def render_explanation_panel(explanation: LLMExplanation | None, low_confidence: bool = False) -> None:
     if low_confidence:
-        st.warning("⚠️ Low historical precedent — no similar incidents found in training data")
+        st.warning("⚠️ Low historical precedent — the retrieved incidents are only weakly similar")
         
     if explanation is None:
         st.info("No explanation generated")
@@ -28,4 +28,5 @@ def render_explanation_panel(explanation: LLMExplanation | None, low_confidence:
     st.write(explanation.reasoning_trace)
     
     if explanation.template_generated:
-        st.caption("📋 Generated from alignment table template (LLM parse failed)")
+        reason = explanation.fallback_reason or "LLM call failed"
+        st.caption(f"📋 Generated from alignment table template ({reason})")

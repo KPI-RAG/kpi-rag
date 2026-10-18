@@ -27,66 +27,43 @@ class RCALoader:
         return self._format_context(record)
 
     def _format_context(self, record: dict) -> str:
+        """Window evidence only. Deliberately left out:
+        - the record's standards / O-RAN lines: the alignment table is the single source of
+          standards in the prompt (several RCA records still carry v1.1 text, e.g. Handover
+          TS 38.133);
+        - kpi_evidence["evidence_status"]: derived from class-level expected KPIs that were
+          aggregated over labelled windows including the test split.
+        """
         lines: list[str] = []
         fault = record.get("predicted_fault", "Unknown")
         conf = record.get("confidence", 0.0)
         lines.append(f"[RCA PIPELINE EVIDENCE — window {record['window_index']}]")
         lines.append(f"Predicted fault: {fault} (confidence: {conf:.1%})")
 
-        # Layer B: top-3 SHAP features by magnitude
-        layer_b: list[dict] = record.get("layer_b_model_attribution", [])
-        if layer_b:
-            sorted_b = sorted(layer_b, key=lambda x: abs(x.get("shap_value", 0)), reverse=True)[:3]
+        # Layer B: top-3 SHAP features; Layer 2 stores |SHAP| and the sign as shap_effect
+        top = sorted(record.get("layer_b_model_attribution", []),
+                     key=lambda x: abs(x.get("shap_value", 0)), reverse=True)[:3]
+        if top:
             lines.append("Model attribution (SHAP, top 3 features):")
-            for entry in sorted_b:
-                feature = entry.get("feature", entry.get("channel", "?"))
-                shap_val = entry.get("shap_value", 0)
-                vs_normal = entry.get("feature_vs_normal", "")
-                effect = entry.get("shap_effect", "")
-                direction = "above" if "above" in vs_normal else "below"
+            for entry in top:
+                direction = "above" if "above" in entry.get("feature_vs_normal", "") else "below"
+                effect = entry.get("shap_effect", "").replace("_", " ")
                 lines.append(
-                    f"  - {feature}: SHAP={shap_val:+.3f} ({direction} normal,"
-                    f" {effect.replace('_', ' ')})"
+                    f"  - {entry.get('feature', entry.get('channel', '?'))}: "
+                    f"|SHAP|={abs(entry.get('shap_value', 0)):.3f} ({direction} normal, {effect})".replace(", )", ")")
                 )
 
-        # Layer A: only the KPIs that carry evidence, max four
-        kpi_evidence: list[dict] = record.get("kpi_evidence", [])
-        anomalous_kpis = [
-            k for k in kpi_evidence
-            if k.get("evidence_status") in ("unexpected", "missing", "supporting")
-            and k.get("shap_supported")
-        ]
-        if not anomalous_kpis:
-            anomalous_kpis = [k for k in kpi_evidence if k.get("observed_mean") is not None][:4]
-        if anomalous_kpis:
-            lines.append("Key KPI observations:")
-            for k in anomalous_kpis[:4]:
-                kpi_name = k.get("kpi", "?")
-                obs_mean = k.get("observed_mean")
-                status = k.get("evidence_status", "")
-                mean_str = f"mean={obs_mean:.4g}" if obs_mean is not None else ""
-                lines.append(f"  - {kpi_name}: {status} {mean_str}".rstrip())
+        # Layer A: observed means of the KPIs behind those features
+        channels = list(dict.fromkeys(e.get("channel") for e in top if e.get("channel")))
+        observed = {k.get("kpi"): k.get("observed_mean") for k in record.get("kpi_evidence", [])}
+        obs_lines = [f"  - {c}: mean={observed[c]:.4g}" for c in channels if observed.get(c) is not None]
+        if obs_lines:
+            lines.append("Observed KPI means (window):")
+            lines += obs_lines
 
-        # Layer C: standards
-        layer_c: dict = record.get("layer_c_domain_standards", {})
-        causal = layer_c.get("causal_mechanism", "") or record.get("causal_mechanism", "")
-        ref = layer_c.get("3gpp_reference", "")
-        oran = layer_c.get("oran_component", "")
-
+        causal = record.get("layer_c_domain_standards", {}).get("causal_mechanism", "") or record.get("causal_mechanism", "")
         if causal:
             causal_short = causal[:120].rstrip()
-            if len(causal) > 120:
-                causal_short += "..."
-            lines.append(f"Causal mechanism: {causal_short}")
-
-        if ref and "physical RF attack" not in ref:
-            lines.append(f"Standards grounding: {ref}")
-            if oran:
-                lines.append(f"O-RAN component: {oran}")
-        elif ref:
-            lines.append("Standards grounding: None — physical RF attack (no 3GPP clause applies)")
-            fallback = record.get("pipeline_fallback", "")
-            if fallback:
-                lines.append(f"Note: {fallback}")
+            lines.append(f"Causal mechanism: {causal_short}{'...' if len(causal) > 120 else ''}")
 
         return "\n".join(lines)

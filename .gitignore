@@ -14,7 +14,9 @@ build/
 
 # ── Data files (large / generated) ───────────────────────────────────────────
 data/raw/
-data/indices/
+data/indices/*
+!data/indices/train_idx_sessionsplit.npy
+!data/indices/test_idx_sessionsplit.npy
 data/processed/*.npy
 
 

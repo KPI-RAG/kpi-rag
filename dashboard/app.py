@@ -21,12 +21,14 @@ st.set_page_config(
     layout="wide"
 )
 
+import hashlib
+
 from src.config_loader import load_config
 
+CONFIG_PATH = os.path.join(REPO_ROOT, "configs", "config.yaml")   # independent of the working directory
+
 # Check the configured backend's key before loading anything heavy (ollama needs none).
-_key_name = {"gemini": "GEMINI_API_KEY", "groq": "GROQ_API_KEY"}.get(
-    load_config(os.path.join(REPO_ROOT, "configs", "config.yaml"))["llm"]["backend"]
-)
+_key_name = {"gemini": "GEMINI_API_KEY", "groq": "GROQ_API_KEY"}.get(load_config(CONFIG_PATH)["llm"]["backend"])
 if _key_name and not os.environ.get(_key_name):
     st.error(
         f"⚠️ **{_key_name} not configured.**  \n"
@@ -67,7 +69,7 @@ EXAMPLE_PAYLOAD = {
 
 @st.cache_resource
 def get_cfg():
-    cfg = load_config()
+    cfg = load_config(CONFIG_PATH)
     chroma_path = cfg.get("rag", {}).get("chroma_db_path", "data/chroma_db")
     if not os.path.isabs(chroma_path):
         cfg["rag"]["chroma_db_path"] = os.path.join(REPO_ROOT, chroma_path)
@@ -91,8 +93,8 @@ def load_alignment():
 
 @st.cache_resource(show_spinner=False)
 def load_rca():
-    """Load the RCALoader once; returns None if rca_evidence.json is absent."""
-    rca_path = os.path.join(REPO_ROOT, "data", "processed", "rca_evidence.json")
+    """Load the RCALoader once; returns None if the RCA evidence file is absent."""
+    rca_path = os.path.join(REPO_ROOT, get_cfg()["data"]["rca_evidence_path"])
     if os.path.exists(rca_path):
         return RCALoader(rca_path)
     return None
@@ -142,12 +144,14 @@ window_index = None
 if input_method == "Upload JSON":
     uploaded = st.sidebar.file_uploader("ClassifierOutput JSON", type="json")
     if uploaded:
+        raw = uploaded.getvalue()
         try:
-            payload = ClassifierOutput(**json.load(uploaded))
+            payload = ClassifierOutput(**json.loads(raw))
         except Exception as e:   # bad JSON or schema mismatch
             st.error(f"Not a valid ClassifierOutput JSON: {e}")
             st.stop()
-        active_key = "uploaded"
+        # keyed by content, so a second upload never shows the first file's explanation
+        active_key = f"upload_{hashlib.sha256(raw).hexdigest()}"
     else:
         payload = None
         active_key = "none"
@@ -165,8 +169,11 @@ elif input_method == "Browse Dataset Windows":
     if not filtered:
         st.info("No windows match filter.")
         st.stop()
-    idx_label = st.sidebar.slider("Window", 0, len(filtered) - 1, 0)
-    selected = filtered[idx_label]
+    # selectbox, not a slider: a slider needs min < max and fails for a class with one window
+    selected = st.sidebar.selectbox(
+        f"Window ({len(filtered)})", filtered,
+        format_func=lambda w: f"{w['window_index']} — {w['payload'].anomaly_type.value}",
+    )
     window_index = selected["window_index"]
     payload = selected["payload"]
     active_key = f"window_{window_index}_{payload.anomaly_type.value}"
@@ -264,5 +271,8 @@ if rca_record is None and rca_loader is not None:
             f"ℹ️ No RCA evidence exists for this exact window — showing a representative "
             f"{fault_val} record (window {rca_record['window_index']}). It was not sent to the LLM."
         )
-render_rca_panel(rca_record)
+# The standard shown is the alignment table's (single source); RCA records may carry older text.
+_row = load_alignment().get(payload.anomaly_type.value, {})
+render_rca_panel(rca_record, standard=(_row.get("3gpp_reference") or "No 3GPP clause applies"),
+                 oran_component=_row.get("oran_component", ""))
 

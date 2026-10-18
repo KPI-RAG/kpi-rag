@@ -35,11 +35,17 @@ def build_index(cfg: dict, rebuild: bool = False) -> int:
     )
     if os.path.exists(handoff_path):
         verify_ticket_order(tickets, handoff_path)
+    else:
+        logger.warning("%s not found: ticket order (ticket_id == window index) is NOT verified", handoff_path)
 
     train_idx_path = os.path.join(indices_path, cfg["data"]["train_idx_file"])
     train_tickets = apply_train_split(tickets, train_idx_path)
     logger.info("Applied train split, %d tickets remaining", len(train_tickets))
     
+    if not train_tickets:
+        # never clear a working index because the raw data is missing or empty
+        raise RuntimeError(f"No training tickets loaded from {raw_path}; refusing to (re)build the index")
+
     collection = get_collection(cfg)
     logger.info("Got collection %s", collection.name if hasattr(collection, 'name') else 'unknown')
     if rebuild:

@@ -1,31 +1,15 @@
----
-title: KPI-RAG 5G Fault Diagnosis
-emoji: 📡
-colorFrom: blue
-colorTo: cyan
-sdk: streamlit
-sdk_version: 1.35.0
-app_file: dashboard/app.py
-pinned: false
-license: mit
----
-
 # KPI-RAG: Explainable 5G Fault Diagnosis
 
-RAG-augmented LLM explanations with 3GPP alignment.
+Detects 5G network faults and explains each one: root cause, KPI evidence, the governing 3GPP
+standard (checked against an alignment table) and a recommended action. Combines SHAP feature
+attribution, retrieval of comparable past incidents and an LLM grounded in 3GPP standards.
 
-## What it does
-Detects 5G network faults and generates structured explanations
-with root cause, KPI evidence, 3GPP standards reference,
-and recommended action.
-
-## How to use
-1. Select a fault type from the sidebar
-2. Choose a window index
-3. Click "Generate Explanation"
-4. View the structured diagnosis with 3GPP citation
-
-An explainability framework for 5G network fault classification that combines SHAP-based feature attribution, knowledge-graph retrieval, and LLM-generated explanations grounded in 3GPP standards.
+## Using the dashboard
+1. Choose an input in the sidebar: **Use example**, **Browse Dataset Windows** (the 382 test
+   windows Phase 2 flagged as faults; filter by fault type, then pick a window) or **Upload JSON**
+   (a `ClassifierOutput` payload).
+2. Click **Generate Explanation**.
+3. Read the diagnosis, its citation check (✅/❌), the retrieved past incidents and the RCA evidence.
 
 ## Architecture
 
@@ -36,7 +20,8 @@ Layer 2 (offline, phase2/ on the team main branch): CatBoost cascade + TreeSHAP
 ChromaDB retrieval: past incidents of the PREDICTED fault type (metadata filter),
         ranked by KPI-evidence similarity to the window (query carries no label)
                  ↓
-Alignment table v1.2 (fault → 3GPP clause) + RCA evidence (per window)
+Alignment table v1.2 (fault → 3GPP clause; the only source of standards in the prompt)
+        + RCA evidence (per window: SHAP features, observed KPI means, causal mechanism)
                  ↓
 LLM (Gemini / Groq / Ollama) → structured explanation
                  ↓
@@ -49,51 +34,48 @@ Streamlit dashboard (6 panels)
 
 ### Prerequisites
 
-- Python ≥ 3.10
+- Python ≥ 3.11
 - [uv](https://docs.astral.sh/uv/) package manager
 - [Gemini API key](https://aistudio.google.com/apikey) (free tier works; Groq is an optional fallback backend)
 
 ### 1. Clone and install
 
-```bash
-git clone <repo-url>
-cd project
-uv sync
-```
-
-### 2. Set environment variables
+The system lives on the **`master`** branch.
 
 ```bash
-# PowerShell
-cp .env.example .env
-# Edit .env and add your GEMINI_API_KEY
-
-# Or set directly:
-$env:GEMINI_API_KEY="..."
-$env:PYTHONPATH="."
+git clone -b master https://github.com/KPI-RAG/kpi-rag.git
+cd kpi-rag
+uv sync            # CPU-only torch; no PYTHONPATH needed afterwards
 ```
 
-Behind an HTTPS-inspecting antivirus or proxy (Python reports `CERTIFICATE_VERIFY_FAILED`),
-run LLM scripts with the Windows trust store:
-`uv run --system-certs --with truststore python -c "import truststore; truststore.inject_into_ssl(); import runpy, sys; sys.argv=['scripts/run_eval_track_c.py']; runpy.run_path(sys.argv[0], run_name='__main__')"`
+Behind an HTTPS-inspecting antivirus or proxy (`CERTIFICATE_VERIFY_FAILED`): add `--system-certs`
+to `uv` commands, and run LLM scripts with the Windows trust store, e.g.
+`uv run --system-certs --with truststore python -c "import truststore; truststore.inject_into_ssl(); import runpy, sys; sys.argv=['scripts/run_eval_track_c.py', '--output', 'data/processed/my_run']; runpy.run_path(sys.argv[0], run_name='__main__')"`
 
-### 3. Place raw data
+### 2. API key
 
-Download the TelecomTS dataset and place JSONL files under:
-
-```
-data/raw/          # 33 JSONL files (nested structure supported)
+```bash
+cp .env.example .env      # then put your GEMINI_API_KEY in .env
 ```
 
-### 4. Build the ChromaDB index
+### 3. Raw data (only needed to rebuild the index or rerun the retrieval experiment)
+
+```bash
+uv run hf download AliMaatouk/TelecomTS --repo-type dataset --local-dir data/raw   # 33 JSONL files, ~1.2 GB
+```
+
+Keep the files where the download puts them: ticket ids are positions in sorted file order,
+which `build_index.py` checks against the ground truth before indexing.
+
+### 4. Build the ChromaDB index (already committed in `data/chroma_db/`)
 
 ```bash
 uv run python scripts/build_index.py --rebuild
 ```
 
-Indexes the 935 anomalous **training** windows (one document per window: its KPI narrative)
-into `data/chroma_db/`. The 300 anomalous test windows are never indexed. `--rebuild` empties
-the collection first; without it existing ids are skipped, so a stale index would survive.
+Indexes the 935 anomalous **training** windows (one document per window: its KPI narrative).
+The 300 anomalous test windows are never indexed. `--rebuild` empties the collection first and
+refuses to run when no tickets were loaded, so a missing `data/raw` cannot wipe the index.
 
 ### 5. Run the pipeline (single explanation)
 
@@ -104,12 +86,12 @@ uv run python scripts/run_pipeline.py --input path/to/classifier_output.json --o
 ### 6. Run the dashboard
 
 ```bash
-$env:PYTHONPATH="."
-$env:GEMINI_API_KEY="..."
 uv run streamlit run dashboard/app.py --server.fileWatcherType none
 ```
 
-"Browse Dataset Windows" lists the 382 test windows Phase 2 flagged as faults.
+**Streamlit Community Cloud:** deploy from branch `master`, main file `dashboard/app.py`, Python 3.11,
+and set `GEMINI_API_KEY` under *Secrets*. Cloud installs from `uv.lock` (CPU torch); the app needs only
+committed files.
 
 ## Evaluation
 

@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import random
+import threading
 import time
 from groq import RateLimitError
 import re
@@ -152,19 +153,24 @@ def _standards_block(payload: ClassifierOutput, alignment: dict[str, dict]) -> s
 
 
 class RateLimiter:
-    """Keeps at least min_interval seconds between LLM calls (module-level singleton below)."""
+    """Keeps at least min_interval seconds between LLM calls (module-level singleton below).
+
+    Locked: Streamlit runs each session in its own thread, and they share this limiter.
+    """
 
     def __init__(self, min_interval: float = 2.0):
         self.min_interval = float(min_interval)
         self.last_call_time = 0.0
+        self._lock = threading.Lock()
 
     def wait(self) -> None:
-        now = time.time()
-        if self.last_call_time > 0:
-            elapsed = now - self.last_call_time
-            if elapsed < self.min_interval:
-                time.sleep(self.min_interval - elapsed)
-        self.last_call_time = time.time()
+        with self._lock:
+            now = time.time()
+            if self.last_call_time > 0:
+                elapsed = now - self.last_call_time
+                if elapsed < self.min_interval:
+                    time.sleep(self.min_interval - elapsed)
+            self.last_call_time = time.time()
 
 
 _default_rate_limiter = RateLimiter(min_interval=2.0)
@@ -221,33 +227,52 @@ def call_gemini(prompt: str, cfg: dict) -> str:
     return result
 
 
+def _http_status(e: Exception) -> int | None:
+    """HTTP status of an SDK/requests error: status_code (openai/groq), code (google-genai), response.status_code (requests)."""
+    for status in (getattr(e, "status_code", None), getattr(e, "code", None),
+                   getattr(getattr(e, "response", None), "status_code", None)):
+        if isinstance(status, int):
+            return status
+    return None
+
+
 def _is_rate_limit(e: Exception) -> bool:
-    """429 / quota error or connection error from any backend?"""
+    """429 / quota error or connection error from any backend?
+
+    A malformed reply is never a rate limit, even if its text happens to contain "429".
+    """
+    if isinstance(e, (LLMResponseError, ValidationError)):
+        return False
     return (
         isinstance(e, _RATE_LIMIT_ERRORS)
-        or getattr(e, "status_code", None) == 429
-        or "429" in str(e)
+        or _http_status(e) == 429
+        or re.search(r"\b429\b", str(e)) is not None
         or "RESOURCE_EXHAUSTED" in str(e)
         or "getaddrinfo" in str(e)
     )
 
 
 def _is_non_retryable(e: Exception) -> bool:
-    """Config or auth errors (missing key, unknown backend, 401/403) — retrying cannot help.
+    """Errors the same request cannot fix: config (missing key or setting, unknown backend) and
+    client errors (4xx except 408 timeout, 409 conflict, 429 rate limit), e.g. an invalid key
+    (400/401/403) or a model name that no longer exists (404).
 
     A malformed LLM reply (LLMResponseError, pydantic ValidationError) is retried.
     """
     if isinstance(e, (LLMResponseError, ValidationError)):
         return False
+    status = _http_status(e)
     return (
-        isinstance(e, (ValueError, RuntimeError))
-        or getattr(e, "status_code", None) in (401, 403)
-        or getattr(e, "code", None) in (401, 403)   # google-genai ClientError
+        isinstance(e, (ValueError, RuntimeError, KeyError))
+        or (status is not None and 400 <= status < 500 and status not in (408, 409, 429))
     )
 
 
 def _backoff_wait(e: Exception, attempt: int, cfg: dict) -> float:
-    """Server's Retry-After if it sent one, else exponential backoff with jitter."""
+    """Server's Retry-After if it sent one, else exponential backoff with jitter.
+
+    May exceed backoff_max_s when the server asks for longer; the caller gives up then.
+    """
     retry_after = _extract_retry_after(e)
     if retry_after is not None:
         return retry_after
@@ -321,10 +346,12 @@ def parse_response(raw: str) -> dict:
     required_keys = {"root_cause", "3gpp_reference", "oran_component", "recommended_action", "reasoning_trace"}
     if not isinstance(parsed, dict) or not required_keys.issubset(parsed.keys()):
         raise LLMResponseError("Missing required keys in JSON response")
-    ref = parsed.get("3gpp_reference", "")
-    ts_match = re.search(r'T[SR]\s+\d{2}\.\d{3}(?:-\d+)?', ref)
+    if not all(isinstance(parsed[k], str) for k in required_keys):
+        raise LLMResponseError("A required field is not a string")
+    # "TS38.331", "ts 38.331", "3GPP TS 38.331 §5.5.4.4" -> "TS 38.331" (first citation only)
+    ts_match = re.search(r'T([SR])\s*(\d{2}\.\d{3}(?:-\d+)?)', parsed["3gpp_reference"], re.IGNORECASE)
     if ts_match:
-        parsed["3gpp_reference"] = ts_match.group()
+        parsed["3gpp_reference"] = f"T{ts_match.group(1).upper()} {ts_match.group(2)}"
     if "3gpp_reference" in parsed:
         parsed["gpp_reference"] = parsed.pop("3gpp_reference")
     return parsed
@@ -357,9 +384,10 @@ def validate_citation(ref: str, alignment: dict[str, dict], fault_type: str = No
     return check1 and check2
 
 
-def _template_fallback(payload: ClassifierOutput, alignment: dict[str, dict]) -> LLMExplanation:
+def _template_fallback(payload: ClassifierOutput, alignment: dict[str, dict], reason: str = "") -> LLMExplanation:
     entry = alignment.get(payload.anomaly_type.value, {})
     return LLMExplanation(
+        fallback_reason=reason,
         root_cause=f"{payload.anomaly_type.value} detected via KPI deviation",
         gpp_reference=entry.get("3gpp_ts", ""),
         oran_component=entry.get("oran_component", ""),
@@ -377,7 +405,9 @@ def _run_with_retry(
     alignment: dict[str, dict],
 ) -> LLMExplanation:
     """Up to max_retries LLM calls (waiting on 429s), then the template fallback."""
-    max_retries = cfg["llm"]["max_retries"]
+    max_retries = max(1, int(cfg["llm"]["max_retries"]))
+    max_wait = cfg["llm"].get("backoff_max_s", 60)
+    reason = ""
     for attempt in range(max_retries):
         try:
             parsed = parse_response(call_llm(prompt, cfg))
@@ -392,6 +422,7 @@ def _run_with_retry(
                 template_generated=False,
             )
         except Exception as e:
+            reason = f"{type(e).__name__}: {str(e)[:200]}"
             logger.warning(
                 "LLM attempt %d/%d failed [%s]: %s",
                 attempt + 1, max_retries, type(e).__name__, e
@@ -401,14 +432,18 @@ def _run_with_retry(
                 break
             if _is_rate_limit(e) and attempt < max_retries - 1:
                 wait = _backoff_wait(e, attempt, cfg)
+                if wait > max_wait:   # e.g. a daily quota: waiting would block the run for hours
+                    logger.error("Server asks to wait %.0fs (> backoff_max_s=%s) — giving up", wait, max_wait)
+                    reason = f"rate limit, retry after {wait:.0f}s"
+                    break
                 logger.warning("Rate-limited, waiting %.1fs", wait)
                 time.sleep(wait)
             elif attempt < max_retries - 1:
                 wait = min(2 ** attempt, 10)
                 logger.warning("Transient error, waiting %.1fs", wait)
                 time.sleep(wait)
-    logger.error("LLM attempts exhausted or stopped, using template fallback")
-    return _template_fallback(payload, alignment)
+    logger.error("LLM attempts exhausted or stopped, using template fallback (%s)", reason)
+    return _template_fallback(payload, alignment, reason)
 
 
 def explain(
@@ -424,11 +459,16 @@ def explain(
 
 
 def _build_shap_summary(payload: ClassifierOutput) -> str:
-    """SHAP lines for the prompts: 'RSRP: below normal (SHAP=-0.42)'."""
+    """SHAP lines for the prompts: 'RSRP: below normal (|SHAP|=0.42, toward predicted class)'.
+
+    Layer 2 stores |SHAP| as shap_value and the sign as shap_effect, so the value is shown as a
+    magnitude and the effect in words; the KPI direction comes from feature_vs_normal.
+    """
     shap_lines = []
     for x in payload.shap_top3:
         direction = "above" if "above" in x.feature_vs_normal else "below"
-        shap_lines.append(f"  {x.channel}: {direction} normal (SHAP={x.shap_value:+.2f})")
+        effect = f", {x.shap_effect.replace('_', ' ')}" if x.shap_effect else ""
+        shap_lines.append(f"  {x.channel}: {direction} normal (|SHAP|={abs(x.shap_value):.2f}{effect})")
     return "\n".join(shap_lines)
 
 

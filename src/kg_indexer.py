@@ -56,6 +56,7 @@ def index_tickets(tickets: list[dict], collection: chromadb.Collection, model_na
     if not tickets:
         return 0
         
+    tickets = list({t["ticket_id"]: t for t in tickets}.values())   # one per id: Chroma rejects duplicate ids in a batch
     documents, embeddings, metadatas, ids = embed_tickets(tickets, model_name)
     
     # Check for existing IDs to skip duplicates

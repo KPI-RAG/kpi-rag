@@ -2,11 +2,13 @@
 import streamlit as st
 
 
-def render_rca_panel(rca_record: dict):
+def render_rca_panel(rca_record: dict, standard: str | None = None, oran_component: str | None = None):
     """Display 3-layer RCA evidence from rca_evidence.json.
 
     Args:
         rca_record: One record from rca_evidence.json, or None / empty dict.
+        standard / oran_component: from the alignment table; shown instead of the record's own
+            standards text when given (some records still carry alignment v1.1 text).
     """
     if not rca_record:
         st.info("No RCA evidence available for this window.")
@@ -18,8 +20,8 @@ def render_rca_panel(rca_record: dict):
     layer_c = rca_record.get("layer_c_domain_standards", {})
     if layer_c:
         with st.expander("📋 Standards Grounding (Layer C)", expanded=True):
-            ref = layer_c.get("3gpp_reference", "N/A")
-            oran = layer_c.get("oran_component", "N/A")
+            ref = standard or layer_c.get("3gpp_reference", "N/A")
+            oran = oran_component or layer_c.get("oran_component", "N/A")
             mechanism = layer_c.get("causal_mechanism", "N/A")
             st.markdown(f"**3GPP Reference:** `{ref}`")
             st.markdown(f"**O-RAN Component:** {oran}")

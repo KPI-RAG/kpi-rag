@@ -173,6 +173,8 @@ def load_scores_from_jsonl(path: str) -> list[GEvalScore]:
             if not line:
                 continue
             data = json.loads(line)
+            if "reference_valid" not in data:   # a missing flag would silently count as an invalid citation
+                raise ValueError(f"{path}: row {data.get('explanation_id', '?')} has no reference_valid")
             scores.append(GEvalScore(**{k: v for k, v in data.items() if k in inputs}))
             
     logger.info("Loaded %d GEvalScores from %s", len(scores), path)

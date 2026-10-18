@@ -34,18 +34,29 @@ def compute_cascade_metrics(preds: dict[int, str], truth: dict[int, str]) -> dic
     tp = [w for w in flagged if w in truth]
     exact = sum(preds[w] == truth[w] for w in faults)
     family = sum(_family(preds[w]) == _family(truth[w]) for w in faults)
+
+    def ratio(a: int, b: int) -> float | None:
+        return a / b if b else None
+
     return {
         "test_windows": len(preds),
         "true_faults": len(faults),
         "flagged_as_fault": len(flagged),
         "true_faults_detected": len(tp),
         "false_alarms": len(flagged) - len(tp),
-        "binary_recall": len(tp) / len(faults),
-        "binary_precision": len(tp) / len(flagged),
+        "binary_recall": ratio(len(tp), len(faults)),
+        "binary_precision": ratio(len(tp), len(flagged)),
         "exact_fault_type_correct": exact,
-        "exact_accuracy_on_all_true_faults": exact / len(faults),
-        "exact_accuracy_on_detected_faults": exact / len(tp),
-        "family_accuracy_on_all_true_faults": family / len(faults),
+        "exact_accuracy_on_all_true_faults": ratio(exact, len(faults)),
+        "exact_accuracy_on_detected_faults": ratio(exact, len(tp)),
+        "family_accuracy_on_all_true_faults": ratio(family, len(faults)),
+        # Jamming (one real OTA anomaly) is 94 of the 300 test faults; report the rest separately
+        "exact_accuracy_excluding_jamming": ratio(
+            sum(preds[w] == truth[w] for w in faults if truth[w] != "Jamming"),
+            sum(truth[w] != "Jamming" for w in faults)),
+        "binary_recall_excluding_jamming": ratio(
+            sum(preds[w] != "Normal" for w in faults if truth[w] != "Jamming"),
+            sum(truth[w] != "Jamming" for w in faults)),
     }
 
 
@@ -65,14 +76,14 @@ def compute_retrieval_metrics(records: list[dict], truth: dict[int, str], cfg: d
     for r in records:
         payload = ClassifierOutput(**r)
         tickets, low_conf = query_from_classifier_output(payload, collection, cfg)
-        system.append((tickets[0].similarity_score, low_conf))
+        system.append((tickets[0].similarity_score if tickets else 0.0, low_conf))
         free, _ = retrieve(build_query(payload), collection, rag["embedding_model"], k=rag["top_k"],
                            threshold=rag["cosine_threshold"])
         if r["window_index"] in truth:
             unfiltered.append((truth[r["window_index"]], [t.anomaly_type for t in free]))
 
     def precision(pairs, k):
-        return statistics.mean(sum(t == label for t in types[:k]) / k for label, types in pairs)
+        return statistics.mean(sum(t == label for t in types[:k]) / k for label, types in pairs) if pairs else None
 
     true_labels = [label for label, _ in unfiltered]
     top1 = [s for s, _ in system]
@@ -85,7 +96,8 @@ def compute_retrieval_metrics(records: list[dict], truth: dict[int, str], cfg: d
         "diagnostic_queries_on_true_faults": len(unfiltered),
         "diagnostic_label_free_p_at_1_vs_true": precision(unfiltered, 1),
         "diagnostic_label_free_p_at_5_vs_true": precision(unfiltered, 5),
-        "diagnostic_majority_class_share": max(true_labels.count(c) for c in set(true_labels)) / len(true_labels),
+        "diagnostic_majority_class_share": (max(true_labels.count(c) for c in set(true_labels)) / len(true_labels)
+                                            if true_labels else None),
     }
 
 

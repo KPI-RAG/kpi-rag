@@ -20,6 +20,7 @@ class SHAPEntry(BaseModel):
     shap_value: float
     feature: str = ""
     feature_vs_normal: Literal["above_normal_mean", "below_normal_mean"]
+    shap_effect: str = ""   # "toward_predicted_class" / "away_from_predicted_class" (Layer 2 stores |SHAP|)
 
 class ClassifierOutput(BaseModel):
     anomaly_type: AnomalyType
@@ -55,3 +56,4 @@ class LLMExplanation(BaseModel):
     reasoning_trace: str
     reference_valid: bool
     template_generated: bool
+    fallback_reason: str = ""   # why the template was used (empty for LLM answers)
