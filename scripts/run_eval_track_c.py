@@ -218,7 +218,7 @@ def main() -> None:
         description="Run Track C evaluation — generate explanations under 3 ablation conditions",
     )
     parser.add_argument(
-        "--output", type=str, default="data/processed",
+        "--output", type=str, default="data/processed/track_c_v3",
         help="directory for output files (explanations, scores template, summary; default: data/processed)",
     )
     parser.add_argument("--config", type=str, default="configs/config.yaml", help="path to config.yaml")

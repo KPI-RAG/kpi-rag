@@ -11,11 +11,11 @@
   },
   "C2": {
     "n": 30,
-    "citation_correct": 7,
+    "citation_correct": 5,
     "correctly_classified": 19,
-    "citation_correct_when_classified": 6,
+    "citation_correct_when_classified": 4,
     "explained": 24,
-    "reference_valid_vs_predicted": 9,
+    "reference_valid_vs_predicted": 7,
     "missed_by_detector": 6,
     "template_fallbacks": 0
   },
