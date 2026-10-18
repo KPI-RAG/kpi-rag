@@ -230,7 +230,7 @@ figcaption b { font-style:normal; color:var(--fg); }
   <div class="abstract">
     <p><strong>Problem.</strong> A fault classifier can tell a 5G operations engineer which fault a window of KPI measurements shows, but not why it happened or which 3GPP specification governs it. Language models write fluent explanations, yet without grounding they often cite a standard that does not apply to the fault.</p>
     <p><strong>What I built.</strong> Within the KPI-RAG team project I designed and implemented the explanation layer that runs after the fault classifier. It indexes the KPI narratives of the 935 anomalous training windows of the TelecomTS dataset in ChromaDB and, for each alarm, retrieves comparable past incidents with a query built from the KPI evidence alone, restricted to the predicted fault type. A prompt combines the classifier's SHAP evidence, the retrieved incidents, the fault's row of a 3GPP alignment table and a per-window evidence block, and Gemini 3.5 Flash Lite returns a structured JSON explanation whose citation my validator checks automatically. I also built the Streamlit dashboard, the evaluation scripts, the test suite and the packaging used to deploy the system.</p>
-    <p><strong>Results.</strong> In a controlled ablation on 30 test windows sampled by true fault type, the cited standard is correct for <strong>5/30</strong> windows with label and SHAP only, <strong>7/30</strong> with retrieved incidents, and <strong>21/30</strong> with the alignment row and evidence, a gain of 47 points. When the classifier's label is correct, the grounded prompt gives the right standard in <strong>19/19</strong> cases, and all nine remaining errors come from detection or classification upstream. A retrieval experiment showed that the dataset's tickets are one template per class, so the deployed design ranks per-window narratives inside the predicted class instead of retrieving on ticket text. The 72 LLM calls of the ablation finished with no fallback, and 206 of 209 automated tests pass.</p>
+    <p><strong>Results.</strong> In a controlled ablation on 30 test windows sampled by true fault type, the cited standard is correct for <strong>5/30</strong> windows with label and SHAP only, also <strong>5/30</strong> with retrieved incidents, and <strong>21/30</strong> with the alignment row and evidence, a gain of 53 points. When the classifier's label is correct, the grounded prompt gives the right standard in <strong>19/19</strong> cases, and all nine remaining errors come from detection or classification upstream. A retrieval experiment showed that the dataset's tickets are one template per class, so the deployed design ranks per-window narratives inside the predicted class instead of retrieving on ticket text. The 72 LLM calls of the ablation finished with no fallback, and 207 of 210 automated tests pass.</p>
     <p><strong>Conclusion.</strong> Grounding the prompt in a curated standards table and validating the answer makes the citation dependable once the fault is known. Better upstream detection is now the main way to improve the explanations end to end.</p>
     <p class="keywords"><b>Keywords:</b> 5G, root-cause analysis, retrieval-augmented generation, 3GPP, LLM grounding, citation validation, ablation, Streamlit</p>
   </div>
@@ -240,7 +240,7 @@ figcaption b { font-style:normal; color:var(--fg); }
 <section class="front" id="acknowledgements" aria-labelledby="h-ack">
   <div class="section-label">Front matter</div>
   <h2 class="section-title" id="h-ack">Acknowledgements</h2>
-  <p>I thank my supervisor, Prof. Yuanzhu Chen, for his guidance and for pushing us to evaluate what we claimed. I thank my teammates Farida El Ghabary, Raneem Alnaghy and Rodina Khallaf; their classifier output, data split, standards table and RCA records are the inputs my components consume, and their own reports describe that work. Capgemini gave us the operational view of how network operations teams troubleshoot faults. The National Telecommunication Institute (NTI) and the Ministry of Communications and Information Technology of Egypt run the DiGiLiANS Master Program, and Queen's University provided the academic programme. I also thank the authors of the TelecomTS dataset [1] for making it public.</p>
+  <p>I thank my supervisor, Prof. Yuanzhu Chen, for guidance and for pushing us to evaluate what we claimed. I thank my teammates Farida El Ghabary, Raneem Alnaghy and Rodina Khallaf; their classifier output, data split, standards table and RCA records are the inputs my components consume, and their own reports describe that work. Capgemini gave us the operational view of how network operations teams troubleshoot faults. The National Telecommunication Institute (NTI) and the Ministry of Communications and Information Technology of Egypt run the DiGiLiANS Master Program, and Queen's University provided the academic programme. I also thank the authors of the TelecomTS dataset [1] for making it public.</p>
 </section>
 
 <!-- ═══════════════════════════ TABLE OF CONTENTS ═══════════════════════════ -->
@@ -514,7 +514,7 @@ figcaption b { font-style:normal; color:var(--fg); }
   <p class="caption"><b>Table 4.</b> Main design decisions in the explanation layer.</p>
 
   <h3 id="s4-7">4.7 Testing, packaging and deployment</h3>
-  <p>The test suite has 209 tests in 29 modules: 21 unit modules and 8 integration modules. They cover the data contract, index building, retrieval, prompt construction for each condition, parsing and citation validation, the retry policy (with mocked rate limits and client errors), the Track C sampling and scoring, every dashboard panel and a headless run of the whole app. A test fixture restores the committed index after tests that modify it.</p>
+  <p>The test suite has 210 tests in 29 modules: 21 unit modules and 8 integration modules. They cover the data contract, index building, retrieval, prompt construction for each condition, parsing and citation validation, the retry policy (with mocked rate limits and client errors), the Track C sampling and scoring, every dashboard panel and a headless run of the whole app. A test fixture restores the committed index after tests that modify it.</p>
   <p>Dependencies are locked with uv, with CPU-only PyTorch: the default Linux wheel pulled about 2 GB of CUDA libraries although no GPU is used. <code>requirements.txt</code> is exported from the same lock for Streamlit Community Cloud. The source folders are installed as a package, so scripts run without setting <code>PYTHONPATH</code>, and the split indices and the 17 MB index are committed so a fresh clone can run the tests and the dashboard at once. The public demo deploys from branch <code>master</code>.</p>
 </section>
 
@@ -525,12 +525,12 @@ figcaption b { font-style:normal; color:var(--fg); }
   <p class="section-subtitle">All figures come from committed result files, listed in Appendix G</p>
 
   <h3 id="s5-1">5.1 Citation ablation (Track C)</h3>
-  <p>Run v3 (<code>data/processed/track_c_v3/</code>) covers 30 windows, 3 per true fault type. Of these, the classifier labels 19 correctly, misclassifies 5 and misses 6, which leaves 24 windows with an explanation and 72 LLM calls in total. No call fell back to the template.</p>
+  <p>Run v3 (<code>data/processed/track_c_v3/</code>) covers 30 windows, 3 per true fault type. Of these, the classifier labels 19 correctly, misclassifies 5 and misses 6, which leaves 24 windows with an explanation and 72 LLM calls in total. No call fell back to the template. I repeated the run after the team updated the RCA evidence file. C3 was identical in every window, and the C1 and C2 differences from the previous run are run-to-run variation of the LLM, because their prompts contain no RCA evidence.</p>
   <div class="table-wrap" id="tab5"><table>
     <thead><tr><th>Answer rule</th><th class="num">Correct<br>(n = 30)</th><th>Wilson<br>95 % CI</th><th class="num">Classified<br>right (n = 19)</th><th class="num">Valid vs<br>predicted (n = 24)</th></tr></thead>
     <tbody>
       <tr><td class="label">C1 LLM: label + SHAP</td><td class="num">5/30 (16.7 %)</td><td>7.3-33.6 %</td><td class="num">4/19</td><td class="num">7/24</td></tr>
-      <tr><td class="label">C2 LLM: + past incidents</td><td class="num">7/30 (23.3 %)</td><td>11.8-40.9 %</td><td class="num">6/19</td><td class="num">9/24</td></tr>
+      <tr><td class="label">C2 LLM: + past incidents</td><td class="num">5/30 (16.7 %)</td><td>7.3-33.6 %</td><td class="num">4/19</td><td class="num">7/24</td></tr>
       <tr class="emph"><td class="label">C3 LLM: + alignment row + evidence</td><td class="num"><b>21/30 (70.0 %)</b></td><td>52.1-83.3 %</td><td class="num"><b>19/19</b></td><td class="num">24/24</td></tr>
       <tr><td class="label">No LLM: always cite TS 38.141-1</td><td class="num">12/30 (40.0 %)</td><td>—</td><td class="num">—</td><td class="num">—</td></tr>
       <tr><td class="label">No LLM: cite the predicted fault's row</td><td class="num">21/30 (70.0 %)</td><td>—</td><td class="num">19/19</td><td class="num">24/24</td></tr>
@@ -544,7 +544,7 @@ figcaption b { font-style:normal; color:var(--fg); }
       <div class="chart-sub">LLM conditions and answer rules that need no LLM</div>
       <div class="bars" role="list">
         <div class="bar-row" role="listitem" title="C1 label + SHAP: 5 of 30 (16.7 %)"><span class="bar-label">C1 · label + SHAP</span><span class="bar-track"><span class="bar-fill f-s1" style="width:16.7%"></span></span><span class="bar-value">5 / 30</span></div>
-        <div class="bar-row" role="listitem" title="C2 + past incidents: 7 of 30 (23.3 %)"><span class="bar-label">C2 · + past incidents</span><span class="bar-track"><span class="bar-fill f-s1" style="width:23.3%"></span></span><span class="bar-value">7 / 30</span></div>
+        <div class="bar-row" role="listitem" title="C2 + past incidents: 5 of 30 (16.7 %)"><span class="bar-label">C2 · + past incidents</span><span class="bar-track"><span class="bar-fill f-s1" style="width:16.7%"></span></span><span class="bar-value">5 / 30</span></div>
         <div class="bar-row" role="listitem" title="C3 + alignment row + evidence: 21 of 30 (70.0 %)"><span class="bar-label">C3 · + alignment + evidence</span><span class="bar-track"><span class="bar-fill f-s1" style="width:70%"></span><span class="ref-line" style="left:70%" title="Pre-registered 70 % threshold"></span></span><span class="bar-value">21 / 30</span></div>
         <div class="bar-gap"></div>
         <div class="bar-row" role="listitem" title="Always cite TS 38.141-1: 12 of 30 (40.0 %)"><span class="bar-label">Always TS 38.141-1</span><span class="bar-track"><span class="bar-fill f-s2" style="width:40%"></span></span><span class="bar-value">12 / 30</span></div>
@@ -552,12 +552,12 @@ figcaption b { font-style:normal; color:var(--fg); }
       </div>
       <div class="legend"><span><span class="dot f-s1"></span>LLM condition</span><span><span class="dot f-s2"></span>Rule without an LLM</span><span><span class="dash"></span>Pre-registered 70 % threshold (P2)</span></div>
     </div>
-    <figcaption><b>Figure 2.</b> Grounding raises end-to-end citation correctness from 7/30 to 21/30 (+47 points) and reaches the pre-registered threshold.</figcaption>
+    <figcaption><b>Figure 2.</b> Grounding raises end-to-end citation correctness from 5/30 to 21/30 (+53 points) and reaches the pre-registered threshold.</figcaption>
   </figure>
 
-  <p>When the correct standard is in the prompt, which is the case for the 19 correctly classified windows, the LLM cites it in 19/19 (Wilson 83.2-100 %). Moving from C2 to C3 improves 14 windows and worsens none (exact McNemar p = 1.2·10⁻⁴), and moving from C1 to C3 improves 16 and worsens none.</p>
+  <p>When the correct standard is in the prompt, which is the case for the 19 correctly classified windows, the LLM cites it in 19/19 (Wilson 83.2-100 %). Moving from C2 to C3 improves 16 windows and worsens none (exact McNemar p = 3.1·10⁻⁵), and moving from C1 to C3 also improves 16 and worsens none (p = 3.1·10⁻⁵).</p>
   <p>C3 gets the same score as the rule that cites the predicted fault's row (21/30). In all 24 explained windows the LLM adopted the standard it was given, which is what the design intends: the standard comes from the curated table and is held to it by the validator, while the model writes the explanation around it. C3's end-to-end accuracy therefore follows the classifier's accuracy.</p>
-  <p>Without the table the LLM's citations are unreliable, and both C1 and C2 score below the fixed answer. C1 mostly cites TS 38.104 (11 windows), TS 38.331 (8) and TS 38.214 (4), plus one LTE specification (TS 36.104). Retrieved incidents change little: C2 improves 2 windows over C1 and worsens none.</p>
+  <p>Without the table the LLM's citations are unreliable, and both C1 and C2 score below the fixed answer. C1 cites TS 38.104 (12 windows), TS 38.331 (8) and TS 38.214 (4). Retrieved incidents change no window: C2 cites the same standard as C1 in all 24 explained windows, and both score 5/30.</p>
 
   <h3 id="s5-2">5.2 Where the remaining errors come from</h3>
   <figure id="fig3">
@@ -610,7 +610,7 @@ figcaption b { font-style:normal; color:var(--fg); }
   <p>Retrieval over this corpus cannot replace the classifier's label, so the deployed design uses the label as a filter. Within the class, the narrative is the only text that describes the particular incident. Ranking by narrative gives the LLM KPI patterns from comparable incidents, where ticket retrieval would return the same template three times. In deployment, the top retrieved incident's similarity over the 382 alarms ranges from 0.59 to 0.75 (median 0.72), and the low-confidence flag never fired.</p>
 
   <h3 id="s5-4">5.4 Reliability and testing</h3>
-  <p>All 72 ablation calls returned a valid JSON answer without a template fallback, under the rate limiter and the free-tier quota. On the current code, <strong>206 of 209 tests pass</strong>; the 3 skipped tests need a Groq API key. A clean clone runs the tests and the dashboard after <code>uv sync</code>, without extra setup.</p>
+  <p>All 72 ablation calls returned a valid JSON answer without a template fallback, under the rate limiter and the free-tier quota. On the current code, <strong>207 of 210 tests pass</strong>; the 3 skipped tests need a Groq API key. A clean clone runs the tests and the dashboard after <code>uv sync</code>, without extra setup.</p>
 
   <h3 id="s5-5">5.5 Comparison with existing approaches</h3>
   <div class="table-wrap" id="tab7"><table>
@@ -634,8 +634,8 @@ figcaption b { font-style:normal; color:var(--fg); }
   <p class="section-subtitle">What the results mean, how they compare with the objectives, and their limits</p>
 
   <h3 id="s6-1">6.1 Interpretation of results</h3>
-  <p><strong>RQ1.</strong> No, not on this corpus. The tickets are class templates, so retrieving them adds nothing the label does not say, and the narratives identify the class only modestly above chance. Retrieval is still useful for a different job: once the class is fixed, it supplies concrete KPI patterns from comparable incidents, such as the RSRP range that C2 quotes for window 611. It does not improve the citation (C1 to C2: +2 windows).</p>
-  <p><strong>RQ2.</strong> Grounding raises citation correctness from 5/30 and 7/30 to 21/30, and to 19/19 when the label is right. The match with the copy-row rule shows that the improvement comes from the curated table reaching the prompt and the validator holding the answer to it. All nine remaining errors start upstream: six windows were never flagged and three were given the wrong fault. Improving the classifier is now the most direct way to improve the explanations.</p>
+  <p><strong>RQ1.</strong> No, not on this corpus. The tickets are class templates, so retrieving them adds nothing the label does not say, and the narratives identify the class only modestly above chance. Retrieval is still useful for a different job: once the class is fixed, it supplies concrete KPI patterns from comparable incidents, such as the RSRP values from similar incidents in C2's reasoning for window 611. It does not improve the citation (C1 and C2 both 5/30).</p>
+  <p><strong>RQ2.</strong> Grounding raises citation correctness from 5/30 to 21/30, and to 19/19 when the label is right. The match with the copy-row rule shows that the improvement comes from the curated table reaching the prompt and the validator holding the answer to it. All nine remaining errors start upstream: six windows were never flagged and three were given the wrong fault. Improving the classifier is now the most direct way to improve the explanations.</p>
   <p><strong>RQ3.</strong> Yes, at the scale tested. The ablation ran without a fallback, errors that cannot be fixed by retrying stop the run with a clear cause, and the test suite and committed artifacts let a fresh clone reproduce the system.</p>
 
   <h3 id="s6-2">6.2 Were the objectives met?</h3>
@@ -645,7 +645,7 @@ figcaption b { font-style:normal; color:var(--fg); }
       <tr><td class="label">P1 Retrieval without leakage</td><td>train-only index with order check; label-free query; measured that text alone cannot identify the fault, so the class is a filter</td><td class="partial">Partly met</td></tr>
       <tr><td class="label">P2 Checked citations, at least 70 % correct</td><td>21/30 = 70.0 % end to end; 19/19 when classified correctly</td><td class="yes">Met</td></tr>
       <tr><td class="label">P3 Ablation that isolates grounding</td><td>ground-truth sampling, shared instructions, two no-LLM baselines, per-window results</td><td class="yes">Met</td></tr>
-      <tr><td class="label">P4 Deployable, reproducible system</td><td>public dashboard; 206/209 tests pass; locked CPU-only dependencies; committed artifacts</td><td class="yes">Met</td></tr>
+      <tr><td class="label">P4 Deployable, reproducible system</td><td>public dashboard; 206/210 tests pass; locked CPU-only dependencies; committed artifacts</td><td class="yes">Met</td></tr>
     </tbody>
   </table></div>
   <p class="caption"><b>Table 8.</b> My objectives, mapped to the proposal's O3 to O5.</p>
@@ -691,7 +691,7 @@ figcaption b { font-style:normal; color:var(--fg); }
     <li>An explanation layer that turns a classifier alarm into a structured explanation with an automatically checked 3GPP citation, deployed as a public six-panel dashboard.</li>
     <li>A retrieval design based on a measured analysis of the corpus: a train-only narrative index, a label-free query and a class filter.</li>
     <li>Citations correct for the true fault in 21 of 30 sampled faults and in 19 of 19 correctly classified ones, which meets the pre-registered 70 % threshold.</li>
-    <li>An evaluation that separates grounding from upstream errors, with no-LLM baselines, and a reproducible codebase with 209 automated tests.</li>
+    <li>An evaluation that separates grounding from upstream errors, with no-LLM baselines, and a reproducible codebase with 210 automated tests.</li>
   </ol>
 
   <h3>7.2 Contributions</h3>
@@ -771,17 +771,17 @@ figcaption b { font-style:normal; color:var(--fg); }
       <tr><td class="num">846</td><td>Congestion (Gradual)</td><td>Buffer Overflow</td><td class="no">✗ 38.331</td><td class="no">✗ 38.331</td><td class="no">✗ 38.321</td></tr>
       <tr><td class="num">713</td><td>Doppler Shift</td><td>Doppler Shift</td><td class="no">✗ 38.104</td><td class="no">✗ 38.104</td><td class="yes">✓ TR 38.901</td></tr>
       <tr><td class="num">611</td><td>Doppler Shift</td><td>Doppler Shift</td><td class="no">✗ 38.104</td><td class="no">✗ 38.104</td><td class="yes">✓ TR 38.901</td></tr>
-      <tr><td class="num">658</td><td>Doppler Shift</td><td>Doppler Shift</td><td class="no">✗ 36.104</td><td class="no">✗ 38.104</td><td class="yes">✓ TR 38.901</td></tr>
+      <tr><td class="num">658</td><td>Doppler Shift</td><td>Doppler Shift</td><td class="no">✗ 38.104</td><td class="no">✗ 38.104</td><td class="yes">✓ TR 38.901</td></tr>
       <tr><td class="num">648</td><td>Faulty Handover</td><td>RF Filters</td><td class="no">✗ 38.104</td><td class="no">✗ 38.104</td><td class="no">✗ 38.141-1</td></tr>
       <tr><td class="num">879</td><td>Faulty Handover</td><td>Normal (missed)</td><td class="no">✗ —</td><td class="no">✗ —</td><td class="no">✗ —</td></tr>
       <tr><td class="num">715</td><td>Faulty Handover</td><td>Faulty Handover</td><td class="yes">✓ 38.331</td><td class="yes">✓ 38.331</td><td class="yes">✓ 38.331</td></tr>
-      <tr><td class="num">684</td><td>Resource Alloc. Bugs</td><td>Resource Alloc. Bugs</td><td class="no">✗ 38.331</td><td class="yes">✓ 38.321</td><td class="yes">✓ 38.321</td></tr>
+      <tr><td class="num">684</td><td>Resource Alloc. Bugs</td><td>Resource Alloc. Bugs</td><td class="no">✗ 38.331</td><td class="no">✗ 38.331</td><td class="yes">✓ 38.321</td></tr>
       <tr><td class="num">710</td><td>Resource Alloc. Bugs</td><td>Resource Alloc. Bugs</td><td class="no">✗ 38.331</td><td class="no">✗ 38.331</td><td class="yes">✓ 38.321</td></tr>
-      <tr><td class="num">686</td><td>Resource Alloc. Bugs</td><td>Resource Alloc. Bugs</td><td class="no">✗ 38.331</td><td class="yes">✓ 38.321</td><td class="yes">✓ 38.321</td></tr>
+      <tr><td class="num">686</td><td>Resource Alloc. Bugs</td><td>Resource Alloc. Bugs</td><td class="no">✗ 38.331</td><td class="no">✗ 38.331</td><td class="yes">✓ 38.321</td></tr>
       <tr><td class="num">866</td><td>Congestion (Sudden Spike)</td><td>Normal (missed)</td><td class="no">✗ —</td><td class="no">✗ —</td><td class="no">✗ —</td></tr>
       <tr><td class="num">827</td><td>Congestion (Sudden Spike)</td><td>Normal (missed)</td><td class="no">✗ —</td><td class="no">✗ —</td><td class="no">✗ —</td></tr>
       <tr><td class="num">843</td><td>Congestion (Sudden Spike)</td><td>Normal (missed)</td><td class="no">✗ —</td><td class="no">✗ —</td><td class="no">✗ —</td></tr>
-      <tr class="total"><td class="num"></td><td>Total correct</td><td></td><td>5 / 30</td><td>7 / 30</td><td>21 / 30</td></tr>
+      <tr class="total"><td class="num"></td><td>Total correct</td><td></td><td>5 / 30</td><td>5 / 30</td><td>21 / 30</td></tr>
     </tbody>
   </table></div>
   <p class="caption"><b>Table A.</b> Cited specification per condition (TS prefix omitted unless TR) and whether it is valid for the true fault. "—": the detector missed the window, so no explanation was produced.</p>
@@ -789,15 +789,15 @@ figcaption b { font-style:normal; color:var(--fg); }
   <h3 id="appB">Appendix B: one window explained under the three conditions</h3>
   <p>Test window 611, true and predicted fault Doppler Shift (Severe) (<code>track_c_v3/track_c_explanations.jsonl</code>).</p>
   <div class="sample"><div class="sample-head"><span>C1 · label + SHAP · cites TS 38.104</span><span class="pill no">incorrect</span></div>
-    <blockquote>"Severe Doppler shift is induced by extremely high-speed user equipment movement, leading to above-normal RSRP variations and degraded DL MCS due to rapid channel decorrelation."</blockquote>
+    <blockquote>"Severe Doppler shift is caused by rapid user equipment movement resulting in abnormally high RSRP combined with degraded downlink modulation and coding scheme (DL_MCS: below normal)."</blockquote>
     O-RAN component: Near-RT RIC</div>
   <div class="sample"><div class="sample-head"><span>C2 · + past incidents · cites TS 38.104</span><span class="pill no">incorrect</span></div>
-    <blockquote>"…heavily influenced by above-normal RSRP exhibiting sharp variability (spanning from −120.7 dB to −107.2 dB across similar historical traces) and suppressed downlink modulation…"</blockquote>
-    O-RAN component: RIC xApp / gNB-DU</div>
+    <blockquote>"Severe Doppler shift is induced by high-velocity user equipment mobility causing rapid radio channel fluctuations, evidenced by fluctuating RSRP levels above normal combined with suppressed downlink modulation and coding (DL_MCS below normal)."</blockquote>
+    O-RAN component: Near-RT RIC</div>
   <div class="sample"><div class="sample-head"><span>C3 · + alignment row + evidence · cites TR 38.901</span><span class="pill yes">correct</span></div>
-    <blockquote>"Severe Doppler shift is induced by high UE velocity, causing rapid channel phase variations reflected by elevated RSRP standard deviation (RSRP_std |SHAP| = 0.654) and FFT energy alongside degraded downlink modulation (DL_MCS_mean = 6)."</blockquote>
-    Recommended action: "Enable advanced channel estimation and robust Doppler compensation algorithms at the O-DU/O-RU to handle high-velocity UE trajectories." O-RAN component: O-DU / O-RU</div>
-  <p>C2 uses the concrete RSRP range from the retrieved incidents. C3 cites the channel-model report that governs Doppler and quotes the feature-level evidence from the evidence block.</p>
+    <blockquote>"Severe Doppler shift caused by high user equipment velocity resulting in rapid channel phase variation, evidenced by high RSRP variance (std |SHAP|=0.654, fft energy |SHAP|=0.510) and degraded downlink modulation (DL_MCS mean=6, |SHAP|=0.484)."</blockquote>
+    Recommended action: "Enable high-speed mobility enhancements and adjust channel estimation filter lengths at the O-DU/O-RU to compensate for rapid phase rotation." O-RAN component: O-RU / O-DU</div>
+  <p>C1 and C2 describe the same pattern and cite the same specification; C2's reasoning adds RSRP values from the similar incidents, but this does not change its citation. C3 cites the channel-model report that governs Doppler and quotes the feature-level evidence from the evidence block.</p>
 
   <h3 id="appC">Appendix C: prompt template (<code>src/llm_explainer.py</code>)</h3>
   <p>Header, used by all conditions:</p>
@@ -861,7 +861,7 @@ evaluation:
 cd kpi-rag
 uv sync                      # CPU-only torch
 cp .env.example .env         # add GEMINI_API_KEY
-uv run pytest tests/ -q      # 206 passed, 3 skipped</code></pre>
+uv run pytest tests/ -q      # 207 passed, 3 skipped</code></pre>
   <h4>Reproduce the reported numbers</h4>
 <pre><code>uv run python scripts/run_eval_track_c.py --output data/processed/my_run   # 72 LLM calls
 uv run python scripts/run_eval_track_c.py --output data/processed/track_c_v3 --summarise-only
@@ -887,9 +887,9 @@ uv run python scripts/build_index.py --rebuild                             # reb
       <tr><td>test_rag_query</td><td class="num">5</td><td>test_run_eval_track_b</td><td class="num">4</td></tr>
       <tr><td>test_kg_indexer</td><td class="num">4</td><td>test_config_loader</td><td class="num">3</td></tr>
       <tr><td>test_build_index</td><td class="num">3</td><td>test_explanation_panel</td><td class="num">3</td></tr>
-      <tr><td>test_run_eval_track_a</td><td class="num">2</td><td>detection / KPI / SHAP / sources panels</td><td class="num">2 each</td></tr>
+      <tr><td>test_run_eval_track_a</td><td class="num">2</td><td>detection / KPI / sources panels; SHAP panel</td><td class="num">2 each; 3</td></tr>
       <tr><td>integration · schema, RAG query, ChromaDB, alignment</td><td class="num">3 · 4 · 6 · 6</td><td>integration · explainer, evaluator, pipeline, live RAG</td><td class="num">6 · 4 · 4 · 5</td></tr>
-      <tr class="total"><td>Total</td><td class="num">209</td><td>passing / skipped (Groq key)</td><td class="num">206 / 3</td></tr>
+      <tr class="total"><td>Total</td><td class="num">210</td><td>passing / skipped (Groq key)</td><td class="num">207 / 3</td></tr>
     </tbody>
   </table></div>
 
@@ -905,7 +905,7 @@ uv run python scripts/build_index.py --rebuild                             # reb
     </tbody>
   </table></div>
 
-  <p class="foot">Individual report · Ahmed Mohamed Al Shobaki · KPI-RAG, Group 15 · October 2026. Source: <code>docs/KPI_RAG_Individual_Report_Ahmed.html</code> in the project repository (branch <code>master</code>).</p>
+  <p class="foot">Individual report · Ahmed Mohamed Al Shobaki · KPI-RAG, Group 15 · October 2026. Source: <code>docs/Individual Reports/KPI_RAG_Individual_Report_Ahmed.html</code> in the project repository (branch <code>master</code>).</p>
 </section>
 
 </main>

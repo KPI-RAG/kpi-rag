@@ -1,0 +1,52 @@
+/* Final report styling: tokens shared with Rodina_Report.html and the KPI-RAG reports. */
+:root {
+  --bg:#f8f7f5; --bg-surface:#ffffff; --fg:#1c1c1e; --fg-muted:#5c5c66; --fg-subtle:#8e8e99;
+  --accent:#2b5ba8; --accent-dim:#dce6f7; --rule:#d8d6d0; --code-bg:#eeecea;
+  --ff-serif:"Source Serif 4", Georgia, serif; --ff-sans:"Inter", system-ui, sans-serif;
+  --ff-mono:"SF Mono","Fira Code",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#16161a; --bg-surface:#1e1e24; --fg:#e8e6e1; --fg-muted:#9898a6; --fg-subtle:#6a6a7a;
+    --accent:#6b9fe4; --accent-dim:#1a2c47; --rule:#2e2e38; --code-bg:#252530; color-scheme: dark;
+  }
+  :root:not([data-theme="light"]) figure img { background:#ffffff; border-radius:6px; padding:6px; }
+}
+:root[data-theme="dark"] {
+  --bg:#16161a; --bg-surface:#1e1e24; --fg:#e8e6e1; --fg-muted:#9898a6; --fg-subtle:#6a6a7a;
+  --accent:#6b9fe4; --accent-dim:#1a2c47; --rule:#2e2e38; --code-bg:#252530; color-scheme: dark;
+}
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg); color:var(--fg); font-family:var(--ff-serif); font-size:1rem; line-height:1.72;
+  max-width:820px; margin:0 auto; padding:3rem max(16px, env(safe-area-inset-left, 0px));
+}
+h1, h2, h3, h4 { line-height:1.25; text-wrap:balance; }
+h1 { font-size:2.2rem; margin:0 0 .6rem; }
+h2 { font-size:1.6rem; margin:3.2rem 0 .8rem; padding-bottom:.4rem; border-bottom:1px solid var(--rule); }
+h3 { font-size:1.15rem; margin:2rem 0 .5rem; }
+h4 { font-family:var(--ff-sans); font-size:.9rem; text-transform:uppercase; letter-spacing:.05em; color:var(--fg-muted); margin:1.6rem 0 .4rem; }
+p, li { max-width:70ch; }
+a { color:var(--accent); text-underline-offset:2px; }
+code { font-family:var(--ff-mono); font-size:.86em; background:var(--code-bg); padding:.1em .35em; border-radius:3px; }
+pre { font-family:var(--ff-mono); font-size:.8rem; background:var(--code-bg); border:1px solid var(--rule); border-radius:6px; padding:.85rem 1rem; overflow-x:auto; }
+pre code { background:none; padding:0; }
+blockquote { border-left:3px solid var(--accent); margin:1.2rem 0; padding:.4rem 1rem; background:var(--bg-surface); color:var(--fg); }
+table { width:100%; border-collapse:collapse; font-family:var(--ff-sans); font-size:.84rem; background:var(--bg-surface); margin:.4rem 0 1.8rem; display:block; overflow-x:auto; }
+thead tr { background:var(--accent-dim); }
+th, td { padding:.45rem .7rem; text-align:left; vertical-align:top; border-bottom:1px solid var(--rule); }
+caption { caption-side:top; text-align:left; font-family:var(--ff-sans); font-size:.8rem; color:var(--fg-muted); padding:.2rem 0 .5rem; }
+figure { margin:1.8rem 0 2rem; text-align:center; }
+figure img { max-width:100%; height:auto; }
+figcaption { font-family:var(--ff-sans); font-size:.8rem; color:var(--fg-muted); text-align:left; margin-top:.6rem; max-width:72ch; }
+.title-page { min-height:85vh; display:flex; flex-direction:column; justify-content:center; border-bottom:1px solid var(--rule); margin-bottom:2rem; }
+.title-page p { margin:.2rem 0; }
+.kicker { font-family:var(--ff-sans); font-size:.75rem; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); }
+@media (max-width:600px) { h1 { font-size:1.7rem; } h2 { font-size:1.35rem; } }
+@page { size:A4; margin:22mm 20mm 24mm; @bottom-center { content:counter(page); font-family:Inter, sans-serif; font-size:9pt; color:#777; } }
+@media print {
+  html { font-size:10.5pt; } body { max-width:none; padding:0; background:#fff; }
+  .pagebreak { page-break-after:always; } .title-page { min-height:auto; height:240mm; border:none; }
+  figure, table, pre, blockquote { break-inside:avoid; } h2, h3 { break-after:avoid; }
+  a { color:inherit; text-decoration:none; }
+}

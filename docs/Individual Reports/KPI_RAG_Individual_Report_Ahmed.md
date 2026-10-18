@@ -21,7 +21,7 @@ Submitted October 20, 2026
 
 **What I built.** Within the KPI-RAG team project I designed and implemented the explanation layer that runs after the fault classifier. It indexes the KPI narratives of the 935 anomalous training windows of the TelecomTS dataset in ChromaDB and, for each alarm, retrieves comparable past incidents with a query built from the KPI evidence alone, restricted to the predicted fault type. A prompt combines the classifier's SHAP evidence, the retrieved incidents, the fault's row of a 3GPP alignment table and a per-window evidence block, and Gemini 3.5 Flash Lite returns a structured JSON explanation whose citation my validator checks automatically. I also built the Streamlit dashboard, the evaluation scripts, the test suite and the packaging used to deploy the system.
 
-**Results.** In a controlled ablation on 30 test windows sampled by true fault type, the cited standard is correct for **5/30** windows with label and SHAP only, **7/30** with retrieved incidents, and **21/30** with the alignment row and evidence, a gain of 47 points. When the classifier's label is correct, the grounded prompt gives the right standard in **19/19** cases, and all nine remaining errors come from detection or classification upstream. A retrieval experiment showed that the dataset's tickets are one template per class, so the deployed design ranks per-window narratives inside the predicted class instead of retrieving on ticket text. The 72 LLM calls of the ablation finished with no fallback, and 206 of 209 automated tests pass.
+**Results.** In a controlled ablation on 30 test windows sampled by true fault type, the cited standard is correct for **5/30** windows with label and SHAP only, also **5/30** with retrieved incidents, and **21/30** with the alignment row and evidence, a gain of 53 points. When the classifier's label is correct, the grounded prompt gives the right standard in **19/19** cases, and all nine remaining errors come from detection or classification upstream. A retrieval experiment showed that the dataset's tickets are one template per class, so the deployed design ranks per-window narratives inside the predicted class instead of retrieving on ticket text. The 72 LLM calls of the ablation finished with no fallback, and 207 of 210 automated tests pass.
 
 **Conclusion.** Grounding the prompt in a curated standards table and validating the answer makes the citation dependable once the fault is known. Better upstream detection is now the main way to improve the explanations end to end.
 
@@ -29,7 +29,7 @@ Submitted October 20, 2026
 
 ## Acknowledgements
 
-I thank my supervisor, Prof. Yuanzhu Chen, for his guidance and for pushing us to evaluate what we claimed. I thank my teammates Farida El Ghabary, Raneem Alnaghy and Rodina Khallaf; their classifier output, data split, standards table and RCA records are the inputs my components consume, and their own reports describe that work. Capgemini gave us the operational view of how network operations teams troubleshoot faults. The National Telecommunication Institute (NTI) and the Ministry of Communications and Information Technology of Egypt run the DiGiLiANS Master Program, and Queen's University provided the academic programme. I also thank the authors of the TelecomTS dataset [1] for making it public.
+I thank my supervisor, Prof. Yuanzhu Chen, for guidance and for pushing us to evaluate what we claimed. I thank my teammates Farida El Ghabary, Raneem Alnaghy and Rodina Khallaf; their classifier output, data split, standards table and RCA records are the inputs my components consume, and their own reports describe that work. Capgemini gave us the operational view of how network operations teams troubleshoot faults. The National Telecommunication Institute (NTI) and the Ministry of Communications and Information Technology of Egypt run the DiGiLiANS Master Program, and Queen's University provided the academic programme. I also thank the authors of the TelecomTS dataset [1] for making it public.
 
 ## Table of Contents
 
@@ -331,7 +331,7 @@ The input can be a built-in example, an uploaded `ClassifierOutput` JSON, or one
 
 ### 4.7 Testing, packaging and deployment
 
-The test suite has 209 tests in 29 modules: 21 unit modules and 8 integration modules. They cover the data contract, index building, retrieval, prompt construction for each condition, parsing and citation validation, the retry policy (with mocked rate limits and client errors), the Track C sampling and scoring, every dashboard panel and a headless run of the whole app. A test fixture restores the committed index after tests that modify it.
+The test suite has 210 tests in 29 modules: 21 unit modules and 8 integration modules. They cover the data contract, index building, retrieval, prompt construction for each condition, parsing and citation validation, the retry policy (with mocked rate limits and client errors), the Track C sampling and scoring, every dashboard panel and a headless run of the whole app. A test fixture restores the committed index after tests that modify it.
 
 Dependencies are locked with uv, with CPU-only PyTorch: the default Linux wheel pulled about 2 GB of CUDA libraries although no GPU is used. `requirements.txt` is exported from the same lock for Streamlit Community Cloud. The source folders are installed as a package, so scripts run without setting `PYTHONPATH`, and the split indices and the 17 MB index are committed so a fresh clone can run the tests and the dashboard at once. The public demo deploys from branch `master`.
 
@@ -339,12 +339,12 @@ Dependencies are locked with uv, with CPU-only PyTorch: the default Linux wheel 
 
 ### 5.1 Citation ablation (Track C)
 
-Run v3 (`data/processed/track_c_v3/`) covers 30 windows, 3 per true fault type. Of these, the classifier labels 19 correctly, misclassifies 5 and misses 6, which leaves 24 windows with an explanation and 72 LLM calls in total. No call fell back to the template.
+Run v3 (`data/processed/track_c_v3/`) covers 30 windows, 3 per true fault type. Of these, the classifier labels 19 correctly, misclassifies 5 and misses 6, which leaves 24 windows with an explanation and 72 LLM calls in total. No call fell back to the template. I repeated the run after the team updated the RCA evidence file. C3 was identical in every window, and the C1 and C2 differences from the previous run are run-to-run variation of the LLM, because their prompts contain no RCA evidence.
 
 | Answer rule | Correct (n = 30) | Wilson 95 % CI | Classified right (n = 19) | Valid vs predicted (n = 24) |
 | --- | --- | --- | --- | --- |
 | C1 LLM: label + SHAP | 5/30 (16.7 %) | 7.3-33.6 % | 4/19 | 7/24 |
-| C2 LLM: + past incidents | 7/30 (23.3 %) | 11.8-40.9 % | 6/19 | 9/24 |
+| C2 LLM: + past incidents | 5/30 (16.7 %) | 7.3-33.6 % | 4/19 | 7/24 |
 | C3 LLM: + alignment row + evidence | **21/30 (70.0 %)** | 52.1-83.3 % | **19/19** | 24/24 |
 | No LLM: always cite TS 38.141-1 | 12/30 (40.0 %) | — | — | — |
 | No LLM: cite the predicted fault's row | 21/30 (70.0 %) | — | 19/19 | 24/24 |
@@ -356,18 +356,18 @@ Run v3 (`data/processed/track_c_v3/`) covers 30 windows, 3 per true fault type. 
 | Series | Value |
 |---|---|
 | C1 · label + SHAP | 5 / 30 |
-| C2 · + past incidents | 7 / 30 |
+| C2 · + past incidents | 5 / 30 |
 | C3 · + alignment + evidence | 21 / 30 |
 | Always TS 38.141-1 | 12 / 30 |
 | Cite predicted row | 21 / 30 |
 
-**Figure 2.** Grounding raises end-to-end citation correctness from 7/30 to 21/30 (+47 points) and reaches the pre-registered threshold.
+**Figure 2.** Grounding raises end-to-end citation correctness from 5/30 to 21/30 (+53 points) and reaches the pre-registered threshold.
 
-When the correct standard is in the prompt, which is the case for the 19 correctly classified windows, the LLM cites it in 19/19 (Wilson 83.2-100 %). Moving from C2 to C3 improves 14 windows and worsens none (exact McNemar p = 1.2·10⁻⁴), and moving from C1 to C3 improves 16 and worsens none.
+When the correct standard is in the prompt, which is the case for the 19 correctly classified windows, the LLM cites it in 19/19 (Wilson 83.2-100 %). Moving from C2 to C3 improves 16 windows and worsens none (exact McNemar p = 3.1·10⁻⁵), and moving from C1 to C3 also improves 16 and worsens none (p = 3.1·10⁻⁵).
 
 C3 gets the same score as the rule that cites the predicted fault's row (21/30). In all 24 explained windows the LLM adopted the standard it was given, which is what the design intends: the standard comes from the curated table and is held to it by the validator, while the model writes the explanation around it. C3's end-to-end accuracy therefore follows the classifier's accuracy.
 
-Without the table the LLM's citations are unreliable, and both C1 and C2 score below the fixed answer. C1 mostly cites TS 38.104 (11 windows), TS 38.331 (8) and TS 38.214 (4), plus one LTE specification (TS 36.104). Retrieved incidents change little: C2 improves 2 windows over C1 and worsens none.
+Without the table the LLM's citations are unreliable, and both C1 and C2 score below the fixed answer. C1 cites TS 38.104 (12 windows), TS 38.331 (8) and TS 38.214 (4). Retrieved incidents change no window: C2 cites the same standard as C1 in all 24 explained windows, and both score 5/30.
 
 ### 5.2 Where the remaining errors come from
 
@@ -410,7 +410,7 @@ Retrieval over this corpus cannot replace the classifier's label, so the deploye
 
 ### 5.4 Reliability and testing
 
-All 72 ablation calls returned a valid JSON answer without a template fallback, under the rate limiter and the free-tier quota. On the current code, **206 of 209 tests pass**; the 3 skipped tests need a Groq API key. A clean clone runs the tests and the dashboard after `uv sync`, without extra setup.
+All 72 ablation calls returned a valid JSON answer without a template fallback, under the rate limiter and the free-tier quota. On the current code, **207 of 210 tests pass**; the 3 skipped tests need a Groq API key. A clean clone runs the tests and the dashboard after `uv sync`, without extra setup.
 
 ### 5.5 Comparison with existing approaches
 
@@ -429,9 +429,9 @@ All 72 ablation calls returned a valid JSON answer without a template fallback, 
 
 ### 6.1 Interpretation of results
 
-**RQ1.** No, not on this corpus. The tickets are class templates, so retrieving them adds nothing the label does not say, and the narratives identify the class only modestly above chance. Retrieval is still useful for a different job: once the class is fixed, it supplies concrete KPI patterns from comparable incidents, such as the RSRP range that C2 quotes for window 611. It does not improve the citation (C1 to C2: +2 windows).
+**RQ1.** No, not on this corpus. The tickets are class templates, so retrieving them adds nothing the label does not say, and the narratives identify the class only modestly above chance. Retrieval is still useful for a different job: once the class is fixed, it supplies concrete KPI patterns from comparable incidents, such as the RSRP values from similar incidents in C2's reasoning for window 611. It does not improve the citation (C1 and C2 both 5/30).
 
-**RQ2.** Grounding raises citation correctness from 5/30 and 7/30 to 21/30, and to 19/19 when the label is right. The match with the copy-row rule shows that the improvement comes from the curated table reaching the prompt and the validator holding the answer to it. All nine remaining errors start upstream: six windows were never flagged and three were given the wrong fault. Improving the classifier is now the most direct way to improve the explanations.
+**RQ2.** Grounding raises citation correctness from 5/30 to 21/30, and to 19/19 when the label is right. The match with the copy-row rule shows that the improvement comes from the curated table reaching the prompt and the validator holding the answer to it. All nine remaining errors start upstream: six windows were never flagged and three were given the wrong fault. Improving the classifier is now the most direct way to improve the explanations.
 
 **RQ3.** Yes, at the scale tested. The ablation ran without a fallback, errors that cannot be fixed by retrying stop the run with a clear cause, and the test suite and committed artifacts let a fresh clone reproduce the system.
 
@@ -442,7 +442,7 @@ All 72 ablation calls returned a valid JSON answer without a template fallback, 
 | P1 Retrieval without leakage | train-only index with order check; label-free query; measured that text alone cannot identify the fault, so the class is a filter | Partly met |
 | P2 Checked citations, at least 70 % correct | 21/30 = 70.0 % end to end; 19/19 when classified correctly | Met |
 | P3 Ablation that isolates grounding | ground-truth sampling, shared instructions, two no-LLM baselines, per-window results | Met |
-| P4 Deployable, reproducible system | public dashboard; 206/209 tests pass; locked CPU-only dependencies; committed artifacts | Met |
+| P4 Deployable, reproducible system | public dashboard; 206/210 tests pass; locked CPU-only dependencies; committed artifacts | Met |
 
 **Table 8.** *My objectives, mapped to the proposal's O3 to O5.*
 
@@ -482,7 +482,7 @@ For a network operations team, the result is that an LLM explanation can carry a
 1. An explanation layer that turns a classifier alarm into a structured explanation with an automatically checked 3GPP citation, deployed as a public six-panel dashboard.
 2. A retrieval design based on a measured analysis of the corpus: a train-only narrative index, a label-free query and a class filter.
 3. Citations correct for the true fault in 21 of 30 sampled faults and in 19 of 19 correctly classified ones, which meets the pre-registered 70 % threshold.
-4. An evaluation that separates grounding from upstream errors, with no-LLM baselines, and a reproducible codebase with 209 automated tests.
+4. An evaluation that separates grounding from upstream errors, with no-LLM baselines, and a reproducible codebase with 210 automated tests.
 
 ### 7.2 Contributions
 
@@ -568,17 +568,17 @@ For a network operations team, the result is that an LLM explanation can carry a
 | 846 | Congestion (Gradual) | Buffer Overflow | ✗ 38.331 | ✗ 38.331 | ✗ 38.321 |
 | 713 | Doppler Shift | Doppler Shift | ✗ 38.104 | ✗ 38.104 | ✓ TR 38.901 |
 | 611 | Doppler Shift | Doppler Shift | ✗ 38.104 | ✗ 38.104 | ✓ TR 38.901 |
-| 658 | Doppler Shift | Doppler Shift | ✗ 36.104 | ✗ 38.104 | ✓ TR 38.901 |
+| 658 | Doppler Shift | Doppler Shift | ✗ 38.104 | ✗ 38.104 | ✓ TR 38.901 |
 | 648 | Faulty Handover | RF Filters | ✗ 38.104 | ✗ 38.104 | ✗ 38.141-1 |
 | 879 | Faulty Handover | Normal (missed) | ✗ — | ✗ — | ✗ — |
 | 715 | Faulty Handover | Faulty Handover | ✓ 38.331 | ✓ 38.331 | ✓ 38.331 |
-| 684 | Resource Alloc. Bugs | Resource Alloc. Bugs | ✗ 38.331 | ✓ 38.321 | ✓ 38.321 |
+| 684 | Resource Alloc. Bugs | Resource Alloc. Bugs | ✗ 38.331 | ✗ 38.331 | ✓ 38.321 |
 | 710 | Resource Alloc. Bugs | Resource Alloc. Bugs | ✗ 38.331 | ✗ 38.331 | ✓ 38.321 |
-| 686 | Resource Alloc. Bugs | Resource Alloc. Bugs | ✗ 38.331 | ✓ 38.321 | ✓ 38.321 |
+| 686 | Resource Alloc. Bugs | Resource Alloc. Bugs | ✗ 38.331 | ✗ 38.331 | ✓ 38.321 |
 | 866 | Congestion (Sudden Spike) | Normal (missed) | ✗ — | ✗ — | ✗ — |
 | 827 | Congestion (Sudden Spike) | Normal (missed) | ✗ — | ✗ — | ✗ — |
 | 843 | Congestion (Sudden Spike) | Normal (missed) | ✗ — | ✗ — | ✗ — |
-|  | Total correct |  | 5 / 30 | 7 / 30 | 21 / 30 |
+|  | Total correct |  | 5 / 30 | 5 / 30 | 21 / 30 |
 
 **Table A.** *Cited specification per condition (TS prefix omitted unless TR) and whether it is valid for the true fault. "—": the detector missed the window, so no explanation was produced.*
 
@@ -588,23 +588,23 @@ Test window 611, true and predicted fault Doppler Shift (Severe) (`track_c_v3/tr
 
 **C1 · label + SHAP · cites TS 38.104** (incorrect)
 
-> "Severe Doppler shift is induced by extremely high-speed user equipment movement, leading to above-normal RSRP variations and degraded DL MCS due to rapid channel decorrelation."
+> "Severe Doppler shift is caused by rapid user equipment movement resulting in abnormally high RSRP combined with degraded downlink modulation and coding scheme (DL_MCS: below normal)."
 
 O-RAN component: Near-RT RIC
 
 **C2 · + past incidents · cites TS 38.104** (incorrect)
 
-> "…heavily influenced by above-normal RSRP exhibiting sharp variability (spanning from −120.7 dB to −107.2 dB across similar historical traces) and suppressed downlink modulation…"
+> "Severe Doppler shift is induced by high-velocity user equipment mobility causing rapid radio channel fluctuations, evidenced by fluctuating RSRP levels above normal combined with suppressed downlink modulation and coding (DL_MCS below normal)."
 
-O-RAN component: RIC xApp / gNB-DU
+O-RAN component: Near-RT RIC
 
 **C3 · + alignment row + evidence · cites TR 38.901** (correct)
 
-> "Severe Doppler shift is induced by high UE velocity, causing rapid channel phase variations reflected by elevated RSRP standard deviation (RSRP_std |SHAP| = 0.654) and FFT energy alongside degraded downlink modulation (DL_MCS_mean = 6)."
+> "Severe Doppler shift caused by high user equipment velocity resulting in rapid channel phase variation, evidenced by high RSRP variance (std |SHAP|=0.654, fft energy |SHAP|=0.510) and degraded downlink modulation (DL_MCS mean=6, |SHAP|=0.484)."
 
-Recommended action: "Enable advanced channel estimation and robust Doppler compensation algorithms at the O-DU/O-RU to handle high-velocity UE trajectories." O-RAN component: O-DU / O-RU
+Recommended action: "Enable high-speed mobility enhancements and adjust channel estimation filter lengths at the O-DU/O-RU to compensate for rapid phase rotation." O-RAN component: O-RU / O-DU
 
-C2 uses the concrete RSRP range from the retrieved incidents. C3 cites the channel-model report that governs Doppler and quotes the feature-level evidence from the evidence block.
+C1 and C2 describe the same pattern and cite the same specification; C2's reasoning adds RSRP values from the similar incidents, but this does not change its citation. C3 cites the channel-model report that governs Doppler and quotes the feature-level evidence from the evidence block.
 
 ### Appendix C: prompt template (`src/llm_explainer.py`)
 
@@ -686,7 +686,7 @@ git clone -b master https://github.com/KPI-RAG/kpi-rag.git
 cd kpi-rag
 uv sync                      # CPU-only torch
 cp .env.example .env         # add GEMINI_API_KEY
-uv run pytest tests/ -q      # 206 passed, 3 skipped
+uv run pytest tests/ -q      # 207 passed, 3 skipped
 ```
 
 #### Reproduce the reported numbers
@@ -720,9 +720,9 @@ uv run streamlit run dashboard/app.py --server.fileWatcherType none
 | test_rag_query | 5 | test_run_eval_track_b | 4 |
 | test_kg_indexer | 4 | test_config_loader | 3 |
 | test_build_index | 3 | test_explanation_panel | 3 |
-| test_run_eval_track_a | 2 | detection / KPI / SHAP / sources panels | 2 each |
+| test_run_eval_track_a | 2 | detection / KPI / sources panels; SHAP panel | 2 each; 3 |
 | integration · schema, RAG query, ChromaDB, alignment | 3 · 4 · 6 · 6 | integration · explainer, evaluator, pipeline, live RAG | 6 · 4 · 4 · 5 |
-| Total | 209 | passing / skipped (Groq key) | 206 / 3 |
+| Total | 210 | passing / skipped (Groq key) | 207 / 3 |
 
 ### Appendix G: sources of the reported numbers
 
@@ -736,4 +736,4 @@ uv run streamlit run dashboard/app.py --server.fileWatcherType none
 
 ---
 
-*Individual report · Ahmed Mohamed Al Shobaki · KPI-RAG, Group 15 · October 2026. Source: docs/KPI_RAG_Individual_Report_Ahmed.md in the project repository (branch master).*
+*Individual report · Ahmed Mohamed Al Shobaki · KPI-RAG, Group 15 · October 2026. Source: docs/Individual Reports/KPI_RAG_Individual_Report_Ahmed.md in the project repository (branch master).*

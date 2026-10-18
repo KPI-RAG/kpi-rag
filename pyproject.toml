@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kpi-rag"
 version = "0.1.0"
-description = "KPI-RAG project"
+description = "Explainable 5G fault diagnosis: SHAP evidence, retrieval and 3GPP-grounded LLM explanations with citation validation"
 readme = "README.md"
 requires-python = ">=3.11"   # locked numpy 2.3 / pandas 3.0 need 3.11+
 # Runtime only (what the dashboard and scripts import). Streamlit Community Cloud installs from uv.lock.
