@@ -6,6 +6,8 @@ Reproducible evaluation and improvement of the two KPI-RAG classifiers on the Te
 - **Model 2** — 11-class fault-type classifier: the "diagnosis".
 
 Author: Farida El Ghabary (Data & Models workstream), Group 15 · Supervisor: Prof. Yuanzhu Chen.
+Builds on Raneem Alnaghy's session-level split (300 s gap, 33 sessions, test = {1, 3, 4, 13, 17}), used by every step,
+and her reject-option design, evaluated in steps 10 and 10c.
 New here? Read `PROJECT_STORY.md` first (plain-language overview), then `docs/final_handoff.md`.
 
 ## Final result in one table (5 held-out recordings, 6,312 windows, 300 true faults)
