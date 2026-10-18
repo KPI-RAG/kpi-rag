@@ -98,55 +98,58 @@ committed files.
 ### Track A — detection, classification, retrieval
 
 ```bash
-uv run python scripts/run_eval_track_a.py      # -> data/processed/track_a_metrics.json
+uv run python scripts/run_eval_track_a.py                 # -> data/processed/track_a_metrics.json
+uv run python scripts/experiment_retrieval_design.py      # retrieval design comparison (needs data/raw)
 ```
 
 Recomputed from the Phase 2 predictions and ground truth (matches Farida's `validation.json`):
 binary recall **266/300 = 88.7 %**, precision **266/382 = 69.6 %**, exact 11-class accuracy
-**199/300 = 66.3 %** (74.8 % of detected faults), congestion-family accuracy 75.0 %.
-Retrieval diagnostic: with the label removed, the retrieved incidents' class matches the true
-class at P@1 = 0.451 (majority-class share 0.353) — text cannot identify the fault, which is
-why the class is applied as a filter.
+**199/300 = 66.3 %** (74.8 % of detected faults; **51.5 % without Jamming**, which is 94 of the 300
+test faults), congestion-family accuracy 75.0 %. Retrieval diagnostic: with the label removed, the
+retrieved incidents' class matches the true class at P@1 = 0.451 (majority-class share 0.353) — text
+cannot identify the fault, which is why the class is applied as a filter.
 
 ### Track B — G-Eval (LLM judge, Rodina Khallaf)
 
 ```bash
-uv run python scripts/run_eval_track_b.py --scores <rated_scores.jsonl> --output data/processed/track_b_results.json
+uv run python scripts/run_eval_track_b.py --scores <scored.jsonl> --output data/processed/track_b_results.json
 ```
 
-Pending re-run on the current explanations: `data/processed/track_c_v2/track_c_scores_template.jsonl`
-holds the 72 explanations to score (1–5 on four dimensions, citation judged against the true fault's
-alignment row). Un-scored rows (0.0) are rejected, so the template cannot be averaged by mistake.
+Pending: `data/processed/track_c_v3/track_c_scores_template.jsonl` holds the 72 explanations to score
+(1–5 on four dimensions, citation judged against the true fault's alignment row). Rows without
+`reference_valid`, or still at 0.0, are rejected; extra keys such as a judge's rationale are ignored.
 
 ### Track C — citation ablation (3 conditions)
 
 Sampling is by **ground truth**: 3 test windows per true fault type (10 types, Jamming excluded),
 each run through what the system actually does (Phase 2 prediction → retrieval → LLM). All three
-conditions use the same instructions; they differ only in context.
+conditions use the same instructions; they differ only in context. Results of run v3
+(`data/processed/track_c_v3/`; run v2 gave the same counts before the evidence-block fixes):
 
-| Condition | Context | Correct vs true fault (n=30) | When classified correctly (n=19) |
-|-----------|---------|-----------------------------|----------------------------------|
-| C1 | Label + SHAP | 5/30 (17 %) | 4/19 (21 %) |
-| C2 | + 3 past incidents of the predicted type | 7/30 (23 %) | 6/19 (32 %) |
-| C3 | + alignment row + RCA evidence | **21/30 (70 %)** | **19/19 (100 %)** |
+| Answer rule | Correct vs true fault (n=30) | When classified correctly (n=19) |
+|-------------|-----------------------------|----------------------------------|
+| C1 LLM: label + SHAP | 5/30 (17 %) | 4/19 |
+| C2 LLM: + 3 past incidents of the predicted type | 7/30 (23 %) | 6/19 |
+| C3 LLM: + alignment row + RCA evidence | **21/30 (70 %)** | **19/19** |
+| No LLM: always cite TS 38.141-1 | 12/30 (40 %) | — |
+| No LLM: copy the predicted fault's alignment row | 21/30 (70 %) | 19/19 |
 
 Gemini 3.5 Flash Lite, `random_state=42`, alignment table v1.2, 0 template fallbacks, 72 LLM calls.
-C2→C3: 14 windows improve, 0 get worse (exact McNemar p = 1.2·10⁻⁴). Wilson 95 % CI for C3:
-52–83 % end to end, 83–100 % when classified correctly.
 
-All 9 C3 failures come from Layer 2, not from grounding: 6 windows the detector missed (all 3
-Sudden Spike samples — Model 1 flags none of the 11 Sudden Spike test windows) and 3 misclassified.
-
-> **What C3 measures.** When the classifier is right, the correct standard is in the C3 prompt,
-> so 19/19 is *prompt compliance*. The end-to-end figure (21/30) is not circular: it scores the
-> citation against the true fault, so a misclassification that injects the wrong row counts as wrong.
+> **How to read it.** C3 equals the copy rule exactly: the LLM adopts the injected standard every time,
+> so C3's citation accuracy is set by the alignment table and the classifier. Without the table the
+> LLM (C1, C2) is worse than always citing one standard. All 9 C3 failures are Layer 2 errors:
+> 6 detector misses (all 3 Sudden Spike samples — Model 1 flags none of the 11 Sudden Spike test
+> windows) and 3 misclassifications. n = 30 from few recording sessions: treat the counts as descriptive.
 
 ```bash
-uv run python scripts/run_eval_track_c.py --output data/processed/track_c_v2 --dry-run   # 1 per fault
-uv run python scripts/run_eval_track_c.py --output data/processed/track_c_v2             # 3 per fault
+uv run python scripts/run_eval_track_c.py --output data/processed/my_run --dry-run   # 1 per fault (27 LLM calls)
+uv run python scripts/run_eval_track_c.py --output data/processed/my_run             # 3 per fault (72 LLM calls)
+uv run python scripts/run_eval_track_c.py --output data/processed/track_c_v3 --summarise-only   # re-score, no LLM
 ```
 
-Outputs (`data/processed/track_c_v2/`): `track_c_explanations.jsonl`, `track_c_summary.json`,
+A run refuses to overwrite an existing one in `--output` unless `--force` is given. Outputs:
+`track_c_explanations.jsonl`, `track_c_summary.json` (with the no-LLM baselines),
 `track_c_scores_template.jsonl`. The earlier prediction-sampled run (alignment v1.1) is kept in
 `data/processed/track_c_explanations.jsonl` for comparison only.
 
@@ -156,7 +159,8 @@ Outputs (`data/processed/track_c_v2/`): `track_c_explanations.jsonl`, `track_c_s
 uv run pytest tests/ -q
 ```
 
-183 tests in 28 modules (20 unit, 8 integration): 180 pass, 3 skip without `GROQ_API_KEY`.
+209 tests in 29 modules (21 unit, 8 integration): 206 pass, 3 skip without `GROQ_API_KEY`. The test
+session restores `data/chroma_db/` afterwards (ChromaDB rewrites its files whenever it is opened).
 
 ## Project Structure
 
@@ -173,24 +177,26 @@ project/
 │   ├── rca_loader.py            # RCA evidence lookup by window_index
 │   ├── llm_explainer.py         # Gemini/Groq/Ollama LLM, 3-condition prompts, citation validation
 │   ├── evaluator.py             # G-Eval scoring + Track B/C metrics
+│   ├── ml_model.py              # CatBoost loader (tests only; Layer 2 runs offline)
 │   └── utils.py                 # Logging, 3GPP ref validation
 ├── scripts/
 │   ├── build_index.py           # Index builder CLI
 │   ├── run_pipeline.py          # Single-explanation CLI
 │   ├── run_eval_track_a.py      # Track A + retrieval metrics CLI
+│   ├── experiment_retrieval_design.py  # retrieval design comparison (report §5.5)
 │   ├── run_eval_track_b.py      # Track B evaluation CLI
 │   └── run_eval_track_c.py      # Track C ablation CLI
 ├── dashboard/
 │   ├── app.py                   # Streamlit main app
 │   └── components/              # 6 dashboard panels
-├── tests/                       # 20 unit + 8 integration test modules
+├── tests/                       # 21 unit + 8 integration test modules
 ├── data/
-│   ├── raw/                     # TelecomTS JSONL (gitignored)
-│   ├── indices/                 # train/test window indices (gitignored)
+│   ├── raw/                     # TelecomTS JSONL (gitignored; see Quick Start step 3)
 │   ├── chroma_db/               # ChromaDB store (committed — Streamlit Cloud has no raw data to rebuild it)
 │   ├── models/                  # CatBoost model1.cbm / model2.cbm (Layer 2 runs offline)
 │   ├── alignment_table.json     # 11-row fault→3GPP mapping (v1.2; Jamming not-applicable)
-│   └── processed/               # RCA evidence, layer-2 outputs, Track A metrics, track_c_v2/
+│   ├── indices/                 # train/test window indices (session split)
+│   └── processed/               # RCA evidence, layer-2 outputs, Track A metrics, track_c_v3/ (v2 kept)
 ├── docs/
 │   ├── KPI-RAG_Proposal_Group_15.pdf
 │   ├── KPI_RAG_Final_Report.md      # final report, every number traced to a file

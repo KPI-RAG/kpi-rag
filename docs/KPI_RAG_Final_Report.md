@@ -23,24 +23,23 @@
 ---
 
 ## Abstract
-
-5G Radio Access Networks expose dozens of KPIs per cell, and diagnosing a fault means relating
-an anomalous KPI pattern to its physical cause and to the 3GPP specification that governs it.
-KPI-RAG is an end-to-end pipeline that does this explainably. On the TelecomTS dataset (32,000
-windows of 18 KPI channels, 128 samples at 10 Hz), a two-stage CatBoost cascade detects faults
-(binary recall **88.7 %**, 266/300; precision 69.6 %) and classifies them into 11 types (exact
-accuracy **66.3 %** on all test faults, 74.8 % on detected ones). TreeSHAP attributions and the
-window's statistics then drive retrieval of past incidents of the predicted fault type from a
-train-only ChromaDB index, and an LLM (Gemini 3.5 Flash Lite) writes a structured explanation
-grounded in a fault-to-3GPP alignment table and per-window RCA evidence. In a 30-window ablation
-sampled by ground truth and run through the full system, explanations cite a standard that is
-correct for the **true** fault in 5/30 cases with label and SHAP only (C1), 7/30 with retrieved
-incidents (C2) and **21/30 with the alignment table and RCA evidence (C3)**; C2→C3 improves 14
-windows and worsens none (exact McNemar p = 1.2·10⁻⁴). When the classifier is right, C3 is 19/19.
-All C3 failures originate in Layer 2: six faults the detector missed and three misclassifications.
-Explanation-quality scoring (G-Eval) is being re-run on these explanations and is reported as pending.
-
----
+5G Radio Access Networks expose dozens of KPIs per cell, and diagnosing a fault means relating an
+anomalous KPI pattern to its physical cause and to the 3GPP specification that governs it. KPI-RAG
+is an end-to-end pipeline that does this explainably. On the TelecomTS dataset (32,000 windows of 18
+KPI channels, 128 samples at 10 Hz), a two-stage CatBoost cascade detects faults (binary recall
+**88.7 %**, 266/300; precision 69.6 %) and classifies them into 11 types (exact accuracy **66.3 %**
+on all test faults; 51.5 % when the single real-world class, Jamming, is excluded). TreeSHAP
+attributions and the window's statistics drive retrieval of past incidents of the predicted fault
+type from a train-only ChromaDB index, and an LLM (Gemini 3.5 Flash Lite) writes a structured
+explanation grounded in a fault-to-3GPP alignment table and per-window evidence. In a 30-window
+ablation sampled by ground truth and run through the full system, the cited standard is correct for
+the **true** fault in 5/30 explanations with label and SHAP only (C1), 7/30 with retrieved incidents
+(C2) and **21/30 with the alignment table and evidence (C3)**. Two answer rules that need no LLM put
+these numbers in context: always citing TS 38.141-1 scores 12/30, and copying the predicted fault's
+table row scores 21/30 — exactly C3. The LLM therefore adopts the injected standard reliably, while
+its own choice of standard is worse than a constant guess; C3's citation accuracy is set by the
+alignment table and the classifier, and all nine C3 failures are detector misses or
+misclassifications. Explanation-quality scoring (G-Eval) is pending.
 
 ## Acknowledgements
 
@@ -90,8 +89,8 @@ correct in C1).
 ### 1.4 Research Questions
 - **RQ1:** Do SHAP attributions and retrieved incidents improve citation correctness over an
   LLM given only the predicted label?
-- **RQ2:** Does grounding in a 3GPP alignment table make citations correct, and how much of the
-  remaining error comes from the classifier rather than the grounding?
+- **RQ2:** Does injecting the fault's 3GPP alignment row make the cited standard correct, does the
+  LLM add anything beyond copying it, and how much error comes from the classifier?
 - **RQ3:** Are the explanations specific, actionable and causally sound (G-Eval)?
 
 ### 1.5 Report Organization
@@ -192,18 +191,31 @@ Predictions include the 116 false alarms on normal windows (64.7 % of them label
 | Stage | Model | Features | Trees | Training rows | Source |
 |---|---|---:|---:|---:|---|
 | 1 — detect | binary CatBoost, threshold 0.5 | 64 | 200 | 4,675 (80/20 rebalanced) | `model1.cbm`, `log.txt` |
-| 2 — classify | 11-class CatBoost | 496 | 1,000 | 5,185 | `model2.cbm`, `log.txt` |
+| 2 — classify | 11-class CatBoost | 496 | 1,000 | 5,185 (real training faults + synthetic windows) | `model2.cbm`, `log.txt` |
 
 Stage 2 runs only on windows Stage 1 flags. An isotonic calibrator for Stage 1 was evaluated and
 rejected (`log.txt`: "calibration rejected in step 12a"). The `confidence` of an alarm is Stage 2's
 uncalibrated probability for the predicted fault type (62 of the 382 alarms are below 0.5); for a
 normal window it is Stage 1's probability of Normal (`phase2/src/pipeline.py`).
 
+**How held-out the test split is.** The split is by session and no session appears in both parts.
+The Layer 2 log states the test set was "used once per step, post-hoc, never for selection"
+(`phase2/EXPERIMENT_LOG.md`), but the adoption rule also required a change to "hold on test"
+(`phase2/DECISIONS.md`): a level-jitter Model 1 that improved 22 of 25 CV folds was rejected because
+its test false positives rose from 116 to 805, and the final Model 2 (`catboost_v3_G`, +0.015 macro-F1,
+p = 0.36) was kept as "consistent in CV and test" although it did not meet the team's own rule
+(p < 0.05 and ≥ 0.03). The test split therefore informed model choice, and the Track A figures are not
+a fully untouched estimate. The synthetic Model 2 windows are documented as built from training
+sessions only (`phase2/docs/phase2_results.md`); no code asserts it. Model 2's signals inherit the
+Phase 1 parser (effect documented as negligible, step 06).
+
 ### 3.5 SHAP Attribution
 TreeSHAP values are computed for the predicted class; the top three features with a single KPI
-channel are kept. Each entry records the SHAP value and, separately, whether the window's feature
-value lies above or below the normal-traffic mean (`feature_vs_normal`, from `normal_means.json`).
-Prompts state the direction from `feature_vs_normal`, never from the SHAP sign.
+channel are kept. Layer 2 stores each value as a magnitude (|SHAP|) with its sign as `shap_effect`
+(`toward_predicted_class` / `away_from_predicted_class`; 97 of the 1,146 top-3 entries point away),
+plus whether the window's feature value lies above or below the normal-traffic mean
+(`feature_vs_normal`, from `normal_means.json`). Prompts show all three — e.g. "RSRP: below normal
+(|SHAP|=0.42, toward predicted class)" — so neither the KPI direction nor the effect is read from a sign.
 
 ### 3.6 RAG Pipeline
 - **Corpus:** the 935 anomalous training windows only; one document per window — its KPI
@@ -221,21 +233,28 @@ conformance clause). A citation is valid for a fault if it is a well-formed TS/T
 that fault's row; a fault without a row (Jamming) can never have a valid citation.
 
 ### 3.8 RCA Evidence Integration
-`rca_evidence.json` holds 289 records — one per non-Jamming Phase 2 alarm, all test windows,
-covering 10 fault types — with observational statistics, model attribution, KPI evidence status
-and the standards grounding. A compact block (≤ 1,055 characters) is injected into C3 prompts
-only when the record is for the same window and the same predicted fault.
+`rca_evidence.json` holds 289 records — one per non-Jamming Phase 2 alarm, all test windows, covering
+10 fault types. For C3, a compact block (537–659 characters) is injected when the record is for the
+same window and predicted fault: the top-3 SHAP features (magnitude, direction, effect), the window's
+observed means of the KPIs behind them, and the fault's causal mechanism. Two parts of the record are
+deliberately not injected: its own standards text (167 records differ from table v1.2, e.g. Handover
+still cites TS 38.133 — the alignment table is the only source of standards in the prompt) and its
+KPI "evidence status" labels, which derive from class-level expected KPIs aggregated over labelled
+windows that include the test split. The record never contains the window's true label.
 
 ### 3.9 LLM Backend
-Gemini 3.5 Flash Lite, temperature 0.1, native JSON output, ≥ 2 s between calls. Rate-limit (429)
-errors wait for the server's `Retry-After` (else exponential backoff, 5–60 s); configuration and
-authentication errors stop immediately; every failed attempt is logged; after three attempts a
-template explanation is returned and always counted as invalid. Groq and Ollama are supported
-alternatives.
+Gemini 3.5 Flash Lite, temperature 0.1, native JSON output, ≥ 2 s between calls (thread-safe across
+dashboard sessions). Rate-limit (429) errors wait for the server's `Retry-After` up to 60 s (else
+exponential backoff, 5–60 s); a longer requested wait (e.g. a daily quota) ends the attempt instead of
+blocking. Client errors (4xx other than 408/409/429, e.g. an invalid key or a removed model) and
+configuration errors stop immediately; malformed replies are retried; every failed attempt is logged;
+after three attempts a template explanation is returned, counted as invalid and labelled with its
+cause. Citations are normalised to `TS/TR XX.XXX`. Groq and Ollama are supported alternatives.
 
 ### 3.10 Evaluation Framework
 - **Track A:** detection and classification metrics recomputed from the Phase 2 predictions and
-  ground truth (`scripts/run_eval_track_a.py`), plus retrieval diagnostics.
+  ground truth (`scripts/run_eval_track_a.py`), plus retrieval diagnostics
+  (`scripts/experiment_retrieval_design.py`).
 - **Track C (citation ablation):** 3 test windows per **true** fault type (10 types; Jamming has no
   clause), `random_state = 42`. Each window goes through the full system: its Phase 2 prediction,
   SHAP and RCA record, retrieval filtered by the predicted type, and the LLM under three conditions
@@ -243,10 +262,9 @@ alternatives.
   C1 label + SHAP; C2 + three past incidents; C3 + alignment row + RCA evidence.
   Each citation is scored against the **true** fault's row (`citation_correct`, end to end) and
   against the predicted row (`reference_valid`, what the validator reports). A window the detector
-  misses produces no explanation and counts as incorrect.
+  misses produces no explanation and counts as incorrect. Two rules that need no LLM are scored the
+  same way: *always cite the single best standard*, and *copy the predicted fault's table row*.
 - **Track B (G-Eval, LLM judge):** four 1–5 dimensions on every Track C explanation, judged against the true fault's alignment row (Appendix C).
-
----
 
 ## 4. Design and Implementation
 
@@ -282,32 +300,37 @@ the predicted-type filter.
 
 ### 4.5 LLM Explanation Pipeline
 `src/llm_explainer.py` builds the three prompts from shared pieces — header (label, confidence,
-SHAP with directions), optional incidents block, optional RCA and standards blocks, one common
-instruction block — calls the LLM, parses the JSON (bad JSON is retried), normalises the
-reference to `TS/TR XX.XXX` and validates it. Citation validation is at specification level; the
-clause number is not checked (no output in Track C included a clause).
+SHAP with magnitude, direction and effect), optional incidents block, optional RCA and standards
+blocks, one common instruction block — calls the LLM, parses the JSON (bad JSON is retried),
+normalises the reference to `TS/TR XX.XXX` and validates it. Citation validation is at specification
+level; the clause number is not checked.
 
 ### 4.6 RCA Loader
-`src/rca_loader.py` indexes `rca_evidence.json` by window and formats the C3 evidence block
-(top-3 SHAP features with direction, up to four KPI observations, causal mechanism, standard).
+`src/rca_loader.py` indexes `rca_evidence.json` by window and formats the C3 evidence block (Section 3.8).
 
 ### 4.7 Dashboard (Streamlit)
-`dashboard/app.py` (Streamlit) has six panels: Detection (label, Stage 2 probability of that label), SHAP (bar
-chart), KPI Window Statistics, Explanation (with a ✅/❌ citation badge), Sources (retrieved
-incidents with similarity) and RCA Evidence. "Browse" lists the 382 Phase 2 alarms (all test
-windows, so none has its own ticket in the index); RCA evidence is injected only when the record
-matches the window's predicted fault. The required API key follows the configured backend.
+`dashboard/app.py` (Streamlit) has six panels: Detection (label, Stage 2 probability of that label),
+SHAP (bar chart), KPI Window Statistics, Explanation (with a ✅/❌ citation badge and, for a template
+fallback, its cause), Sources (retrieved incidents with similarity, flagged when weakly similar) and
+RCA Evidence (standard and O-RAN component taken from the alignment table). "Browse" lists the 382
+Phase 2 alarms (all test windows, so none has its own ticket in the index), filtered by fault type;
+RCA evidence is injected only when the record matches the window's predicted fault. Uploaded payloads
+are keyed by content, so a new upload never shows the previous file's explanation. The required API
+key follows the configured backend, and all paths resolve from the repository root.
 
 ### 4.8 Key Technical Decisions
 - **Cosine index.** An earlier index used L2 distance while code computed similarity as 1 − d; it
-  was rebuilt with cosine space.
+  was rebuilt with cosine space. `build_index.py --rebuild` refuses to clear the index when no raw
+  tickets were loaded.
 - **Calibrator removed** (Section 3.4).
-- **Single alignment table** (`data/alignment_table.json`) read through the config.
-- **Fail-closed guards:** missing split files abort indexing and Track C instead of degrading silently.
-- **Pinned deployment:** `requirements.txt` matches the tested environment (chromadb 1.5.9 writes
-  the committed index; the previous pins did not resolve).
-
----
+- **Single sources:** one alignment table (`data/alignment_table.json`, read through the config) for
+  every standard shown or injected; one dependency lock (`uv.lock`), from which `requirements.txt` is
+  exported.
+- **Fail-closed guards:** missing split files abort indexing and Track C instead of degrading silently;
+  a Track C run does not overwrite an earlier one without `--force`.
+- **Deployment:** CPU-only PyTorch (no GPU is used; the default Linux wheel pulled about 2 GB of CUDA
+  libraries), Python ≥ 3.11, runtime and test dependencies separated, `src/` installed as a package so
+  scripts run without `PYTHONPATH`. The split indices are committed so a clean clone runs the tests.
 
 ## 5. Results and Evaluation
 
@@ -327,36 +350,49 @@ matches the window's predicted fault. The required API key follows the configure
 | Exact 11-class accuracy, all true faults | **66.3 %** (199/300) |
 | Exact accuracy, detected faults only | 74.8 % (199/266) |
 | Accuracy with the congestion family merged (Buffer Overflow + both Congestion types) | 75.0 % (225/300) |
+| Exact accuracy excluding Jamming | 51.5 % (106/206) |
+| Binary recall excluding Jamming | 83.5 % (172/206) |
 
-The recomputed counts equal Farida's `validation.json` (checked by `tests/test_run_eval_track_a.py`).
+Jamming — the one real over-the-air anomaly — is 94 of the 300 test faults and 93 of the 199 correct
+classifications, so the headline accuracy leans on it. The recomputed counts equal Farida's
+`validation.json` (checked by `tests/test_run_eval_track_a.py`).
 
-### 5.3 Track C — Citation Accuracy Ablation (`data/processed/track_c_v2/track_c_summary.json`)
-30 windows (3 per true fault), 72 LLM calls, 0 template fallbacks, alignment table v1.2.
+### 5.3 Track C — Citation Accuracy Ablation (`data/processed/track_c_v3/track_c_summary.json`)
+Run v3 (`data/processed/track_c_v3/`): 30 windows (3 per true fault), 72 LLM calls, 0 template
+fallbacks, alignment table v1.2. Run v2 (`track_c_v2/`, before the evidence-block fixes of Section 3.8)
+gave identical counts on the same windows.
 
-> **Methodology note.** This run samples by **ground truth** and scores each citation against the
-> true fault, and all three conditions share one instruction block. The first Track C run
-> (`data/processed/track_c_explanations.jsonl`) did neither: it sampled by predicted label (8 of its
-> 30 windows were normal traffic, 9 misclassified) and C3 alone carried extra instructions, so its
-> C2→C3 delta mixed context with instructions. Its figures (C1 8/30, C2 7/30, C3 30/30 against
-> alignment v1.1; 28/30 against v1.2) are kept for comparison only and are not used in this report.
+> **Methodology note.** Sampling is by **ground truth**, citations are scored against the true fault,
+> and all three conditions share one instruction block. The first Track C run
+> (`data/processed/track_c_explanations.jsonl`) sampled by predicted label (8 of its 30 windows were
+> normal traffic, 9 misclassified) and C3 alone carried extra instructions; its figures (C1 8/30,
+> C2 7/30, C3 30/30 against alignment v1.1; 28/30 against v1.2) are kept for comparison only.
 
-| Condition | Correct vs true fault (n = 30) | Wilson 95 % CI | When classified correctly (n = 19) | Valid vs predicted row (n = 24 explained) |
+| Answer rule | Correct vs true fault (n = 30) | Wilson 95 % CI | When classified correctly (n = 19) | Valid vs predicted row (24 explained) |
 |---|---:|---|---:|---:|
-| C1 label + SHAP | 5/30 (16.7 %) | 7.3–33.6 % | 4/19 (21.1 %) | 7/24 |
-| C2 + past incidents | 7/30 (23.3 %) | 11.8–40.9 % | 6/19 (31.6 %) | 9/24 |
-| C3 + alignment + RCA | **21/30 (70.0 %)** | 52.1–83.3 % | **19/19 (100 %)** | 24/24 |
+| C1 LLM: label + SHAP | 5/30 (16.7 %) | 7.3–33.6 % | 4/19 | 7/24 |
+| C2 LLM: + past incidents | 7/30 (23.3 %) | 11.8–40.9 % | 6/19 | 9/24 |
+| C3 LLM: + alignment row + RCA evidence | **21/30 (70.0 %)** | 52.1–83.3 % | **19/19** | 24/24 |
+| No LLM: always cite TS 38.141-1 (best single standard) | 12/30 (40.0 %) | — | — | — |
+| No LLM: copy the predicted fault's row | 21/30 (70.0 %) | — | 19/19 | 24/24 |
 
-- **C2 → C3:** 14 windows become correct, none become incorrect (exact McNemar p = 1.2·10⁻⁴).
-- **Where C3 fails (9/30):** 6 windows the detector missed — all three Sudden Spike samples
-  (866, 827, 843), one Congestion Gradual (682), one Buffer Overflow (717), one Handover (879) — and
-  3 misclassified windows whose injected row is for the wrong fault (845, 846: Congestion predicted
-  as Buffer Overflow; 648: Handover predicted as RF Filters). Two misclassified windows were still
-  correct (645, 703: predicted RF Filters, true CCI; both rows cite TS 38.141-1).
-- **C1 citations** are real specifications, mostly the wrong one for the fault: TS 38.104 ×12,
-  TS 38.331 ×8, TS 38.214 ×3, TS 38.101-1 ×1.
-- **What C3's 19/19 means:** when the classification is right the correct standard is in the
-  prompt, so it measures prompt compliance. The end-to-end 21/30 is not circular — it would
-  reward a wrong row only if that row happened to cite the true fault's standard.
+- **C3 equals copying the injected row.** Its 21/30 is the copy rule's 21/30 on the same windows: the
+  LLM adopts the standard it is given every time (24/24 vs the predicted row). C3's citation accuracy
+  is therefore determined by the classifier and by which faults share a specification (TS 38.141-1
+  covers four), not by the LLM's reasoning.
+- **Without the table, the LLM is worse than a constant guess.** C1 (5/30) and C2 (7/30) are below
+  "always cite TS 38.141-1" (12/30). C1 mostly answers TS 38.104 (11), TS 38.331 (8) and TS 38.214 (4),
+  plus one LTE specification (TS 36.104). Retrieved incidents change little: C2 improves 2 windows over
+  C1 and worsens none.
+- **Where C3 fails (9/30):** 6 detector misses — all three Sudden Spike samples (866, 827, 843), one
+  Congestion Gradual (682), one Buffer Overflow (717), one Handover (879) — and 3 misclassifications
+  whose injected row is for the wrong fault (845, 846: Congestion predicted as Buffer Overflow; 648:
+  Handover predicted as RF Filters). Two misclassified windows were still correct (645, 703) because
+  the wrong row cites the same specification.
+- **Statistics are descriptive.** C2→C3: 14 windows better, 0 worse (exact McNemar p = 1.2·10⁻⁴);
+  C1→C3: 16 better, 0 worse. The windows come from a small number of recording sessions (Layer 2 has
+  10 fault sessions in total) and are sampled 3 per class, so they are neither independent nor a
+  population sample; the intervals and p-values indicate magnitude, not significance.
 
 ### 5.4 Track B — G-Eval Quality Assessment (pending)
 Pending. Rodina Khallaf's G-Eval judge was first run on the earlier Track C explanations, which
@@ -364,34 +400,43 @@ were sampled by predicted label: of its three "Antenna Failure" windows one was 
 were normal traffic, and its three "Sudden Spike" windows were two CCI Severe and one normal window.
 Those scores therefore describe a different, partly mislabelled sample and are not reported here.
 The judge is being re-run on the 72 explanations in
-`data/processed/track_c_v2/track_c_scores_template.jsonl` (each tagged with its true fault), using
+`data/processed/track_c_v3/track_c_scores_template.jsonl` (each tagged with its true fault), using
 the alignment table v1.2 row of the true fault as the citation reference. `src/evaluator.py` rejects scores outside 1–5, so an un-rated template cannot be
 averaged by mistake. The planned aggregate is the equal-weight mean of the four dimensions per
 explanation, and the pre-registered pass mark (`citation_validity_threshold = 0.70`) applies to
 the rate of correct citations.
 
 ### 5.5 RAG Retrieval Quality
-| Measurement (266 detected true faults unless noted) | Value |
+Measured on the 266 detected true faults with `scripts/experiment_retrieval_design.py` (in memory;
+the deployed-design row is from `track_a_metrics.json`).
+
+| Design | P@1 / P@5 vs true class |
 |---|---|
-| Previous design (class-template documents, label in query): P@1 vs true class | 0.707 — below the classifier's 0.748 |
-| Label-free retrieval on KPI narratives: P@1 / P@5 vs true class | 0.451 / 0.335 (majority-class share 0.353) |
-| Same, averaging all paragraph embeddings to avoid truncation | 0.049 |
+| Previous: class-template documents, label in the query | 0.707 / 0.686 — below the classifier's 0.748 |
+| Template documents, label removed from the query | 0.102 / 0.069 |
+| Per-window KPI narratives, label-free query (deployed ranking) | 0.451 / 0.335 (majority-class share 0.353) |
+| Same, averaging all paragraph embeddings to avoid truncation | 0.049 / 0.201 |
 | Deployed design (filter by predicted type), top-1 similarity on 382 alarms | 0.59 – 0.75 (median 0.72); low-confidence flag 0/382 |
 
-### 5.6 Test Suite
-183 tests in 28 modules (20 unit, 8 integration): **180 pass, 3 skip** (the skipped tests need a
-Groq key). Appendix E lists the modules.
+Text alone identifies the true class only modestly above chance (P@5 is below the majority share),
+which is why the class comes from the classifier as a filter.
 
----
+### 5.6 Test Suite
+209 tests in 29 modules (21 unit, 8 integration): **206 pass, 3 skip** (the skipped tests need a Groq
+key). A test session restores the committed ChromaDB files, which ChromaDB rewrites on open.
+Appendix E lists the modules.
 
 ## 6. Discussion
 
 ### 6.1 Interpretation of Results
-**RQ1.** Neither SHAP nor retrieved incidents make the LLM cite the right standard: C1 5/30, C2 7/30
-(the overlapping CIs do not support a difference). **RQ2.** The alignment table does: 19/19 when the
-fault is classified correctly, 21/30 end to end, with every remaining error caused upstream by
-Layer 2. The grounding step is therefore not the bottleneck; detection and classification are.
-**RQ3** awaits the Track B re-run.
+**RQ1.** Neither SHAP nor retrieved incidents make the LLM cite the right standard: C1 5/30 and C2
+7/30 are both below a constant answer (12/30). **RQ2.** Injecting the alignment row makes the citation
+correct whenever the fault is classified correctly (19/19), but the LLM adds nothing beyond copying it:
+C3 equals the copy rule exactly (21/30). The value of the grounding step is the curated table plus the
+validator, not the model's knowledge, and every remaining error comes from Layer 2 — detection misses
+and misclassifications, which C3 then explains confidently with evidence for the wrong class. What
+the LLM contributes beyond the citation (specificity, actionability, causal soundness) is the question
+for Track B. **RQ3** awaits the Track B re-run.
 
 ### 6.2 G-Eval Analysis
 Pending the Track B re-run (Section 5.4). This section will report per-dimension and per-condition
@@ -426,60 +471,89 @@ These were found by reviewing the system against its data, and each was fixed at
    the first run against v1.2 turned its C3 30/30 into 28/30 — one reason Track C was re-run.
 9. **Dashboard data.** The dashboard browsed the Phase 1 hand-off file (935 training windows whose
    own tickets are in the index, older labels); it now browses the 382 Phase 2 test alarms.
+10. **The citation metric needed baselines.** Without them C3's 70 % read as "the LLM knows the
+    standard"; with them it is the copy rule's 70 %, and the LLM-only conditions trail a constant answer.
+11. **SHAP was shown with a misleading sign.** Layer 2 stores |SHAP|, so every prompt said "SHAP=+x",
+    including 97 top-3 features that push away from the predicted class; prompts now give magnitude,
+    direction and effect in words.
+12. **The C3 evidence block carried a second, stale standard and test-derived labels.** RCA records
+    still cite alignment v1.1 text (Handover TS 38.133) next to the table's TS 38.331, and their KPI
+    "evidence status" comes from class-level statistics over labelled windows including the test split.
+    Both were removed from the prompt (run v3); the citation counts did not change.
+13. **Dashboard defects.** Browsing a class with one alarm (Sudden Spike) crashed the window slider,
+    and a second upload displayed the first file's explanation; both fixed and covered by tests.
+14. **Deployment and reproducibility.** The lock pulled CUDA builds of PyTorch (about 2 GB, no GPU used);
+    `build_index.py --rebuild` without raw data silently emptied the committed index; scripts needed
+    `PYTHONPATH`; the split indices were not committed. All four were fixed at the packaging level.
 
 ### 6.4 Objectives Met
 | Objective | Result | Evidence |
 |---|---|---|
-| Detection | recall 88.7 %, precision 69.6 % | 5.1 |
-| Classification | 66.3 % exact (74.8 % of detected), 75.0 % family | 5.2 |
-| Attribution | top-3 SHAP with separate direction field | 3.5 |
-| Citation grounding | 21/30 end to end; 19/19 when classified correctly | 5.3 |
+| Detection | recall 88.7 % (83.5 % without Jamming), precision 69.6 % | 5.1, 5.2 |
+| Classification | 66.3 % exact (51.5 % without Jamming; 74.8 % of detected), 75.0 % family | 5.2 |
+| Attribution | top-3 SHAP with magnitude, KPI direction and effect | 3.5 |
+| Citation grounding | 21/30 end to end; 19/19 when classified correctly — equal to copying the table row | 5.3 |
 | Explanation quality | pending G-Eval re-run | 5.4 |
 
 ### 6.5 Limitations
-- **Sample size.** n = 30 per condition; the CIs in 5.3 are wide.
-- **Sudden Spike is invisible to the detector:** 0 of 11 test windows flagged; congestion is mostly
+- **The citation metric rewards copying.** In C3 the correct standard is in the prompt whenever the
+  classification is right, so C3 measures prompt compliance plus classifier accuracy; it does not show
+  that the LLM knows the standards (Section 5.3).
+- **Small, clustered sample.** n = 30 per condition, 3 per class, drawn from few recording sessions;
+  intervals and p-values are descriptive.
+- **The test split informed Layer 2 model choice** (Section 3.4), so the Track A figures are somewhat
+  optimistic as held-out estimates. Precision is also session-dependent: cross-validation produced about
+  1,021 false alarms per fold against 116 on the test split (`phase2/EXPERIMENT_LOG.md`).
+- **Jamming dominates the headline accuracy:** without it, exact accuracy is 51.5 %.
+- **Sudden Spike is invisible to the detector** (0 of 11 test windows flagged); congestion is mostly
   confused with Buffer Overflow. This caps end-to-end correctness for those faults whatever the LLM does.
-- **C3 on correct classifications is prompt compliance**, by construction.
+- **C3 amplifies Layer 2 errors:** a misclassified window receives confident-looking evidence for the
+  wrong class.
 - **Specification-level validation only:** clause numbers are not checked.
-- **G-Eval pending** on the current explanations; explanation quality beyond the citation is not yet measured, and an LLM judge needs a human spot-check.
+- **G-Eval pending** on the current explanations, and an LLM judge from the generator's family needs a
+  human spot-check.
 - **Layer 2 is not reproducible from this branch alone:** it needs `phase2/` and its data caches; the
-  model files store anonymous feature names.
-- **One LLM, one seed, free-tier quota** (15 requests/min; three 429s in the v2 run, all recovered).
+  model files store anonymous feature names; the training-session-only origin of the synthetic windows
+  is documented but not asserted in code.
+- **Data hygiene of the RCA file:** some records carry alignment v1.1 standards text and mis-encoded
+  characters in fields that are not injected into prompts.
+- **One LLM, one seed, free-tier quota** (15 requests/min; three 429s per run, all recovered).
 - **The corpus has no incident-resolution text,** so retrieval contributes comparable KPI patterns,
   not fixes.
 
 ### 6.6 Practical Implications
-For a NOC, the result says where to invest: grounding with a curated alignment table makes
-citations dependable once the fault is identified, so the next gains come from detection
-(Sudden Spike, congestion) rather than from the language model. The dashboard shows the citation
-check and the evidence behind each explanation, so an engineer can see when to distrust it.
-
----
+For a NOC, the results say where the value is: a curated fault-to-standard table plus a validator
+makes citations dependable once the fault is identified, while the LLM on its own picks the wrong
+specification more often than a constant answer would. Investment should go to detection (Sudden
+Spike, congestion) and to the table, and the LLM should be judged on the explanation it writes around
+the standard. The dashboard shows the citation check and the evidence behind each explanation, so an
+engineer can see when to distrust it.
 
 ## 7. Conclusion and Future Work
 
 ### 7.1 Main Achievements
-1. A session-split cascade with 88.7 % recall and 66.3 % exact accuracy over 11 fault types.
-2. An explanation pipeline whose citations are correct for the true fault in 21/30 sampled faults,
-   and in 19/19 when the fault was classified correctly; all failures trace to Layer 2.
+1. A session-split cascade with 88.7 % recall and 66.3 % exact accuracy over 11 fault types
+   (51.5 % without Jamming).
+2. An explanation pipeline whose citations are correct for the true fault in 21/30 sampled faults and
+   in 19/19 correctly classified ones; all failures trace to Layer 2.
 3. An evaluation that separates grounding from classification, scores against ground truth, and
-   is reproducible from the repository (Appendix F).
+   includes no-LLM baselines, reproducible from the repository (Appendix F).
 
 ### 7.2 Contributions
-- A three-condition ablation with shared instructions, sampled and scored by ground truth.
+- A three-condition ablation with shared instructions, sampled and scored by ground truth, with
+  constant and copy baselines that show what the citation metric can and cannot measure.
 - A Release 19 fault-to-3GPP alignment table for the TelecomTS fault types.
 - Evidence that, on TelecomTS, dense retrieval cannot substitute for the classifier, and a
   retrieval design that uses it for what it can do.
 
 ### 7.3 Future Work
-- G-Eval on the 72 explanations, with a human spot-check to measure judge–human agreement.
-- Improve detection of Sudden Spike and congestion (Layer 2).
-- Clause-level citation validation.
-- More windows and seeds for Track C; a second LLM.
-- Reproducible Layer 2 inference inside this repository (named features, a feature builder).
-
----
+- G-Eval on the 72 explanations of run v3, with a human spot-check to measure judge–human agreement.
+- A citation test the prompt cannot answer: ask for the clause, or hold the table out for some faults.
+- Improve detection of Sudden Spike and congestion (Layer 2), and re-estimate Track A on sessions
+  that played no part in model selection.
+- More windows, sessions and seeds for Track C; a second LLM.
+- Reproducible Layer 2 inference inside this repository (named features, a feature builder, an
+  asserted training-only synthetic-host set); regenerate `rca_evidence.json` from table v1.2.
 
 ## References
 [1] Lewis, P., et al. (2020). Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. *NeurIPS 2020*.
@@ -518,26 +592,27 @@ check and the evidence behind each explanation, so an engineer can see when to d
 | Jamming | none (external over-the-air event) | — | not-applicable |
 
 ### Appendix B — One Window under the Three Conditions
-Test window 611, true and predicted fault **Doppler Shift (Severe)** (`track_c_v2/track_c_explanations.jsonl`).
+Test window 611, true and predicted fault **Doppler Shift (Severe)** (`track_c_v3/track_c_explanations.jsonl`).
 
 **C1 — label + SHAP** · cited **TS 38.104** · correct: **no**
-> Root cause: "Severe Doppler shift is caused by high-speed user mobility inducing rapid frequency
-> variations, which correlates with above normal RSRP (+0.65 and +0.51) due to transient proximity
-> and below normal DL_MCS (+0.48) due to channel degradation." O-RAN component: Near-RT RIC.
+> Root cause: "Severe Doppler shift is induced by extremely high-speed user equipment movement,
+> leading to above-normal RSRP variations and degraded DL MCS due to rapid channel decorrelation."
+> O-RAN component: Near-RT RIC.
 
 **C2 — + past incidents** · cited **TS 38.104** · correct: **no**
-> Reasoning: "…above-normal RSRP variations (contributing +0.65 and +0.51) and below-normal DL_MCS
-> (contributing +0.48) directly mirror historical incidents where signal strength oscillated
-> rapidly between -121.6 dB and -107.2 dB…" O-RAN component: RIC xApp / gNodeB MAC/PHY.
+> Reasoning: "…heavily influenced by above-normal RSRP exhibiting sharp variability (spanning from
+> -120.7 dB to -107.2 dB across similar historical traces) and suppressed downlink modulation…"
+> O-RAN component: RIC xApp / gNB-DU.
 
 **C3 — + alignment row + RCA evidence** · cited **TR 38.901** · correct: **yes**
-> Root cause: "Severe Doppler shift caused by high user equipment velocity leading to rapid channel
-> phase variation, evidenced by elevated RSRP standard deviation (SHAP +0.654) and FFT energy
-> (SHAP +0.510) alongside suppressed DL MCS mean (SHAP +0.484)." Action: "Enable advanced channel
-> estimation and Doppler compensation algorithms at the O-DU/O-RU…" O-RAN component: O-DU / O-RU.
+> Root cause: "Severe Doppler shift is induced by high UE velocity, causing rapid channel phase
+> variations reflected by elevated RSRP standard deviation (RSRP_std |SHAP|=0.654) and FFT energy
+> alongside degraded downlink modulation (DL_MCS_mean=6)." Action: "Enable advanced channel
+> estimation and robust Doppler compensation algorithms at the O-DU/O-RU to handle high-velocity UE
+> trajectories." O-RAN component: O-DU / O-RU.
 
-C2 used the retrieved incidents' concrete RSRP range; only C3 cites the governing channel-model
-report and names the feature-level evidence from the RCA block.
+C2 used the retrieved incidents' concrete RSRP range; C3 cites the channel-model report it was given
+(TR 38.901, as the copy rule would) and names the feature-level evidence from the RCA block.
 
 ### Appendix C — G-Eval Rubric (1–5 per dimension)
 | Dimension | 1 | 3 | 5 |
@@ -581,28 +656,30 @@ models:
 ### Appendix E — Test Modules (`pytest --collect-only`)
 | Module | Tests | Module | Tests |
 |---|---:|---|---:|
-| test_phase2_models | 23 | test_schema | 10 |
-| test_llm_explainer | 23 | test_evaluator | 10 |
-| test_phase2_pipeline | 18 | test_data_loader | 6 |
-| test_phase2_data | 12 | test_run_eval_track_c | 6 |
-| test_rag_query | 5 | test_run_pipeline | 5 |
-| test_kg_indexer | 4 | test_run_eval_track_b | 4 |
-| test_build_index | 3 | test_config_loader | 3 |
-| test_explanation_panel | 3 | test_run_eval_track_a | 2 |
-| test_detection_panel / kpi_signal / shap / sources panels | 2 each | | |
+| test_review3_fixes | 26 | test_schema | 10 |
+| test_phase2_models | 23 | test_evaluator | 10 |
+| test_llm_explainer | 23 | test_data_loader | 6 |
+| test_phase2_pipeline | 18 | test_run_eval_track_c | 6 |
+| test_phase2_data | 12 | test_run_pipeline | 5 |
+| test_rag_query | 5 | test_run_eval_track_b | 4 |
+| test_kg_indexer | 4 | test_config_loader | 3 |
+| test_build_index | 3 | test_explanation_panel | 3 |
+| test_run_eval_track_a | 2 | test_detection_panel / kpi_signal / shap / sources panels | 2 each |
 | integration/test_01 schema | 3 | integration/test_05 llm explainer | 6 |
 | integration/test_02 rag query | 4 | integration/test_06 evaluator | 4 |
 | integration/test_03 chromadb | 6 | integration/test_07 full pipeline | 4 |
 | integration/test_04 alignment | 6 | integration/test_08 real RAG cycle | 5 (3 skip) |
-| **Total** | **183** (180 pass, 3 skip) | | |
+| **Total** | **209** (206 pass, 3 skip) | | |
 
 ### Appendix F — Where Each Number Comes From
 | Result | File | Produced by |
 |---|---|---|
 | Detection, classification, retrieval metrics | `data/processed/track_a_metrics.json` | `scripts/run_eval_track_a.py` |
-| Track C counts and explanations | `data/processed/track_c_v2/` | `scripts/run_eval_track_c.py --output data/processed/track_c_v2` |
+| Track C counts, baselines and explanations | `data/processed/track_c_v3/` (v2 for comparison) | `scripts/run_eval_track_c.py --output data/processed/track_c_v3` |
+| Retrieval design comparison (0.707 / 0.102 / 0.451 / 0.049) | — | `scripts/experiment_retrieval_design.py` |
 | Cascade counts (cross-check), training rows | `data/processed/validation.json`, `data/processed/log.txt` | Layer 2 pipeline (`phase2/` on main) |
+| Test-split use in model selection, CV false alarms | `phase2/DECISIONS.md`, `phase2/EXPERIMENT_LOG.md` (main branch) | Layer 2 team |
 | Feature list | `data/processed/feature_spec.json` | Layer 2 pipeline |
 | Alignment table | `data/alignment_table.json` | Rodina Khallaf, v1.2 |
-| Retrieval design experiments (0.707 / 0.451 / 0.049) | commit `76e4d86` message; `track_a_metrics.json` (0.451) | in-memory experiment on the 266 detected faults |
-| Wilson CIs, McNemar p | computed from `track_c_v2/track_c_explanations.jsonl` | — |
+| Wilson CIs, McNemar p | computed from `track_c_v3/track_c_explanations.jsonl` | — |
+
