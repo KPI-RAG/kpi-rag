@@ -189,7 +189,7 @@ figcaption b { font-style:normal; color:var(--fg); }
 @page { size:A4; margin:22mm 20mm 24mm; @bottom-center { content:counter(page); font-family:Inter, sans-serif; font-size:9pt; color:#777; } }
 @media print {
   :root { --bg:#fff; --bg-surface:#fff; }
-  body { padding:0; font-size:10.5pt; }
+  html { font-size:10.5pt; } body { padding:0; }
   .doc { max-width:none; }
   .title-page { min-height:auto; height:245mm; border:none; margin:0; page-break-after:always; }
   .chapter, .front { page-break-before:always; margin-top:0; }
