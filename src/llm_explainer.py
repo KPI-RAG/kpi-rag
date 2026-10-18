@@ -97,61 +97,57 @@ def build_prompt(
     alignment: dict[str, dict],
     rca_context: str = "",
 ) -> str:
-    """Full (C3) prompt: label + SHAP, optional RCA evidence block, top-3 tickets, alignment row."""
-    shap_lines = []
-    for x in payload.shap_top3:
-        direction = "above" if "above" in x.feature_vs_normal else "below"
-        shap_lines.append(f"  {x.channel}: {direction} normal (SHAP={x.shap_value:+.2f})")
-    shap_summary = "\n".join(shap_lines)
-    if tickets:
-        ticket_lines = []
-        for i, ticket in enumerate(tickets[:3]):
-            ticket_lines.append(f"  [{i+1}] {ticket.content[:200]}...")
-        tickets_summary = "\n".join(ticket_lines)
-    else:
-        tickets_summary = "  No similar incidents retrieved."
-    entry = alignment.get(payload.anomaly_type.value, {})
-    gpp_ts = entry.get("3gpp_ts", "")
-    clause = entry.get("clause", "")
-    evidence_span = entry.get("evidence_span", "")
-    oran_component = entry.get("oran_component", "")
+    """Full (C3) prompt: label + SHAP, optional RCA evidence block, top-3 tickets, alignment row.
 
-    rca_block = ""
-    if rca_context:
-        rca_block = f"\n[EVIDENCE FROM RCA PIPELINE]\n{rca_context}\n"
+    The same alignment row is used by validate_citation(), so C3's citation score
+    measures whether the LLM keeps the standard it was given, not whether it knew it;
+    C1 and C2 are the baselines without this context.
+    """
+    rca_block = f"\n[EVIDENCE FROM RCA PIPELINE]\n{rca_context}\n" if rca_context else ""
+    return (
+        _prompt_header(payload) + rca_block + _tickets_block(tickets)
+        + _standards_block(payload, alignment) + _RESPONSE_INSTRUCTIONS
+    )
 
-    # The same alignment row is used by validate_citation(), so C3's citation
-    # score (100%, 30/30) measures whether the LLM keeps the standard it was given, not
-    # whether it knew it. C1 (27%) and C2 (23%) provide the baselines without this context.
-    prompt = f"""You are a 5G network fault diagnosis expert.
 
-[FAULT DETECTED]
-Fault detected: {payload.anomaly_type.value}
-Confidence: {payload.confidence:.0%}
-
-Top contributing KPIs (SHAP):
-{shap_summary}
-{rca_block}
-[RETRIEVED INCIDENTS]
-{tickets_summary}
-
-[STANDARDS REFERENCE]
-3GPP {gpp_ts} clause {clause}: {evidence_span}
-O-RAN component: {oran_component}
-
-Use TR (Technical Report) instead of TS when the standard is a TR -- for example, channel models use TR 38.901.
+# One instruction block for all three Track C conditions, so C1/C2/C3 differ only in
+# the context they carry. No example standard numbers: those would hint the answer.
+_RESPONSE_INSTRUCTIONS = """
 Ground your explanation in the specific KPI values and SHAP evidence provided above.
 
 Return ONLY a JSON object with exactly these fields:
-{{
+{
   "root_cause": "one sentence physical explanation referencing specific KPI values",
-  "3gpp_reference": "TS/TR XX.XXX (e.g., TS 38.321 or TR 38.901)",
+  "3gpp_reference": "TS XX.XXX or TR XX.XXX",
   "oran_component": "component name",
   "recommended_action": "one actionable step",
   "reasoning_trace": "2-3 sentence causal chain citing specific KPI values from the evidence above"
-}}
+}
 """
-    return prompt
+
+
+def _prompt_header(payload: ClassifierOutput) -> str:
+    return (
+        "You are a 5G network fault diagnosis expert.\n\n"
+        f"Fault detected: {payload.anomaly_type.value}\n"
+        f"Confidence: {payload.confidence:.0%}\n\n"
+        f"Top contributing KPIs (SHAP):\n{_build_shap_summary(payload)}\n"
+    )
+
+
+def _tickets_block(tickets: list[RetrievedTicket]) -> str:
+    lines = [f"  [{i+1}] {t.content[:200]}..." for i, t in enumerate(tickets[:3])]
+    return "\nRetrieved similar incidents:\n" + ("\n".join(lines) or "  No similar incidents retrieved.") + "\n"
+
+
+def _standards_block(payload: ClassifierOutput, alignment: dict[str, dict]) -> str:
+    entry = alignment.get(payload.anomaly_type.value)
+    if not entry:   # Jamming: not-applicable row
+        return "\n[STANDARDS REFERENCE]\nNo 3GPP clause applies to this fault type.\n"
+    return (
+        f"\n[STANDARDS REFERENCE]\n3GPP {entry['3gpp_ts']} clause {entry['clause']}: {entry['evidence_span']}\n"
+        f"O-RAN component: {entry['oran_component']}\n"
+    )
 
 
 class RateLimiter:
@@ -336,8 +332,12 @@ def validate_citation(ref: str, alignment: dict[str, dict], fault_type: str = No
     """True if ``ref`` is a well-formed TS/TR number AND is cited in the fault's row.
 
     With ``fault_type`` the row's ``valid_refs`` are used (primary + secondary
-    standards); without it, any row's primary standard counts.
+    standards); without it, any row's primary standard counts. A fault with no
+    row (Jamming: no 3GPP clause applies) can never have a valid citation.
     """
+    if fault_type and fault_type not in alignment:
+        logger.warning("No alignment row for %s — citation %r cannot be valid", fault_type, ref)
+        return False
     try:
         check1 = bool(validate_3gpp_ref(ref))
     except Exception:
@@ -410,130 +410,14 @@ def _run_with_retry(
     return _template_fallback(payload, alignment)
 
 
-def explain_from_rca(
-    window_index: int,
-    fault_type: str,
-    condition: str | int,
-    cfg: dict,
-    rca_context: str = "",
-) -> LLMExplanation:
-    """Explain one rca_evidence window end to end.
-
-    Builds the ClassifierOutput from the record, retrieves tickets (C2/C3),
-    loads the alignment table and calls explain_condition(). ``condition``
-    may be 1/2/3 or "C1"/"C2"/"C3"; ``rca_context`` is only used for C3.
-    """
-    _cond_map = {"C1": 1, "C2": 2, "C3": 3}
-    if isinstance(condition, str):
-        cond_int = _cond_map.get(condition.upper(), int(condition.lstrip("Cc")))
-    else:
-        cond_int = int(condition)
-
-    from src.rca_loader import RCALoader
-    rca_evidence_path = cfg.get("data", {}).get(
-        "rca_evidence_path", "data/processed/rca_evidence.json"
-    )
-    loader = RCALoader(rca_evidence_path)
-    record = loader.get(window_index)
-    if record is None:
-        raise ValueError(f"window_index {window_index} not found in rca_evidence")
-
-    from src.schema import AnomalyType, ClassifierOutput, SHAPEntry
-    layer_b = record.get("layer_b_model_attribution", [])
-    top3_raw = sorted(layer_b, key=lambda x: abs(x.get("shap_value", 0)), reverse=True)[:3]
-    while len(top3_raw) < 3:   # schema wants exactly three
-        top3_raw.append(
-            {"channel": "N/A", "feature": "N/A", "shap_value": 0.0, "feature_vs_normal": "above_normal_mean"}
-        )
-    shap_top3 = [
-        SHAPEntry(
-            channel=e.get("channel", e.get("feature", "N/A")),
-            feature=e.get("feature", ""),
-            shap_value=float(e.get("shap_value", 0.0)),
-            feature_vs_normal=e.get("feature_vs_normal", "above_normal_mean"),
-        )
-        for e in top3_raw
-    ]
-    signal_statistics: dict[str, float] = {
-        k: float(v)
-        for k, v in record.get("layer_a_observational", {}).items()
-        if isinstance(v, (int, float))
-    }
-
-    try:
-        anomaly_type = AnomalyType(fault_type)
-    except ValueError:
-        matched = next(
-            (at for at in AnomalyType if at.value.lower() == fault_type.lower()), None
-        )
-        if matched is None:
-            raise ValueError(f"Unknown fault_type: {fault_type!r}")
-        anomaly_type = matched
-
-    payload = ClassifierOutput(
-        anomaly_type=anomaly_type,
-        confidence=float(record.get("confidence", 0.0)),
-        shap_top3=shap_top3,
-        signal_statistics=signal_statistics,
-    )
-
-    tickets: list[RetrievedTicket] = []
-    if cond_int in (2, 3):
-        try:
-            from src.kg_indexer import get_collection
-            from src.rag_query import query_from_classifier_output
-            collection = get_collection(cfg)
-            tickets, _ = query_from_classifier_output(payload, collection, cfg)
-        except Exception as exc:
-            logger.warning("Ticket retrieval failed (window %d): %s", window_index, exc)
-
-    alignment = load_alignment_table(alignment_path(cfg))
-
-    return explain_condition(
-        payload, tickets, cfg, alignment,
-        condition=cond_int,
-        rca_context=rca_context if cond_int == 3 else "",
-    )
-
-
 def explain(
-    payload: "ClassifierOutput | None" = None,
-    tickets: "list[RetrievedTicket] | None" = None,
-    cfg: dict | None = None,
-    alignment: "dict[str, dict] | None" = None,
-    *,
-    window_index: int | None = None,
-    fault_type: str | None = None,
-    condition: "str | int | None" = None,
+    payload: ClassifierOutput,
+    tickets: list[RetrievedTicket],
+    cfg: dict,
+    alignment: dict[str, dict],
     rca_context: str = "",
 ) -> LLMExplanation:
-    """Generate an explanation.
-
-    Two ways to call it:
-        explain(payload, tickets, cfg, alignment)            # full C3 prompt
-        explain(window_index=5, fault_type=..., condition="C3", cfg=cfg)
-    The second form builds payload and tickets itself via explain_from_rca().
-    """
-    if window_index is not None:
-        if cfg is None:
-            raise ValueError("cfg is required when using window_index")
-        if fault_type is None:
-            raise ValueError("fault_type is required when using window_index")
-        if condition is None:
-            raise ValueError("condition is required when using window_index")
-        return explain_from_rca(
-            window_index=window_index,
-            fault_type=fault_type,
-            condition=condition,
-            cfg=cfg,
-            rca_context=rca_context,
-        )
-
-    if payload is None or tickets is None or cfg is None or alignment is None:
-        raise ValueError(
-            "explain() requires either (payload, tickets, cfg, alignment) "
-            "or (window_index, fault_type, condition, cfg)"
-        )
+    """Generate an explanation with the full (C3) prompt."""
     prompt = build_prompt(payload, tickets, alignment, rca_context=rca_context)
     return _run_with_retry(prompt, cfg, payload, alignment)
 
@@ -549,61 +433,12 @@ def _build_shap_summary(payload: ClassifierOutput) -> str:
 
 def build_prompt_condition1(payload: ClassifierOutput) -> str:
     """Condition 1: label + SHAP only -- no tickets, no alignment table."""
-    shap_summary = _build_shap_summary(payload)
-    prompt = f"""You are a 5G network fault diagnosis expert.
-
-Fault detected: {payload.anomaly_type.value}
-Confidence: {payload.confidence:.0%}
-
-Top contributing KPIs (SHAP):
-{shap_summary}
-
-Return ONLY a JSON object with exactly these fields:
-{{
-  "root_cause": "one sentence physical explanation",
-  "3gpp_reference": "TS XX.XXX or TR XX.XXX",
-  "oran_component": "component name",
-  "recommended_action": "one actionable step",
-  "reasoning_trace": "2-3 sentence causal chain"
-}}
-"""
-    return prompt
+    return _prompt_header(payload) + _RESPONSE_INSTRUCTIONS
 
 
-def build_prompt_condition2(
-    payload: ClassifierOutput,
-    tickets: list[RetrievedTicket]
-) -> str:
+def build_prompt_condition2(payload: ClassifierOutput, tickets: list[RetrievedTicket]) -> str:
     """Condition 2: label + SHAP + tickets -- no alignment table."""
-    shap_summary = _build_shap_summary(payload)
-    if tickets:
-        ticket_lines = []
-        for i, ticket in enumerate(tickets[:3]):
-            ticket_lines.append(f"  [{i+1}] {ticket.content[:200]}...")
-        tickets_summary = "\n".join(ticket_lines)
-    else:
-        tickets_summary = "  No similar incidents retrieved."
-    prompt = f"""You are a 5G network fault diagnosis expert.
-
-Fault detected: {payload.anomaly_type.value}
-Confidence: {payload.confidence:.0%}
-
-Top contributing KPIs (SHAP):
-{shap_summary}
-
-Retrieved similar incidents:
-{tickets_summary}
-
-Return ONLY a JSON object with exactly these fields:
-{{
-  "root_cause": "one sentence physical explanation",
-  "3gpp_reference": "TS XX.XXX or TR XX.XXX",
-  "oran_component": "component name",
-  "recommended_action": "one actionable step",
-  "reasoning_trace": "2-3 sentence causal chain"
-}}
-"""
-    return prompt
+    return _prompt_header(payload) + _tickets_block(tickets) + _RESPONSE_INSTRUCTIONS
 
 
 def explain_condition(

@@ -1,13 +1,16 @@
 import json
 import logging
+import random
 import sys
 import os
 import argparse
 from pathlib import Path
 from collections import defaultdict
 
+import numpy as np
+
 from src.config_loader import load_config
-from src.schema import AnomalyType
+from src.schema import AnomalyType, ClassifierOutput
 from src.utils import setup_logging
 from src.kg_indexer import get_collection
 from src.rag_query import query_from_classifier_output
@@ -20,15 +23,51 @@ logger = logging.getLogger(__name__)
 TRACK_C_FAULTS = [ft for ft in AnomalyType if ft.value != "Jamming"]
 
 
+def sample_verified_windows(
+    phase2_path: str,
+    handoff_path: str,
+    test_idx: set,
+    fault_types: list,
+    n_per_fault: int,
+    seed: int = 42,
+) -> dict:
+    """Sample test windows where BOTH the Phase 2 prediction AND the ground truth equal the fault.
+
+    Returns {fault_type: [layer2 records]}. Faults with fewer verified windows than
+    n_per_fault get all they have (logged); nothing is topped up from other files.
+    """
+    rng = random.Random(seed)
+    with open(phase2_path, "r", encoding="utf-8") as f:
+        phase2 = json.load(f)
+    with open(handoff_path, "r", encoding="utf-8") as f:
+        truth = {r["window_index"]: r["ground_truth_anomaly_type"] for r in json.load(f)}
+
+    by_fault = {}
+    for ft in fault_types:
+        ft_val = ft.value if hasattr(ft, "value") else ft
+        verified = [
+            w for w in phase2
+            if w["window_index"] in test_idx
+            and w.get("anomaly_type") == ft_val
+            and truth.get(w["window_index"]) == ft_val   # normal windows are not in the handoff file
+        ]
+        if len(verified) < n_per_fault:
+            logger.warning("Fault '%s': only %d verified windows (need %d), using all of them",
+                           ft_val, len(verified), n_per_fault)
+        by_fault[ft] = rng.sample(verified, min(n_per_fault, len(verified)))
+        logger.info("Fault '%s': %d verified windows, sampled %d", ft_val, len(verified), len(by_fault[ft]))
+    return by_fault
+
+
 def run_track_c(
     output_dir: str,
     cfg: dict,
     n_per_fault: int = 3,
 ) -> None:
-    """Generate explanations for all 3 conditions on stratified samples.
+    """Generate explanations for all 3 conditions on verified samples.
 
-    n_per_fault samples per fault type (10 faults) × 3 conditions
-    = 30 × 3 = 90 total LLM calls (or 10 × 3 = 30 in dry-run).
+    Up to n_per_fault windows per fault type (10 faults), each a correctly
+    detected and correctly classified test window, × 3 conditions.
     Saves explanation JSONL and scores template for human annotation.
     """
     out = Path(output_dir)
@@ -39,117 +78,31 @@ def run_track_c(
 
     collection = get_collection(cfg)
     alignment = load_alignment_table(alignment_path(cfg))
-
-    # Initialize RCALoader once — O(1) lookup per window during the eval loop
-    rca_evidence_path = cfg.get("data", {}).get(
-        "rca_evidence_path", "data/processed/rca_evidence.json"
-    )
-    rca_loader = RCALoader(rca_evidence_path)
-
-    import random
-    from src.schema import ClassifierOutput
-
-    layer2_file = cfg.get("data", {}).get(
-        "layer2_output_file", "layer2_output_sessionsplit_phase2.json"
-    )
-    processed_dir = cfg.get("data", {}).get("processed_path", "data/processed")
-    layer2_path = (
-        layer2_file
-        if os.path.exists(layer2_file)
-        else os.path.join(processed_dir, layer2_file)
-    )
-    with open(layer2_path, "r", encoding="utf-8") as f:
-        all_windows_raw = json.load(f)
-
-    parsed_windows = []
-    for w in all_windows_raw:
-        try:
-            payload_obj = ClassifierOutput(**w)
-            window_idx = w.get("window_index")  # carry the join key for RCALoader
-            parsed_windows.append((payload_obj, window_idx))
-        except Exception as _skip_err:
-            # "Normal" windows land here too: Normal is not an AnomalyType
-            logger.debug("Skipping record window=%s: %s", w.get("window_index", "?"), _skip_err)
-
-    random.seed(cfg.get("data", {}).get("random_state", 42))
-
-    by_fault: dict[AnomalyType, list[tuple[ClassifierOutput, int | None]]] = {}
-    for payload_obj, window_idx in parsed_windows:
-        if payload_obj.anomaly_type in TRACK_C_FAULTS:
-            by_fault.setdefault(payload_obj.anomaly_type, []).append(
-                (payload_obj, window_idx)
-            )
-
-    # Option A: Supplement undersupplied faults (e.g. Congestion) from handoff file
-    supplement_path = os.path.join(processed_dir, "layer2_rag_handoff_sessionsplit.json")
-    if os.path.exists(supplement_path):
-        data_cfg = cfg.get("data", {})
-        test_idx_path = os.path.join(
-            data_cfg.get("indices_path", "data/indices"),
-            data_cfg.get("test_idx_file", "test_idx_sessionsplit.npy"),
-        )
-        test_set = set()
-        if os.path.exists(test_idx_path):
-            import numpy as np
-            test_set = set(np.load(test_idx_path).tolist())
-        with open(supplement_path, "r", encoding="utf-8") as f:
-            supp_raw = json.load(f)
-        for ft in TRACK_C_FAULTS:
-            if len(by_fault.get(ft, [])) < n_per_fault:
-                existing_w = {w_idx for _, w_idx in by_fault.get(ft, [])}
-                for rec in supp_raw:
-                    w_idx = rec.get("window_index")
-                    if test_set and (w_idx is None or w_idx not in test_set):
-                        continue
-                    if w_idx in existing_w:
-                        continue
-                    try:
-                        p_obj = ClassifierOutput(**rec)
-                        if p_obj.anomaly_type == ft:
-                            by_fault.setdefault(ft, []).append((p_obj, w_idx))
-                            existing_w.add(w_idx)
-                            if len(by_fault[ft]) >= n_per_fault:
-                                break
-                    except Exception as _skip_err:
-                        logger.debug("Skipping record window=%s: %s", rec.get("window_index", "?"), _skip_err)
-
-    # samples: list of (fault_type, ClassifierOutput, window_index)
-    samples: list[tuple[AnomalyType, ClassifierOutput, int | None]] = []
-    for ft in TRACK_C_FAULTS:
-        pool = by_fault.get(ft, [])
-        n = min(n_per_fault, len(pool))
-        if n > 0:
-            chosen = random.sample(pool, n)
-            for payload_obj, window_idx in chosen:
-                samples.append((ft, payload_obj, window_idx))
-
-    logger.info(
-        "Track C: %d fault types × %d samples × 3 conditions = %d LLM calls",
-        len(TRACK_C_FAULTS), n_per_fault, len(samples) * 3,
-    )
-
-    # Held-out guard: every sampled window must be in the test split (the index is train-only).
     data_cfg = cfg.get("data", {})
+    rca_loader = RCALoader(data_cfg.get("rca_evidence_path", "data/processed/rca_evidence.json"))
+
+    processed_dir = data_cfg.get("processed_path", "data/processed")
+    layer2_path = os.path.join(processed_dir, data_cfg.get("layer2_output_file", "layer2_output_sessionsplit_phase2.json"))
+    handoff_path = os.path.join(processed_dir, "layer2_rag_handoff_sessionsplit.json")   # ground truth
     test_idx_path = os.path.join(
         data_cfg.get("indices_path", "data/indices"), data_cfg.get("test_idx_file", "test_idx_sessionsplit.npy")
     )
+    # Held-out guard: the index is train-only, so only test windows may be explained.
     if not os.path.exists(test_idx_path):
         raise FileNotFoundError(f"Test index not found: {test_idx_path} — aborting.")
-    import numpy as np
     test_set = set(np.load(test_idx_path).tolist())
-    leaked = [w for _, _, w in samples if w is None or w not in test_set]
-    if leaked:
-        raise ValueError(f"Track C sampled {len(leaked)} windows outside the test split: {leaked[:5]}")
-    n_without_rca = sum(
-        1 for ft, _, w in samples
-        if not (rca_loader.get(w) or {}).get("predicted_fault") == ft.value
+
+    by_fault = sample_verified_windows(
+        layer2_path, handoff_path, test_set, TRACK_C_FAULTS, n_per_fault,
+        seed=data_cfg.get("random_state", 42),
     )
+    samples = [(ft, ClassifierOutput(**w), w["window_index"]) for ft in TRACK_C_FAULTS for w in by_fault[ft]]
+    logger.info("Track C: %d verified samples × 3 conditions = %d LLM calls", len(samples), len(samples) * 3)
+
+    n_without_rca = sum(1 for ft, _, w in samples if (rca_loader.get(w) or {}).get("predicted_fault") != ft.value)
     if n_without_rca:
-        logger.warning(
-            "%d/%d sampled windows have no RCA record for their sampled fault; "
-            "their C3 prompt gets a representative record of another window",
-            n_without_rca, len(samples),
-        )
+        logger.warning("%d/%d samples have no matching RCA record; their C3 prompt carries no RCA block",
+                       n_without_rca, len(samples))
 
     all_explanations: list[dict] = []
     all_scores: list[dict] = []
@@ -169,19 +122,9 @@ def run_track_c(
             # C3 gets the alignment row and RCA evidence; its citation score therefore
             # measures prompt compliance, with C1/C2 as the baselines.
             rca_context = ""
-            if condition == 3 and window_index is not None:
-                rec = rca_loader.get(window_index)
-                if rec and rec.get("predicted_fault") == ft.value:
-                    rca_context = rca_loader.get_prompt_context(window_index)
-                else:
-                    rep = rca_loader.find_by_fault(ft.value)
-                    if rep:
-                        rca_context = rca_loader._format_context(rep)
-                if rca_context:
-                    logger.info(
-                        "  RCA evidence injected for window %s (%d chars)",
-                        window_index, len(rca_context),
-                    )
+            if condition == 3 and (rca_loader.get(window_index) or {}).get("predicted_fault") == ft.value:
+                rca_context = rca_loader.get_prompt_context(window_index)
+                logger.info("  RCA evidence injected for window %s (%d chars)", window_index, len(rca_context))
 
             explanation = explain_condition(
                 payload, tickets, cfg, alignment,

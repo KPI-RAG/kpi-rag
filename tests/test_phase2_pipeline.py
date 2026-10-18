@@ -137,54 +137,28 @@ def test_run_track_c_has_default_output():
         sys.argv = old_argv
 
 
-# ── Congestion supplementation ────────────────────────────────────────────────
+# ── Track C verified sampling ─────────────────────────────────────────────────
 
-def test_congestion_supplementation_reaches_3_samples():
-    """
-    Phase 2 layer2 has only 2 Gradual and 1 Sudden Spike.
-    After supplementation from old handoff, both must have >= 3.
-    """
+def test_track_c_verified_sampling():
+    """Every sampled window is a test window whose prediction AND ground truth equal its fault."""
     import json, numpy as np
-    from src.schema import ClassifierOutput
-    from scripts.run_eval_track_c import TRACK_C_FAULTS
-    import os
+    from scripts.run_eval_track_c import sample_verified_windows, TRACK_C_FAULTS
 
-    with open("data/processed/layer2_output_sessionsplit_phase2.json") as f:
-        d = json.load(f)
+    test_idx = set(np.load("data/indices/test_idx_sessionsplit.npy").tolist())
+    with open("data/processed/layer2_rag_handoff_sessionsplit.json", encoding="utf-8") as f:
+        truth = {r["window_index"]: r["ground_truth_anomaly_type"] for r in json.load(f)}
 
-    by_fault = {}
-    for w in d:
-        try:
-            obj = ClassifierOutput(**w)
-            if obj.anomaly_type in TRACK_C_FAULTS:
-                by_fault.setdefault(obj.anomaly_type, []).append(w["window_index"])
-        except Exception:
-            pass
-
-    test_set = set(np.load("data/indices/test_idx_sessionsplit.npy").tolist())
-    supplement_path = "data/processed/layer2_rag_handoff_sessionsplit.json"
-
-    if os.path.exists(supplement_path):
-        with open(supplement_path) as f:
-            old_data = json.load(f)
-        for ft in TRACK_C_FAULTS:
-            if len(by_fault.get(ft, [])) < 3:
-                existing = set(by_fault.get(ft, []))
-                for rec in old_data:
-                    if rec.get("window_index") in test_set and rec.get("window_index") not in existing:
-                        try:
-                            obj = ClassifierOutput(**rec)
-                            if obj.anomaly_type == ft:
-                                by_fault.setdefault(ft, []).append(rec["window_index"])
-                                existing.add(rec["window_index"])
-                                if len(by_fault[ft]) >= 3:
-                                    break
-                        except Exception:
-                            pass
-
-    for ft in TRACK_C_FAULTS:
-        count = len(by_fault.get(ft, []))
-        assert count >= 3, f"{ft.value} has only {count} samples after supplementation"
+    result = sample_verified_windows(
+        phase2_path="data/processed/layer2_output_sessionsplit_phase2.json",
+        handoff_path="data/processed/layer2_rag_handoff_sessionsplit.json",
+        test_idx=test_idx, fault_types=TRACK_C_FAULTS, n_per_fault=3, seed=42,
+    )
+    for ft, windows in result.items():
+        for w in windows:
+            assert w["window_index"] in test_idx
+            assert w["anomaly_type"] == ft.value
+            assert truth.get(w["window_index"]) == ft.value   # never a normal or misclassified window
+    assert sum(len(v) for v in result.values()) == 26     # Congestion: Gradual has 2, Sudden Spike 0
 
 
 # ── ChromaDB cosine metric ────────────────────────────────────────────────────

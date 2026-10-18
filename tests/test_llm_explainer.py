@@ -363,3 +363,26 @@ def test_retry_backs_off_on_429_then_succeeds(mock_call, mock_sleep, sample_payl
     assert mock_call.call_count == 2
     mock_sleep.assert_called_once_with(7.0)   # server Retry-After wins over exponential backoff
 
+
+
+def test_validate_citation_fault_without_alignment_row_is_never_valid(alignment):
+    """Jamming has no 3GPP row: no reference may count as valid (was: any primary standard)."""
+    assert validate_citation("TS 38.141-1", alignment, "Jamming") is False
+    assert validate_citation("TS 38.141-1", alignment, "Antenna Failure") is True
+    assert validate_citation("TS 38.331", alignment, "Faulty Handover Algorithm (Too Frequent)") is True
+    assert validate_citation("TS 38.133", alignment, "Faulty Handover Algorithm (Too Frequent)") is False
+
+
+def test_conditions_share_the_same_instructions(sample_payload, alignment):
+    """C1/C2/C3 differ only in context, so the ablation delta is not an instruction effect."""
+    tail = build_prompt_condition1(sample_payload).split("Ground your explanation", 1)[1]
+    assert build_prompt_condition2(sample_payload, []).endswith(tail)
+    assert build_prompt(sample_payload, [], alignment).endswith(tail)
+    assert "TR 38.901" not in build_prompt(sample_payload, [], alignment)   # no answer hints
+
+
+def test_jamming_prompt_says_no_clause_applies(alignment):
+    from src.schema import ClassifierOutput
+    p = ClassifierOutput(anomaly_type="Jamming", confidence=0.9, signal_statistics={},
+                         shap_top3=[{"channel": c, "shap_value": 0.1, "feature_vs_normal": "above_normal_mean"} for c in "ABC"])
+    assert "No 3GPP clause applies" in build_prompt(p, [], alignment)

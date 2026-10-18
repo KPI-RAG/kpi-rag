@@ -21,17 +21,20 @@ st.set_page_config(
     layout="wide"
 )
 
-# Check the key before loading anything heavy.
-_api_key = os.environ.get("GEMINI_API_KEY")
-if not _api_key:
+from src.config_loader import load_config
+
+# Check the configured backend's key before loading anything heavy (ollama needs none).
+_key_name = {"gemini": "GEMINI_API_KEY", "groq": "GROQ_API_KEY"}.get(
+    load_config(os.path.join(REPO_ROOT, "configs", "config.yaml"))["llm"]["backend"]
+)
+if _key_name and not os.environ.get(_key_name):
     st.error(
-        "⚠️ **GEMINI_API_KEY not configured.**  \n"
+        f"⚠️ **{_key_name} not configured.**  \n"
         "Add it in **App Settings → Secrets** on Streamlit Community Cloud, "
         "or set it in your local `.env` file."
     )
     st.stop()
 
-from src.config_loader import load_config
 from src.schema import ClassifierOutput, SHAPEntry
 from src.utils import setup_logging
 from src.kg_indexer import get_collection
@@ -97,27 +100,24 @@ def load_rca():
 
 
 @st.cache_data(show_spinner=False)
-def load_layer2_windows(path: str | None = None) -> list:
-    """Load layer2 handoff windows as ClassifierOutput objects."""
-    if path is None:
-        path = os.path.join(REPO_ROOT, "data", "processed", "layer2_rag_handoff_sessionsplit.json")
+def load_layer2_windows() -> list:
+    """Windows Phase 2 flagged as faults, as ClassifierOutput objects.
+
+    Every record in the Phase 2 file is a test-split window, so none of them has
+    its own ticket in the (train-only) ChromaDB index.
+    """
+    data_cfg = get_cfg()["data"]
+    path = os.path.join(REPO_ROOT, data_cfg["processed_path"], data_cfg["layer2_output_file"])
     if not os.path.exists(path):
         return []
     with open(path, encoding="utf-8") as f:
         records = json.load(f)
     windows = []
     for r in records:
+        if r["anomaly_type"] == "Normal":
+            continue
         try:
-            payload = ClassifierOutput(
-                anomaly_type=r["predicted_fault_type"],
-                confidence=r["confidence"],
-                shap_top3=r["shap_top3"],
-                signal_statistics=r["signal_statistics"],
-            )
-            windows.append({
-                "window_index": r.get("window_index", len(windows)),
-                "payload": payload,
-            })
+            windows.append({"window_index": r["window_index"], "payload": ClassifierOutput(**r)})
         except Exception as e:
             logger.warning("Skipping malformed layer-2 window record: %s", e)
     return windows
@@ -142,7 +142,11 @@ window_index = None
 if input_method == "Upload JSON":
     uploaded = st.sidebar.file_uploader("ClassifierOutput JSON", type="json")
     if uploaded:
-        payload = ClassifierOutput(**json.load(uploaded))
+        try:
+            payload = ClassifierOutput(**json.load(uploaded))
+        except Exception as e:   # bad JSON or schema mismatch
+            st.error(f"Not a valid ClassifierOutput JSON: {e}")
+            st.stop()
         active_key = "uploaded"
     else:
         payload = None
@@ -150,7 +154,7 @@ if input_method == "Upload JSON":
 
 elif input_method == "Browse Dataset Windows":
     if not layer2_windows:
-        st.warning("layer2_rag_handoff_sessionsplit.json not found — check data/processed/")
+        st.warning(f"{cfg['data']['layer2_output_file']} not found — check data/processed/")
         st.stop()
     fault_types = sorted(set(w["payload"].anomaly_type.value for w in layer2_windows))
     selected_fault = st.sidebar.selectbox("Filter by fault type", ["All"] + fault_types)
@@ -176,20 +180,26 @@ else:  # Use example
     active_key = "example_antenna_failure"
 
 st.sidebar.divider()
-st.sidebar.caption("Model: all-MiniLM-L6-v2 | DB: ChromaDB | LLM: Gemini 3.5 Flash Lite")
+_llm = cfg["llm"]
+st.sidebar.caption(
+    f"Model: {cfg['rag']['embedding_model']} | DB: ChromaDB | "
+    f"LLM: {_llm.get(_llm['backend'] + '_model', _llm['backend'])}"
+)
 
 if payload is None:
     st.info("👈 Upload a ClassifierOutput JSON or select example")
     st.stop()
 
-# RCA evidence is only available when a dataset window (window_index) is selected.
+# RCA evidence is only available when a dataset window is selected, and is only
+# injected when the record is for the same fault the payload names.
 rca_context = ""
-if rca_loader is not None and window_index is not None:
+if (rca_loader is not None and window_index is not None
+        and (rca_loader.get(window_index) or {}).get("predicted_fault") == payload.anomaly_type.value):
     rca_context = rca_loader.get_prompt_context(window_index)
 if rca_context:
     st.sidebar.caption("✅ RCA evidence injected into prompt")
 else:
-    st.sidebar.caption("ℹ️ No RCA context (example/upload mode)")
+    st.sidebar.caption("ℹ️ No RCA context for this input")
 
 if payload is not None:
     col1, col2 = st.columns([1, 2])
@@ -243,8 +253,8 @@ else:
 
 st.divider()
 
-# RCA Evidence panel. rca_evidence.json only covers the 1,235 anomalous windows
-# (window_index 0..1234); for other inputs show a representative record and say so.
+# RCA Evidence panel. rca_evidence.json covers the 289 non-Jamming Phase 2 alarms;
+# for other inputs show a representative record and say so.
 rca_record = rca_loader.get(window_index) if (rca_loader and window_index is not None) else None
 if rca_record is None and rca_loader is not None:
     fault_val = payload.anomaly_type.value

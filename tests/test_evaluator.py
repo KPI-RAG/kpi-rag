@@ -148,3 +148,10 @@ def test_save_results_none_track_c(tmp_path, synth_scores):
     assert data["track_b"]["n"] == 9
     assert data["track_c"] is None
 
+
+
+def test_geval_score_rejects_unannotated_template_row():
+    """An all-0.0 template row is not a score and must not be averaged."""
+    with pytest.raises(ValueError, match="outside 1-5"):
+        GEvalScore(explanation_id="w1_c1", condition=1, fault_type="Antenna Failure",
+                   citation_validity=0.0, fault_specificity=0.0, actionability=0.0, causal_soundness=0.0)

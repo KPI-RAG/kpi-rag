@@ -20,7 +20,11 @@ class GEvalScore:
     overall: float = field(init=False)
 
     def __post_init__(self):
-        self.overall = (self.citation_validity + self.fault_specificity + 
+        # Also catches an un-annotated template (all 0.0) loaded from JSONL.
+        for val in (self.citation_validity, self.fault_specificity, self.actionability, self.causal_soundness):
+            if not (1.0 <= val <= 5.0):
+                raise ValueError(f"Score {val} outside 1-5 range ({self.explanation_id})")
+        self.overall = (self.citation_validity + self.fault_specificity +
                         self.actionability + self.causal_soundness) / 4.0
 
 @dataclass
@@ -63,10 +67,6 @@ def score_explanation(
     reference_valid uses the fault-specific check (same as Track C) when an
     alignment table is given, otherwise just the TS/TR format.
     """
-    for val in [citation_validity, fault_specificity, actionability, causal_soundness]:
-        if not (1.0 <= val <= 5.0):
-            raise ValueError(f"Score {val} outside 1-5 range")
-            
     try:
         if alignment is not None:
             from src.llm_explainer import validate_citation
