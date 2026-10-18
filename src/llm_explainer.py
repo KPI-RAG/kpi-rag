@@ -380,7 +380,8 @@ def validate_citation(ref: str, alignment: dict[str, dict], fault_type: str = No
     if not check1:
         logger.warning("Citation validation failed Check 1 (format regex): %s", ref)
     if not check2:
-        logger.warning("Citation validation failed Check 2 (alignment table lookup): %s", ref)
+        # a wrong-row citation is an ordinary outcome (scoring, baselines), not a fault
+        logger.debug("Citation validation failed Check 2 (alignment table lookup): %s", ref)
     return check1 and check2
 
 
