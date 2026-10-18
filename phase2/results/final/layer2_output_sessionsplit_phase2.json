@@ -19,8 +19,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5487187488445093,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -113,8 +113,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5537923952845761,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -207,8 +207,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.47235641654720667,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -301,8 +301,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.552409475724845,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -395,8 +395,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5629859721533349,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -489,8 +489,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5521301127156157,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -583,8 +583,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5648262660529968,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -677,8 +677,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5498592880199664,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -771,8 +771,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5563927388085507,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -865,8 +865,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.568366109262918,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -1053,8 +1053,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5572037591556828,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -1147,8 +1147,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5622554269197324,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -1241,8 +1241,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5512709590542195,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -1335,8 +1335,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5582928152644125,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -1429,8 +1429,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5791655900145938,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -1523,8 +1523,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5673784762627072,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -1617,8 +1617,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5367250679592641,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -1711,8 +1711,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5512709590542195,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -1805,8 +1805,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5655542524110301,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -1899,8 +1899,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5521301127156157,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -1993,8 +1993,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5176804383917959,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -2087,8 +2087,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5275459603571246,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -2181,8 +2181,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5594333544398696,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -2275,8 +2275,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5594333544398696,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -2369,8 +2369,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5608430029692912,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -2463,8 +2463,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5825053526513225,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -2557,8 +2557,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5563066674423166,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -2651,8 +2651,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5608450254741228,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -2745,8 +2745,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5442183288646729,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -2839,8 +2839,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5608430029692912,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -2933,8 +2933,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5728370248520442,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -3027,8 +3027,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5762483887231508,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -3121,8 +3121,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5655381823630452,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -3215,8 +3215,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5442183288646729,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -3309,8 +3309,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5486667632493862,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -3403,8 +3403,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5521624265270026,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -3497,8 +3497,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5717503454737375,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -3591,8 +3591,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5608450254741228,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -3685,8 +3685,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5669536853124768,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -3779,8 +3779,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5582928152644125,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -3873,8 +3873,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5518923188287144,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -3967,8 +3967,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.48095659055105694,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -4061,8 +4061,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.47611786715961085,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -4155,8 +4155,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5725600385732381,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -4249,8 +4249,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5594333544398696,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -4343,8 +4343,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.563026391884727,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -4437,8 +4437,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5582928152644125,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -4531,8 +4531,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.4761531482729087,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -4625,8 +4625,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5664134060724263,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -4719,8 +4719,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5628760337780391,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -4813,8 +4813,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.560791017374168,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -4907,8 +4907,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5669536853124768,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -5001,8 +5001,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5666743223032475,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -5095,8 +5095,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5610377623832089,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -5189,8 +5189,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5521301127156157,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -5283,8 +5283,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.563262958432141,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -5377,8 +5377,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5624532653326404,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -5471,8 +5471,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.46041129861333996,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -5565,8 +5565,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5591539914306405,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -5659,8 +5659,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5583088853123974,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -5753,8 +5753,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5512689365493879,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -5847,8 +5847,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.4957003689804284,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -5941,8 +5941,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.564126511328792,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -6035,8 +6035,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5751102262781167,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -6129,8 +6129,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5619295340447935,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -6223,8 +6223,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5676231987669162,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -6317,8 +6317,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5453749380881149,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -6411,8 +6411,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5736982010182722,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -6505,8 +6505,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5751102262781167,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -6599,8 +6599,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5467685165695515,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -6693,8 +6693,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5759714024443446,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -6787,8 +6787,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5549329344600333,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -6881,8 +6881,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5176825525351287,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -6975,8 +6975,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5467705390743833,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -7069,8 +7069,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5449760186341783,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -7163,8 +7163,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5582928152644125,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -7257,8 +7257,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5572037591556828,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -7351,8 +7351,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5608430029692912,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -7445,8 +7445,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5737005777486952,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -7539,8 +7539,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5523554676248903,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -7633,8 +7633,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.563262958432141,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -7727,8 +7727,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5773476232935074,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -7821,8 +7821,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5717479687433145,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -7915,8 +7915,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5673884722231902,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -8009,8 +8009,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5582928152644125,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -8103,8 +8103,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5725600385732381,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -8197,8 +8197,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5546535714508041,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -8291,8 +8291,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5498592880199664,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -8385,8 +8385,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5706258763462653,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -8479,8 +8479,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5632649809369727,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -8573,8 +8573,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5582928152644125,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -8667,8 +8667,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5725600385732381,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -8761,8 +8761,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.5666766990336707,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -9650,8 +9650,8 @@
         "feature_vs_normal": "below_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch3_mean",
+        "channel": "UL_SNR",
+        "feature": "UL_SNR_patch7_mean",
         "shap_value": 0.5098585185737528,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "below_normal_mean"
@@ -10308,8 +10308,8 @@
         "feature_vs_normal": "below_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch3_mean",
+        "channel": "UL_SNR",
+        "feature": "UL_SNR_patch7_mean",
         "shap_value": 0.5634835177802711,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "below_normal_mean"
@@ -10402,8 +10402,8 @@
         "feature_vs_normal": "below_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch3_mean",
+        "channel": "UL_SNR",
+        "feature": "UL_SNR_patch7_mean",
         "shap_value": 0.6263103985577926,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "below_normal_mean"
@@ -10496,8 +10496,8 @@
         "feature_vs_normal": "below_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch3_mean",
+        "channel": "UL_SNR",
+        "feature": "UL_SNR_patch7_mean",
         "shap_value": 0.687184211286013,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "below_normal_mean"
@@ -12852,8 +12852,8 @@
         "feature_vs_normal": "below_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch3_mean",
+        "channel": "UL_SNR",
+        "feature": "UL_SNR_patch7_mean",
         "shap_value": 0.5365361354255278,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "below_normal_mean"
@@ -13307,8 +13307,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_std",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_std",
         "shap_value": 0.30695476572088254,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -13770,8 +13770,8 @@
         "feature_vs_normal": "below_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch3_mean",
+        "channel": "UL_SNR",
+        "feature": "UL_SNR_patch7_mean",
         "shap_value": 0.6298416189052274,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "below_normal_mean"
@@ -15425,8 +15425,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_std",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_std",
         "shap_value": 0.30515929565281036,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -16957,8 +16957,8 @@
         "feature_vs_normal": "below_normal_mean"
       },
       {
-        "channel": "DL_BLER",
-        "feature": "DL_BLER_patch0_std",
+        "channel": "RSRP",
+        "feature": "RSRP_patch1_std",
         "shap_value": 0.30342292214109656,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "below_normal_mean"
@@ -17962,8 +17962,8 @@
         "feature_vs_normal": "below_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch3_mean",
+        "channel": "UL_SNR",
+        "feature": "UL_SNR_patch7_mean",
         "shap_value": 0.5367943134087727,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "below_normal_mean"
@@ -18858,8 +18858,8 @@
         "feature_vs_normal": "below_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch3_mean",
+        "channel": "UL_SNR",
+        "feature": "UL_SNR_patch7_mean",
         "shap_value": 0.5265777999966936,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "below_normal_mean"
@@ -19595,8 +19595,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_std",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_std",
         "shap_value": 0.22958323943300352,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -20976,8 +20976,8 @@
         "feature_vs_normal": "below_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch3_mean",
+        "channel": "UL_SNR",
+        "feature": "UL_SNR_patch7_mean",
         "shap_value": 0.6791795644509043,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "below_normal_mean"
@@ -21315,8 +21315,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "DL_NumberOfPackets",
-        "feature": "DL_NumberOfPackets_patch6_mean",
+        "channel": "PRB_Utilization_UL",
+        "feature": "PRB_Utilization_UL_patch7_mean",
         "shap_value": 0.31588772567000556,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -22023,8 +22023,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "DL_NumberOfPackets",
-        "feature": "DL_NumberOfPackets_patch6_mean",
+        "channel": "PRB_Utilization_UL",
+        "feature": "PRB_Utilization_UL_patch7_mean",
         "shap_value": 0.3423873744182078,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -22204,8 +22204,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "DL_NumberOfPackets",
-        "feature": "DL_NumberOfPackets_patch6_mean",
+        "channel": "PRB_Utilization_UL",
+        "feature": "PRB_Utilization_UL_patch7_mean",
         "shap_value": 0.28815179159129584,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -23843,8 +23843,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "DL_NumberOfPackets",
-        "feature": "DL_NumberOfPackets_patch6_mean",
+        "channel": "PRB_Utilization_UL",
+        "feature": "PRB_Utilization_UL_patch7_mean",
         "shap_value": 0.31732726211725965,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -24212,8 +24212,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "DL_NumberOfPackets",
-        "feature": "DL_NumberOfPackets_patch6_mean",
+        "channel": "PRB_Utilization_UL",
+        "feature": "PRB_Utilization_UL_patch7_mean",
         "shap_value": 0.3418484489509004,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -24689,8 +24689,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "DL_NumberOfPackets",
-        "feature": "DL_NumberOfPackets_patch6_mean",
+        "channel": "PRB_Utilization_UL",
+        "feature": "PRB_Utilization_UL_patch7_mean",
         "shap_value": 0.31506367164963395,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -25487,8 +25487,8 @@
         "feature_vs_normal": "below_normal_mean"
       },
       {
-        "channel": "DL_BLER",
-        "feature": "DL_BLER_patch0_std",
+        "channel": "RSRP",
+        "feature": "RSRP_patch1_std",
         "shap_value": 0.2688868066794332,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "below_normal_mean"
@@ -26511,15 +26511,15 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "DL_BLER",
-        "feature": "DL_BLER_patch0_std",
+        "channel": "RSRP",
+        "feature": "RSRP_patch1_std",
         "shap_value": 0.2852096252652719,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "below_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_std",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_std",
         "shap_value": 0.19748985391682827,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -56086,8 +56086,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_std",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_std",
         "shap_value": 0.22739607456041008,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -251783,8 +251783,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.22562175501352186,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "below_normal_mean"
@@ -255119,8 +255119,8 @@
         "note": "idle_link_ambiguous"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.19658595779156326,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "below_normal_mean",
@@ -331726,8 +331726,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.19270375524017455,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "below_normal_mean"
@@ -408864,8 +408864,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.19776798387850694,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "below_normal_mean"
@@ -419175,8 +419175,8 @@
         "feature_vs_normal": "below_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_std",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_std",
         "shap_value": 0.19451506603093824,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "above_normal_mean"
@@ -453664,8 +453664,8 @@
         "feature_vs_normal": "above_normal_mean"
       },
       {
-        "channel": "TX_Bytes",
-        "feature": "TX_Bytes_patch0_mean",
+        "channel": "RSRP",
+        "feature": "RSRP_patch7_mean",
         "shap_value": 0.2044099104842843,
         "shap_effect": "toward_predicted_class",
         "feature_vs_normal": "below_normal_mean"

@@ -16,7 +16,7 @@ session-level split. Model 1 test P 0.196 / R 0.897; Model 2 test accuracy 0.677
   All Phase 2 outputs live in `kpi_rag/phase2/`.
 - One numbered script per step in `scripts/`; shared code in `src/`; outputs in `results/NN_*/`.
 - Selection: session-grouped CV, 5 folds x 5 seeds; Nadeau-Bengio corrected t-test vs
-  the current model. Test set (3 sessions) = **post-hoc only**, never used to choose.
+  the current model. Test set (5 sessions: 1, 3, 4, 13, 17) = **post-hoc only**, never used to choose.
 - A step is "done" only when its script runs end to end and the result is checked.
 
 ## Status
@@ -45,9 +45,10 @@ session-level split. Model 1 test P 0.196 / R 0.897; Model 2 test accuracy 0.677
 | 12c-1 | Session-level bootstrap CIs + power analysis | ✅ done | small gains need ≈ 31 folds (2–3× more fault sessions) |
 | 12 | Report `docs/phase2_results.md` + docx, `PROJECT_STORY.md`, `docs/future_work.md` | ✅ done | — |
 | — | TabPFN / Mantis / more algorithms | dropped | evidence: no expected gain at n = 935 vs cost |
-| 09 | Her next step 4: reject option + fixed Model 1, measured on the full cascade | planned | — |
-| 10 | Final cascade + one pipeline (Layer 2 JSON format unchanged) | planned | — |
-| 11 | SHAP vs Alignment Table; report (incl. her next step 3: class grouping) | planned | — |
+| 09 | Her next step 4: reject option + fixed Model 1, measured on the full cascade | ✅ done (steps 10, 10c) | not promoted |
+| 10 | Final cascade + one pipeline (Layer 2 JSON format unchanged) | ✅ done (step 11) | see above |
+| 11 | SHAP vs Alignment Table; report (incl. her next step 3: class grouping) | ✅ report + family metric done (12c); SHAP-vs-table comparison left to the evaluation workstream | — |
+| 11b | Audit 2026-10-18: patch-feature names in `shap_top3` were patch-major but values are channel-major (names only; models unaffected) | ✅ fixed in `src/pipeline.py`, JSON regenerated | 121 of 382 fault records had a wrong KPI in `shap_top3` |
 | — | Her next step 5: explanation-layer evaluation (G-Eval, TeleQnA) | out of scope | Evaluation workstream (Rodina) |
 
 ## Key decisions

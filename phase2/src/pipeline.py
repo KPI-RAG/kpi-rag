@@ -20,7 +20,7 @@ CHANNELS = ["RSRP", "DL_BLER", "DL_MCS", "UL_BLER", "UL_MCS", "UL_NPRB", "UL_SNR
             "PRB_Utilization_UL", "UL_NumberOfPackets", "DL_NumberOfPackets"]
 STATS = ["mean", "std", "min", "max"]
 A_NAMES = [f"{c}_{s}" for c in CHANNELS for s in STATS]
-PATCH_NAMES = [f"{c}_patch{p}_{s}" for p in range(8) for c in CHANNELS for s in ("mean", "std")]
+PATCH_NAMES = [f"{c}_patch{p}_{s}" for c in CHANNELS for p in range(8) for s in ("mean", "std")]   # channel-major, as v3.patch_stats
 FFT_NAMES = [f"{c}_fft_{k}" for c in CHANNELS for k in ("band1", "band2", "band3", "band4", "energy")]
 G_NAMES = F.names()
 M2_NAMES = [([*A_NAMES, *PATCH_NAMES][i]) for i in range(320)] + FFT_NAMES + G_NAMES   # B+FFT+G = 496

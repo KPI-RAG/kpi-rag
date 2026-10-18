@@ -1,7 +1,7 @@
 KPI-RAG PHASE 2 (DATA & MODELS) — FINAL HANDOFF                                   2026-10-15
 =====================================================================================
 
-Everything is finished and synced (143 files on Drive, same on the server).
+Everything is finished. GitHub (phase2/) is the master copy; the Drive mirror is incomplete (Drive storage full).
 Server: kpi_rag/phase2/   =   Drive: Farida/Phase 2 - Data & Models/
 
 1. THE FINAL CONFIGURATION (WHAT WE SHIP)
@@ -44,7 +44,7 @@ Server: kpi_rag/phase2/   =   Drive: Farida/Phase 2 - Data & Models/
      more sessions).
 
 6. FUTURE WORK
-   docs/future_work.md (10 items, each with the evidence and what it would need).
+   docs/future_work.md (14 items, each with the evidence and what it would need).
 
 7. FILES  (server kpi_rag/phase2/  =  Drive Farida/Phase 2 - Data & Models/)
    - results/final/: model1.cbm, model2.cbm, feature_spec.json,
