@@ -1,0 +1,32 @@
+{
+  "C1": {
+    "n": 30,
+    "citation_correct": 5,
+    "correctly_classified": 19,
+    "citation_correct_when_classified": 4,
+    "explained": 24,
+    "reference_valid_vs_predicted": 7,
+    "missed_by_detector": 6,
+    "template_fallbacks": 0
+  },
+  "C2": {
+    "n": 30,
+    "citation_correct": 7,
+    "correctly_classified": 19,
+    "citation_correct_when_classified": 6,
+    "explained": 24,
+    "reference_valid_vs_predicted": 9,
+    "missed_by_detector": 6,
+    "template_fallbacks": 0
+  },
+  "C3": {
+    "n": 30,
+    "citation_correct": 21,
+    "correctly_classified": 19,
+    "citation_correct_when_classified": 19,
+    "explained": 24,
+    "reference_valid_vs_predicted": 24,
+    "missed_by_detector": 6,
+    "template_fallbacks": 0
+  }
+}

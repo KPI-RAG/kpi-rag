@@ -30,17 +30,19 @@ An explainability framework for 5G network fault classification that combines SH
 ## Architecture
 
 ```
-Classifier → SHAP top-3 KPIs
+Layer 2 (offline, phase2/ on the team main branch): CatBoost cascade + TreeSHAP
+        -> data/processed/layer2_output_sessionsplit_phase2.json (6,312 test windows)
                  ↓
-           ChromaDB retrieval (similar tickets)
+ChromaDB retrieval: past incidents of the PREDICTED fault type (metadata filter),
+        ranked by KPI-evidence similarity to the window (query carries no label)
                  ↓
-           Alignment table (3GPP TS → fault mapping) + RCA evidence (per window)
+Alignment table v1.2 (fault → 3GPP clause) + RCA evidence (per window)
                  ↓
-           LLM (Gemini / Groq / Ollama) → structured explanation
+LLM (Gemini / Groq / Ollama) → structured explanation
                  ↓
-           Citation validation (TS XX.XXX format + table lookup)
+Citation validation (TS/TR XX.XXX format + the fault's alignment row)
                  ↓
-           Streamlit dashboard (6 panels)
+Streamlit dashboard (6 panels)
 ```
 
 ## Quick Start
@@ -71,6 +73,10 @@ $env:GEMINI_API_KEY="..."
 $env:PYTHONPATH="."
 ```
 
+Behind an HTTPS-inspecting antivirus or proxy (Python reports `CERTIFICATE_VERIFY_FAILED`),
+run LLM scripts with the Windows trust store:
+`uv run --system-certs --with truststore python -c "import truststore; truststore.inject_into_ssl(); import runpy, sys; sys.argv=['scripts/run_eval_track_c.py']; runpy.run_path(sys.argv[0], run_name='__main__')"`
+
 ### 3. Place raw data
 
 Download the TelecomTS dataset and place JSONL files under:
@@ -82,16 +88,17 @@ data/raw/          # 33 JSONL files (nested structure supported)
 ### 4. Build the ChromaDB index
 
 ```bash
-uv run python scripts/build_index.py
+uv run python scripts/build_index.py --rebuild
 ```
 
-This indexes ~935 anomaly tickets (train split only) into ChromaDB at `data/chroma_db/`.
-The full dataset contains 1,235 anomalous records; the remaining ~300 are held out as the test set and are never indexed, preventing data leakage.
+Indexes the 935 anomalous **training** windows (one document per window: its KPI narrative)
+into `data/chroma_db/`. The 300 anomalous test windows are never indexed. `--rebuild` empties
+the collection first; without it existing ids are skipped, so a stale index would survive.
 
 ### 5. Run the pipeline (single explanation)
 
 ```bash
-uv run python scripts/run_pipeline.py
+uv run python scripts/run_pipeline.py --input path/to/classifier_output.json --output explanation.json
 ```
 
 ### 6. Run the dashboard
@@ -102,62 +109,72 @@ $env:GEMINI_API_KEY="..."
 uv run streamlit run dashboard/app.py --server.fileWatcherType none
 ```
 
+"Browse Dataset Windows" lists the 382 test windows Phase 2 flagged as faults.
+
 ## Evaluation
 
-### Track B — Full-system evaluation
+### Track A — detection, classification, retrieval
 
 ```bash
-uv run python scripts/run_eval_track_b.py --output data/processed/ --n-samples 30
+uv run python scripts/run_eval_track_a.py      # -> data/processed/track_a_metrics.json
 ```
 
-### Track C — Ablation study (3 conditions)
+Recomputed from the Phase 2 predictions and ground truth (matches Farida's `validation.json`):
+binary recall **266/300 = 88.7 %**, precision **266/382 = 69.6 %**, exact 11-class accuracy
+**199/300 = 66.3 %** (74.8 % of detected faults), congestion-family accuracy 75.0 %.
+Retrieval diagnostic: with the label removed, the retrieved incidents' class matches the true
+class at P@1 = 0.451 (majority-class share 0.353) — text cannot identify the fault, which is
+why the class is applied as a filter.
 
-| Condition | Context provided | Citation validity |
-|-----------|-----------------|-------------------|
-| C1 | Label + SHAP only | 8/30 (27%) |
-| C2 | Label + SHAP + retrieved tickets | 7/30 (23%) |
-| C3 | Full system (tickets + alignment table + RCA evidence) | 30/30 (100%) |
-
-Gemini 3.5 Flash Lite, 10 fault types × 3 windows, `random_state=42`, same 30
-windows in every condition, 0 template fallbacks. RCA evidence was injected for
-30/30 C3 samples.
-
-> **What the C3 citation validity metric measures:**
-> C3 demonstrates that providing structured 3GPP standards context enables the
-> LLM to correctly incorporate domain references in 100% of cases (30/30). C1 (27%)
-> and C2 (23%) establish the baselines without this context. The delta C2→C3 (+77pp)
-> quantifies the contribution of the alignment-guided prompting strategy.
->
-> A citation is valid if it matches any standard cited in that fault's alignment
-> row (e.g. CCI Severe: TS 38.141-1 or TS 38.104). Earlier runs accepted only the
-> primary standard, which under-credited the baselines: without any context the LLM
-> already cites TS 38.104 for Faulty RF Filters and TS 38.331 for Faulty Handover.
->
-> **Important framing:** `validate_citation()` checks the LLM's output against
-> the same alignment table injected into the C3 prompt. This measures
-> *prompt-compliance* (given the correct standard, does the LLM use it?) rather
-> than *independent citation retrieval* (does the LLM know the standard from
-> training data alone?). C1 provides the true baseline for intrinsic knowledge.
+### Track B — human G-Eval
 
 ```bash
-# Dry run (1 sample per fault = 30 LLM calls)
-uv run python scripts/run_eval_track_c.py --output data/processed/ --dry-run
-
-# Full run (3 samples per fault = 90 LLM calls)
-uv run python scripts/run_eval_track_c.py --output data/processed/
+uv run python scripts/run_eval_track_b.py --scores <rated_scores.jsonl> --output data/processed/track_b_results.json
 ```
 
-Output files:
-- `data/processed/track_c_explanations.jsonl` — generated explanations
-- `data/processed/track_c_scores_template.jsonl` — human annotation template
+Not done yet: `data/processed/track_c_v2/track_c_scores_template.jsonl` holds the 72 explanations
+to rate (1–5 on four dimensions). Un-rated rows (0.0) are rejected, so the template cannot be
+averaged by mistake.
+
+### Track C — citation ablation (3 conditions)
+
+Sampling is by **ground truth**: 3 test windows per true fault type (10 types, Jamming excluded),
+each run through what the system actually does (Phase 2 prediction → retrieval → LLM). All three
+conditions use the same instructions; they differ only in context.
+
+| Condition | Context | Correct vs true fault (n=30) | When classified correctly (n=19) |
+|-----------|---------|-----------------------------|----------------------------------|
+| C1 | Label + SHAP | 5/30 (17 %) | 4/19 (21 %) |
+| C2 | + 3 past incidents of the predicted type | 7/30 (23 %) | 6/19 (32 %) |
+| C3 | + alignment row + RCA evidence | **21/30 (70 %)** | **19/19 (100 %)** |
+
+Gemini 3.5 Flash Lite, `random_state=42`, alignment table v1.2, 0 template fallbacks, 72 LLM calls.
+C2→C3: 14 windows improve, 0 get worse (exact McNemar p = 1.2·10⁻⁴). Wilson 95 % CI for C3:
+52–83 % end to end, 83–100 % when classified correctly.
+
+All 9 C3 failures come from Layer 2, not from grounding: 6 windows the detector missed (all 3
+Sudden Spike samples — Model 1 flags none of the 11 Sudden Spike test windows) and 3 misclassified.
+
+> **What C3 measures.** When the classifier is right, the correct standard is in the C3 prompt,
+> so 19/19 is *prompt compliance*. The end-to-end figure (21/30) is not circular: it scores the
+> citation against the true fault, so a misclassification that injects the wrong row counts as wrong.
+
+```bash
+uv run python scripts/run_eval_track_c.py --output data/processed/track_c_v2 --dry-run   # 1 per fault
+uv run python scripts/run_eval_track_c.py --output data/processed/track_c_v2             # 3 per fault
+```
+
+Outputs (`data/processed/track_c_v2/`): `track_c_explanations.jsonl`, `track_c_summary.json`,
+`track_c_scores_template.jsonl`. The earlier prediction-sampled run (alignment v1.1) is kept in
+`data/processed/track_c_explanations.jsonl` for comparison only.
 
 ## Testing
 
 ```bash
-uv run pytest tests/ -v
+uv run pytest tests/ -q
 ```
 
-16 unit test modules (83 tests) and 8 integration modules (37 tests; 3 skip without `GROQ_API_KEY`) covering schema validation, RAG query, LLM explainer, evaluator, Track B/C scripts, and all 6 dashboard panels.
+182 tests in 28 modules (20 unit, 8 integration): 179 pass, 3 skip without `GROQ_API_KEY`.
 
 ## Project Structure
 
@@ -178,22 +195,26 @@ project/
 ├── scripts/
 │   ├── build_index.py           # Index builder CLI
 │   ├── run_pipeline.py          # Single-explanation CLI
+│   ├── run_eval_track_a.py      # Track A + retrieval metrics CLI
 │   ├── run_eval_track_b.py      # Track B evaluation CLI
 │   └── run_eval_track_c.py      # Track C ablation CLI
 ├── dashboard/
 │   ├── app.py                   # Streamlit main app
 │   └── components/              # 6 dashboard panels
-├── tests/                       # 16 unit + 8 integration test modules
+├── tests/                       # 20 unit + 8 integration test modules
 ├── data/
 │   ├── raw/                     # TelecomTS JSONL (gitignored)
 │   ├── indices/                 # train/test window indices (gitignored)
 │   ├── chroma_db/               # ChromaDB store (committed — Streamlit Cloud has no raw data to rebuild it)
 │   ├── models/                  # CatBoost model1.cbm / model2.cbm (Layer 2 runs offline)
 │   ├── alignment_table.json     # 11-row fault→3GPP mapping (v1.2; Jamming not-applicable)
-│   └── processed/               # RCA evidence, layer-2 outputs, Track C outputs
+│   └── processed/               # RCA evidence, layer-2 outputs, Track A metrics, track_c_v2/
 ├── docs/
 │   ├── KPI-RAG_Proposal_Group_15.pdf
-│   └── REVIEW_2026-10-06.md     # end-to-end code/eval review with evidence
+│   ├── KPI_RAG_Final_Report_v2.md   # final report, every number traced to a file
+│   ├── KPI_RAG_Final_Report.md      # superseded first draft (kept for history)
+│   ├── REVIEW_2026-10-06.md     # first end-to-end review
+│   └── REVIEW_2026-10-18.md     # second review + how each finding was resolved
 ├── pyproject.toml / uv.lock     # dev environment (uv)
 ├── requirements.txt             # pinned install for Streamlit Cloud
 └── .env.example
@@ -206,12 +227,13 @@ Key settings in `configs/config.yaml`:
 | Setting | Value | Notes |
 |---------|-------|-------|
 | `rag.embedding_model` | `all-MiniLM-L6-v2` | Sentence-BERT |
-| `rag.cosine_threshold` | `0.35` | Provisional — calibrate Week 9 |
-| `rag.top_k` | `5` | Retrieved tickets per query |
+| `rag.collection_name` | `telecomts_descriptions` | One document per training window (its KPI narrative) |
+| `rag.cosine_threshold` | `0.35` | Low-confidence flag only; test top-1 similarity is 0.59–0.75, so it never fired (0/382) |
+| `rag.top_k` | `5` | Past incidents per query, filtered to the predicted fault type |
 | `llm.backend` | `gemini` | Also supports `groq`, `ollama` |
 | `llm.gemini_model` | `gemini-3.5-flash-lite` | Free tier: 15 requests/min |
 | `llm.groq_model` | `llama-3.1-8b-instant` | Fallback backend |
-| `llm.max_retries` | `3` | Waits on 429s (server Retry-After, else exponential backoff); template fallback after the last attempt |
+| `llm.max_retries` | `3` | Waits on 429s (server Retry-After, else exponential backoff); config/auth errors stop at once; every failure is logged; template fallback at the end |
 | `llm.min_request_interval_s` | `2.0` | Minimum gap between LLM calls (all backends) |
 
 ## Fault Types

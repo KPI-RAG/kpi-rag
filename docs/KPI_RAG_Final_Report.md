@@ -1,3 +1,5 @@
+> **Superseded by `KPI_RAG_Final_Report_v2.md`.** This draft contains numbers not backed by the repository (see `REVIEW_2026-10-18.md` §5); do not submit it.
+
 # KPI-RAG: Explainable Root-Cause Analysis for 5G Networks
 ## Phase 2 Final Report
 

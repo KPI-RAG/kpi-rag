@@ -11,5 +11,6 @@ def render_detection_panel(anomaly_type: str | None, confidence: float | None) -
                 label="Model Confidence",
                 value=f"{confidence:.1%}"
             )
-        st.caption("Raw model probability (model1 P(anomalous))")
+        # Phase 2 JSON: for an alarm this is Model 2's probability of the predicted type
+        st.caption("Uncalibrated Model 2 probability of this fault type")
 
