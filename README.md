@@ -24,16 +24,13 @@ supervised by Prof. Yuanzhu Chen. Built on the public
 - [Testing](#testing)
 - [Configuration](#configuration)
 - [Repository layout](#repository-layout)
-- [Documentation](#documentation)
 - [Team](#team)
 - [Acknowledgements](#acknowledgements)
 - [License](#license)
 
 ## Key results
 
-Measured on five held-out recording sessions (6,312 test windows, 300 true faults). Every number
-is traced to a file in this repository; the [final report](docs/Final%20Report/KPI_RAG_Final_Report.md)
-gives the full analysis.
+Measured on five held-out recording sessions (6,312 test windows, 300 true faults).
 
 | What | Result |
 |---|---|
@@ -77,7 +74,7 @@ Streamlit dashboard (6 panels)
 
 The alignment table is the only source of standards in the prompt. Retrieval supplies concrete KPI
 patterns from comparable incidents; it does not decide the fault type, because the dataset's tickets
-are one text template per class (see the final report, Section 5.5).
+are one text template per class.
 
 ## Getting started
 
@@ -234,7 +231,6 @@ All settings live in [`configs/config.yaml`](configs/config.yaml); API keys come
 │   ├── indices/                 # session-split train/test indices
 │   ├── chroma_db/               # retrieval index (committed for Streamlit Cloud)
 │   └── processed/               # Layer 2 output, RCA evidence, Track A metrics, Track C run
-├── docs/                        # reports (see Documentation)
 ├── pyproject.toml, uv.lock      # environment (uv)
 └── requirements.txt             # pinned export of uv.lock
 ```
@@ -242,30 +238,12 @@ All settings live in [`configs/config.yaml`](configs/config.yaml); API keys come
 The Layer 2 training pipeline (feature engineering, model experiments) lives in `phase2/` on the
 `main` branch; this branch consumes its outputs.
 
-## Documentation
-
-| Document | Description |
-|---|---|
-| [Final report](docs/Final%20Report/KPI_RAG_Final_Report.md) ([HTML](docs/Final%20Report/KPI_RAG_Final_Report.html), [Word](docs/Final%20Report/KPI_RAG_Final_Report.docx)) | Team final report: problem, method, results and evaluation |
-| [Items to confirm](docs/Final%20Report/ITEMS_TO_CONFIRM.md) | Open points for each owner before submission |
-| [Individual reports](docs/Individual%20Reports/) | Each member's report on their own part |
-| [Phase 1 report](docs/KPI-RAG_Phase1_Report_Group_15.pdf) | First prototype (September 2026) |
-| [Proposal](docs/KPI-RAG_Proposal_Group_15.pdf) | Project proposal |
-
-The final report is built from Markdown sources in `docs/Final Report/source/`:
-
-```bash
-cd "docs/Final Report/source/scripts"
-uv run --no-project --with pypandoc_binary python build.py    # writes the .md, .html and .docx
-powershell -File finalize_docx.ps1 <full path to .docx> <full path to .pdf>   # Word: page numbers, PDF export
-```
-
 ## Team
 
 | Member | Main contributions |
 |---|---|
 | Ahmed Mohamed Al Shobaki (team leader) | Retrieval and its redesign, prompt design, LLM explanation layer and citation validation, Track C, dashboard, deployment, test suite |
-| Farida El Ghabary | Synthetic training data and the Model 2 recipe; data and models report |
+| Farida El Ghabary | Synthetic training data and the Model 2 recipe |
 | Raneem Alnaghy | Recording-session reconstruction and the session-level split; reject-option study |
 | Rodina Khallaf | 3GPP Release 19 / O-RAN alignment table; Track B (G-Eval) and Track D (TeleQnA) evaluations |
 

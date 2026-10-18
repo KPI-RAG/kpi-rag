@@ -1,4 +1,4 @@
-"""Retrieval design experiment (report §5.5 / §6.3): which document + query design retrieves
+"""Retrieval design experiment: which document + query design retrieves
 incidents of the TRUE fault type for held-out windows? In memory, no index changes, no LLM.
 
 Evaluated on the test windows Phase 2 detected that are true faults (266). Needs data/raw.
