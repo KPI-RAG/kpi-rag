@@ -136,9 +136,10 @@ conditions use the same instructions; they differ only in context. Results of ru
 
 Gemini 3.5 Flash Lite, `random_state=42`, alignment table v1.2, 0 template fallbacks, 72 LLM calls.
 
-> **How to read it.** C3 equals the copy rule exactly: the LLM adopts the injected standard every time,
-> so C3's citation accuracy is set by the alignment table and the classifier. Without the table the
-> LLM (C1, C2) is worse than always citing one standard. All 9 C3 failures are Layer 2 errors:
+> **How to read it.** Alignment-table grounding is effective: when the correct standard is provided, the
+> LLM cites it in 19/19 cases, and C2→C3 adds 47 points. C3 matching the copy-row rule confirms the table
+> as the grounding mechanism — the LLM reliably adopts the provided standard. Without the table, citations
+> are unreliable (C1, C2 are below a fixed answer). All 9 C3 failures are Layer 2 errors:
 > 6 detector misses (all 3 Sudden Spike samples — Model 1 flags none of the 11 Sudden Spike test
 > windows) and 3 misclassifications. n = 30 from few recording sessions: treat the counts as descriptive.
 

@@ -24,12 +24,13 @@ dependencies = [
     "numpy",
     "pandas",
     "pydantic",
+    "catboost>=1.2.10",       # loads data/models/*.cbm (src/ml_model.py)
 ]
 
 [dependency-groups]
 dev = [
     "pytest",
-    "catboost>=1.2.10",   # tests and src/ml_model.py only; Layer 2 runs offline
+    "pytest-mock",
 ]
 
 # No GPU is used anywhere; the default PyPI torch wheel on Linux pulls ~2 GB of CUDA libraries.
