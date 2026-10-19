@@ -1,0 +1,524 @@
+{
+  "per_sample": [
+    {
+      "window_id": "c3_w597",
+      "window_index": 597,
+      "condition": 3,
+      "fault_type": "Co-Channel Interference (Mild)",
+      "citation_validity": 4.0,
+      "fault_specificity": 4.0,
+      "actionability": 4.0,
+      "causal_soundness": 3.0,
+      "composite": 3.8,
+      "citation_valid": true,
+      "justifications": {
+        "citation_validity": "The generated explanation cites 'TS 38.141-1' in the main text and 'clause 7.8' in the reasoning trace. While the specific clause is mentioned in the trace, the primary citation field lacks the section number. However, the specification and the clause referenced in the trace are correct and highly specific to the fault type (In-channel selectivity). It is not a 5 because the primary citation line is less specific than the ground truth, but the technical reference is valid.",
+        "fault_specificity": "The explanation correctly identifies mild co-channel interference and the mechanism (neighboring cell overlap). It correctly links this to degraded UL_SNR. However, it attributes the cause to 'above normal RX_Bytes', which is a traffic metric, not a direct physical layer cause of interference. The ground truth emphasizes the stability of PRB utilization to distinguish from congestion, which is missing here. The mechanism is correct but the causal attribution to RX_Bytes is slightly imprecise regarding the physical layer origin.",
+        "actionability": "The recommended action to 'Adjust antenna tilt and review neighboring cell frequency reuse patterns' is a clear, technically appropriate subsystem-level action for mitigating co-channel interference. It lacks specific parameters (e.g., specific tilt degrees or frequency offset values), which prevents it from scoring a 5, but it is concrete enough to be actionable by an engineer.",
+        "causal_soundness": "The causal chain is partially sound but contains a technical inconsistency. It states that 'above normal RX_Bytes' drives the interference. RX_Bytes is a measure of received data volume, not a cause of interference. Interference is caused by external signals (neighboring cells). While the correlation with UL_SNR degradation is correct, linking high traffic volume (RX_Bytes) as the *driver* of the interference mechanism is technically flawed. The explanation confuses correlation (high traffic might co-occur with interference) with causation (interference is caused by spectral overlap, not traffic volume)."
+      }
+    },
+    {
+      "window_id": "c3_w592",
+      "window_index": 592,
+      "condition": 3,
+      "fault_type": "Co-Channel Interference (Mild)",
+      "citation_validity": 4.0,
+      "fault_specificity": 4.0,
+      "actionability": 4.0,
+      "causal_soundness": 4.0,
+      "composite": 4.0,
+      "citation_valid": true,
+      "justifications": {
+        "citation_validity": "The generated explanation cites 'TS 38.141-1', which is the correct specification for NR RF conformance. However, it omits the specific clause '§7.8' (In-channel selectivity) required by the ground truth. While the specification is correct, the lack of clause specificity makes it less precise than a perfect citation.",
+        "fault_specificity": "The explanation correctly identifies 'Mild co-channel interference' and the mechanism of 'neighboring cell transmissions on overlapping frequency resources'. It correctly links this to degraded UL_SNR. However, it fails to explicitly mention the stability of PRB utilization or the rise in UL_BLER, which are key distinguishing symptoms for mild CCI versus congestion, making the symptom profile slightly incomplete.",
+        "actionability": "The recommended actions (adjusting antenna tilt and reviewing PCI allocation) are technically appropriate and specific to the O-RU/neighbor cell context. They are clear subsystem-level actions. They lack specific parameter thresholds (e.g., specific tilt degrees or PCI reuse distance), preventing a score of 5, but they are concrete enough for a score of 4.",
+        "causal_soundness": "The causal chain from neighbor interference to degraded UL_SNR is technically coherent. However, the reasoning trace cites 'elevated RX_Bytes' as a primary driver (SHAP=0.536). In the context of mild CCI, RX_Bytes elevation is not a direct causal mechanism of the interference itself but rather a potential symptom of traffic load or a correlation artifact. The ground truth emphasizes UL_SNR degradation and stable PRB utilization. Linking high RX_Bytes as a primary driver of the *fault* (rather than just a correlated metric) weakens the causal soundness slightly, though the core link to UL_SNR is correct."
+      }
+    },
+    {
+      "window_id": "c3_w645",
+      "window_index": 645,
+      "condition": 3,
+      "fault_type": "Faulty RF Filters (Temporal)",
+      "citation_validity": 4.0,
+      "fault_specificity": 4.0,
+      "actionability": 4.0,
+      "causal_soundness": 4.0,
+      "composite": 4.0,
+      "citation_valid": true,
+      "justifications": {
+        "citation_validity": "The generated explanation cites TS 38.141-1, which is the correct specification for RF conformance and receiver performance (including out-of-band blocking). However, it lacks the specific clause references (§7.5, §7.6) and the additional reference to TS 38.104 §6.6 for transmitter spurious emissions required by the ground truth. While the specification is correct, the citation is less specific than the expected standard.",
+        "fault_specificity": "The explanation correctly identifies the faulty O-RU RF filters and the mechanism of out-of-band interference raising the noise floor. It accurately links this to RSRP variability. However, it omits the transmit-side spurious emissions mechanism and the specific distinction from CCI (uniform vs. directional) mentioned in the ground truth, making it slightly less comprehensive but still technically correct for the receiver side.",
+        "actionability": "The recommended action to 'Inspect and replace the faulty O-RU RF filter module' is a clear, technically appropriate subsystem-level action. It lacks specific parameters, thresholds, or measurable operational steps (e.g., specific dB rejection levels to verify), which prevents it from scoring a 5.",
+        "causal_soundness": "The causal chain from degraded filters to increased noise floor and RSRP fluctuation is technically coherent and supported by the SHAP evidence (RSRP_std, RSRP_fft_energy). The link to UL_NPRB_min is plausible as a secondary effect of degraded SNR/BLER, though the primary causal link to UL metrics is less direct than the RSRP link. The explanation is sound but does not fully elaborate on the transmit-side self-interference loop described in the ground truth."
+      }
+    },
+    {
+      "window_id": "c3_w835",
+      "window_index": 835,
+      "condition": 3,
+      "fault_type": "Buffer Overflow (Gradual Buildup)",
+      "citation_validity": 3.0,
+      "fault_specificity": 4.0,
+      "actionability": 3.0,
+      "causal_soundness": 4.0,
+      "composite": 3.4,
+      "citation_valid": false,
+      "justifications": {
+        "citation_validity": "The generated explanation cites 'TS 38.321' generally in the header and 'TS 38.321 §5.4.5' in the reasoning. While §5.4.5 is the correct section for the Buffer Status Reporting procedure, the ground truth expects a more specific reference to §6.1.3.1 for the MAC CE formats or a combined reference. Citing only the procedure section without the specific MAC CE definition is less precise than the expected standard, but it is technically related and not incorrect.",
+        "fault_specificity": "The explanation correctly identifies the fault as a gradual buffer overflow at the O-DU MAC layer. It links this to high PRB utilization and poor RSRP. However, it misses the specific mechanism of UE-side buffer saturation driving BSRs that the scheduler cannot satisfy, instead framing it slightly more as a resource utilization issue. It is a correct fault family with a minor lack of detail on the specific BSR-to-overflow causal link.",
+        "actionability": "The recommendation to 'Tune the O-DU MAC scheduler parameters' is relevant to the subsystem but vague. It does not specify which parameters (e.g., BSR timer, periodic BSR, grant allocation thresholds) or provide measurable operational steps. It is a clear subsystem-level action but lacks the specificity required for a higher score.",
+        "causal_soundness": "The causal chain is technically coherent: high PRB utilization and poor RSRP lead to inefficient scheduling, causing buffer buildup. The link to BSRs is mentioned. However, the explanation attributes the root cause partly to 'sustained high uplink resource block utilization' which is often a symptom of the congestion/overflow rather than the primary cause (which is the mismatch between data arrival and granted capacity). The distinction between cell-wide congestion and UE-specific buffer overflow is slightly blurred, but the overall mechanism is sound."
+      }
+    },
+    {
+      "window_id": "c3_w893",
+      "window_index": 893,
+      "condition": 3,
+      "fault_type": "Buffer Overflow (Gradual Buildup)",
+      "citation_validity": 3.0,
+      "fault_specificity": 4.0,
+      "actionability": 3.0,
+      "causal_soundness": 4.0,
+      "composite": 3.4,
+      "citation_valid": false,
+      "justifications": {
+        "citation_validity": "The generated explanation cites 'TS 38.321' generally. While this is the correct specification for MAC layer procedures (including BSR), it lacks the specific clause references (e.g., §6.1.3.1 or §5.4.5) required for a high score. The citation is related and correct in scope but lacks the necessary specificity to be considered 'highly specific' or 'exact'.",
+        "fault_specificity": "The explanation correctly identifies the fault as a 'gradual uplink buffer overflow' at the O-DU. It links this to high PRB utilization and weak RSRP. However, it misses the specific mechanism of Buffer Status Reports (BSR) failing to trigger sufficient scheduler allocation, which is the core technical distinction from general congestion. It identifies the correct fault family and component but lacks the precise MAC-layer mechanism detail.",
+        "actionability": "The recommendation to 'Optimize the MAC scheduler parameters and adjust uplink power control settings' is technically relevant to the O-DU and the identified causes. However, it is vague; it does not specify which parameters (e.g., BSR periodicity, PRB allocation thresholds, power control step size) or provide measurable operational steps. It falls into the category of a relevant subsystem action but lacking concrete detail.",
+        "causal_soundness": "The causal chain is coherent: High PRB utilization and weak RSRP lead to inefficient transmission and buffer buildup. The use of SHAP values supports the attribution to these KPIs. The link between weak RSRP and buffer overflow is plausible (retransmissions/delay), though the primary driver of buffer overflow in this context is typically the mismatch between BSR-reported demand and scheduler allocation, which is implied but not explicitly detailed in the causal trace. The relationship is correct but slightly incomplete in its intermediate mechanism."
+      }
+    },
+    {
+      "window_id": "c3_w703",
+      "window_index": 703,
+      "condition": 3,
+      "fault_type": "Faulty RF Filters (Temporal)",
+      "citation_validity": 4.0,
+      "fault_specificity": 5.0,
+      "actionability": 4.0,
+      "causal_soundness": 5.0,
+      "composite": 4.4,
+      "citation_valid": true,
+      "justifications": {
+        "citation_validity": "The generated explanation cites TS 38.141-1, which is the correct specification for RF conformance and receiver performance. However, it lacks the specific clause references (e.g., §7.5, §7.6) and the complementary TS 38.104 reference for transmitter spurious emissions required by the ground truth, making it less specific than a perfect score.",
+        "fault_specificity": "The explanation correctly identifies the faulty RF filters at the O-RU as the root cause and accurately describes the mechanism: out-of-band interference passing through the receiver front-end, raising the noise floor, and degrading UL_SNR. This aligns perfectly with the expected causal mechanism.",
+        "actionability": "The recommended action to 'Inspect and replace the faulty O-RU RF filter module' is a clear, technically appropriate subsystem-level action. It lacks specific operational thresholds or configuration parameters (e.g., specific dBm limits for spurious emissions), preventing a score of 5.",
+        "causal_soundness": "The causal chain is technically coherent: degraded filters lead to out-of-band interference, which raises the noise floor (reflected in UL_NPRB) and degrades signal quality (UL_SNR). The explanation correctly links these physical mechanisms to the observed KPI anomalies (high NPRB, low SNR, low RSRP)."
+      }
+    },
+    {
+      "window_id": "c3_w607",
+      "window_index": 607,
+      "condition": 3,
+      "fault_type": "Co-Channel Interference (Severe)",
+      "citation_validity": 4.0,
+      "fault_specificity": 4.0,
+      "actionability": 4.0,
+      "causal_soundness": 3.0,
+      "composite": 3.8,
+      "citation_valid": true,
+      "justifications": {
+        "citation_validity": "The generated explanation cites TS 38.141-1, which is the correct specification for in-channel selectivity (part of the expected reference). However, it omits the specific clause (§7.8) and the second expected reference (TS 38.104 §4.9) regarding OTA co-location. While the specification is correct, the lack of clause specificity and the missing complementary reference prevent a perfect score.",
+        "fault_specificity": "The explanation correctly identifies Severe Co-Channel Interference and the mechanism of UL_SNR collapse. However, it incorrectly attributes the high DL PRB utilization (90.81%) to 'heavy network load exacerbating the interference profile.' The ground truth explicitly states that PRB_Utilization remains stable and that elevated PRB utilization would shift the diagnosis toward congestion, not CCI. This misinterpretation of the KPI context reduces the specificity score.",
+        "actionability": "The recommended actions (ICIC audit, PCI adjustment, downtilt) are technically appropriate and standard remediation steps for co-channel interference. They are clear and subsystem-level. However, they lack specific parameter thresholds or measurable operational steps (e.g., specific PCI offset values or tilt angles), which prevents a score of 5.",
+        "causal_soundness": "The causal link between CCI and UL_SNR collapse is correct. However, the reasoning trace introduces a flawed causal link by suggesting that high DL PRB utilization indicates 'heavy network load exacerbating the interference profile.' In the context of the ground truth, high PRB utilization is a distractor or indicator of congestion, not a cause or exacerbator of CCI. This technical inconsistency in the causal chain lowers the score."
+      }
+    },
+    {
+      "window_id": "c3_w700",
+      "window_index": 700,
+      "condition": 3,
+      "fault_type": "Co-Channel Interference (Severe)",
+      "citation_validity": 4.0,
+      "fault_specificity": 4.0,
+      "actionability": 4.0,
+      "causal_soundness": 4.0,
+      "composite": 4.0,
+      "citation_valid": true,
+      "justifications": {
+        "citation_validity": "The generated explanation cites TS 38.141-1, which is the correct specification for in-channel selectivity (part of the expected reference). However, it omits the specific clause (§7.8) and the secondary expected reference (TS 38.104 §4.9) regarding OTA co-location. While the specification is correct, the lack of clause specificity and the missing complementary reference prevent a perfect score.",
+        "fault_specificity": "The explanation correctly identifies 'Severe co-channel interference' and links it to the collapse of UL_SNR. It accurately reflects the ground truth mechanism where interference overwhelms the receiver. It misses the explicit mention of DL_MCS forcing to minimum values or the distinction regarding PRB utilization stability, which are key differentiators for 'severe' CCI in the ground truth, but the core mechanism is correctly identified.",
+        "actionability": "The recommended action (PCI planning audit and neighbor cell power configuration check) is technically appropriate and specific to the subsystem (O-RU/Network Planning). It provides clear operational steps without being vague. It lacks specific parameter thresholds (e.g., target SINR or power levels), which prevents a score of 5, but it is a concrete, actionable subsystem-level recommendation.",
+        "causal_soundness": "The causal chain is coherent: Strong interfering neighbor signals -> UL_SNR collapse -> Severe CCI classification. The use of SHAP values to support the UL_SNR degradation is consistent with the evidence. The link between the cause and the specific KPI behavior (UL_SNR mean of 7.035 dB) is technically sound. It does not explicitly detail the intermediate step of interference-to-signal ratio overwhelming the receiver in the text, but the implication is clear and correct."
+      }
+    },
+    {
+      "window_id": "c3_w864",
+      "window_index": 864,
+      "condition": 3,
+      "fault_type": "Antenna Failure",
+      "citation_validity": 3.0,
+      "fault_specificity": 4.0,
+      "actionability": 4.0,
+      "causal_soundness": 4.0,
+      "composite": 3.6,
+      "citation_valid": false,
+      "justifications": {
+        "citation_validity": "The generated explanation cites 'TS 38.141-1' generally. While this is the correct specification for base station RF performance, it lacks the specific clause references (§4.2.1 and §7.2) required for a high score. It is a related specification but the support is indirect due to the lack of specificity.",
+        "fault_specificity": "The explanation correctly identifies the fault as physical antenna degradation/disconnection and links it to reduced radiated power and DL MCS drop. However, it focuses primarily on the downlink (DL) and misses the explicit mention of uplink (UL) degradation (UL_SNR, BLER) which is a key distinguishing feature of antenna failure versus interference in the ground truth.",
+        "actionability": "The recommended action to inspect physical antenna connectors, feeder cables, and O-RU hardware is clear, technically appropriate, and at the subsystem level. It lacks specific thresholds or measurable operational steps (e.g., specific VSWR limits or RSRP thresholds) which would be required for a score of 5.",
+        "causal_soundness": "The causal chain from physical degradation to reduced power to DL MCS drop is technically coherent. However, the explanation is incomplete as it does not fully articulate the impact on the uplink chain (UL_SNR/BLER) or the distinction from interference, leaving an intermediate link in the full bidirectional causal mechanism incomplete."
+      }
+    },
+    {
+      "window_id": "c3_w622",
+      "window_index": 622,
+      "condition": 3,
+      "fault_type": "Antenna Failure",
+      "citation_validity": 3.0,
+      "fault_specificity": 4.0,
+      "actionability": 4.0,
+      "causal_soundness": 4.0,
+      "composite": 3.6,
+      "citation_valid": false,
+      "justifications": {
+        "citation_validity": "The generated explanation cites 'TS 38.141-1' generally. While this is the correct specification for base station RF performance, it lacks the specific clause references (§4.2.1 and §7.2) required for a high score. The ground truth expects specific sections regarding conducted requirements and reference sensitivity, which are missing here, making the support indirect.",
+        "fault_specificity": "The explanation correctly identifies the fault as 'Physical antenna degradation or disconnection' and links it to the O-RU component. It accurately describes the impact on DL_MCS and UL_SNR. However, it does not explicitly mention the degradation of RSRP or the rise in BLER, which are key parts of the expected causal mechanism, resulting in a minor omission of specific symptom details.",
+        "actionability": "The recommended action to 'Inspect the physical antenna connectors, RF cables, and mast-mounted amplifiers' is a clear, technically appropriate subsystem-level action. It lacks specific measurable thresholds or configuration parameters (e.g., specific VSWR limits or power levels), which prevents it from achieving a score of 5.",
+        "causal_soundness": "The causal chain from physical degradation to reduced effective radiated power/sensitivity and subsequent KPI degradation (DL_MCS, UL_SNR) is technically coherent. However, the explanation does not explicitly detail the intermediate step of BLER rising which forces the MCS downward via AMC, making the link between the physical fault and the specific KPI behavior slightly incomplete compared to the full ground truth mechanism."
+      }
+    },
+    {
+      "window_id": "c3_w687",
+      "window_index": 687,
+      "condition": 3,
+      "fault_type": "Antenna Failure",
+      "citation_validity": 3.0,
+      "fault_specificity": 4.0,
+      "actionability": 4.0,
+      "causal_soundness": 4.0,
+      "composite": 3.6,
+      "citation_valid": false,
+      "justifications": {
+        "citation_validity": "The generated explanation cites 'TS 38.141-1' generally. While this is the correct specification for base station RF performance, it lacks the specific clause references (§4.2.1 and §7.2) required for a high score. The citation is related and correct in scope but lacks the specificity of the ground truth.",
+        "fault_specificity": "The explanation correctly identifies the fault as physical antenna degradation/disconnection and links it to reduced radiated power and sensitivity. It misses the explicit distinction from Co-Channel Interference mentioned in the ground truth, but the core mechanism and symptoms (MCS drop, SNR fall) are accurately identified.",
+        "actionability": "The recommended action to inspect physical antenna connectors, feeder cables, and TMA/filter units is technically appropriate and specific to the O-RU subsystem. It lacks specific measurable thresholds or configuration parameters, preventing a score of 5.",
+        "causal_soundness": "The causal chain from physical degradation to reduced power/sensitivity to KPI degradation (MCS, SNR) is technically coherent. However, it does not explicitly detail the BLER rise or the AMC algorithm's response mechanism as thoroughly as the ground truth, leaving an intermediate link slightly less detailed."
+      }
+    },
+    {
+      "window_id": "c3_w697",
+      "window_index": 697,
+      "condition": 3,
+      "fault_type": "Faulty RF Filters (Temporal)",
+      "citation_validity": 4.0,
+      "fault_specificity": 5.0,
+      "actionability": 4.0,
+      "causal_soundness": 4.0,
+      "composite": 4.2,
+      "citation_valid": true,
+      "justifications": {
+        "citation_validity": "The generated explanation cites 'TS 38.141-1', which is the correct specification for RF requirements and measurements. However, it lacks the specific clause references (e.g., §7.5, §7.6) provided in the ground truth, making it less precise than a score of 5 would require.",
+        "fault_specificity": "The explanation correctly identifies the faulty component (O-RU RF filters) and the specific mechanism (out-of-band interference raising the noise floor). It accurately links this to the observed symptoms (RSRP anomalies) and distinguishes the temporal nature of the fault.",
+        "actionability": "The recommended action ('Inspect and replace the faulty O-RU RF filter assembly') is a clear, technically appropriate subsystem-level action. It lacks specific operational parameters or thresholds (e.g., specific dB limits for replacement), preventing a score of 5.",
+        "causal_soundness": "The causal chain from degraded filters to increased noise floor and RSRP degradation is technically coherent. However, the explanation focuses primarily on the receiver side (RSRP) and does not explicitly detail the transmit-side spurious emissions or UL_BLER impact mentioned in the ground truth, leaving the intermediate link to UL metrics slightly incomplete."
+      }
+    },
+    {
+      "window_id": "c3_w610",
+      "window_index": 610,
+      "condition": 3,
+      "fault_type": "Faulty RF Filters (Temporal)",
+      "citation_validity": 3.0,
+      "fault_specificity": 4.0,
+      "actionability": 4.0,
+      "causal_soundness": 4.0,
+      "composite": 3.6,
+      "citation_valid": false,
+      "justifications": {
+        "citation_validity": "The generated explanation cites 'TS 38.141-1' generally. While this is the correct specification for RF conformance, it lacks the specific clause references (e.g., §7.5 for out-of-band blocking) required for a high score. The ground truth expects specific sections to support the mechanism of filter degradation causing out-of-band interference.",
+        "fault_specificity": "The explanation correctly identifies the faulty RF filters at the O-RU and the mechanism of out-of-band interference passing through the receiver front-end. It misses the transmit-side spurious emissions aspect mentioned in the ground truth, but the core receiver-side mechanism is accurately described.",
+        "actionability": "The recommendation to 'Inspect and replace the faulty O-RU hardware modules or RF filter components' is a clear, technically appropriate subsystem-level action. It lacks specific diagnostic thresholds or configuration parameters, preventing a score of 5.",
+        "causal_soundness": "The causal chain links the faulty filter to out-of-band interference, which raises the noise floor and degrades RSRP/UL metrics. The use of SHAP values for RSRP_std and UL_NPRB_min supports the temporal degradation claim. The link is coherent, though it could be more explicit about how the noise floor elevation specifically drives the observed KPI variances."
+      }
+    },
+    {
+      "window_id": "c3_w605",
+      "window_index": 605,
+      "condition": 3,
+      "fault_type": "Faulty RF Filters (Temporal)",
+      "citation_validity": 3.0,
+      "fault_specificity": 4.0,
+      "actionability": 4.0,
+      "causal_soundness": 4.0,
+      "composite": 3.6,
+      "citation_valid": false,
+      "justifications": {
+        "citation_validity": "The generated explanation cites 'TS 38.141-1' without specifying the relevant clauses (§7.5 or §7.6). While the specification is correct for receiver performance under interference, the lack of specific clause references makes the support indirect and less precise than the ground truth requires.",
+        "fault_specificity": "The explanation correctly identifies the faulty O-RU RF filters and the mechanism of out-of-band interference raising the noise floor. It misses the transmit-side spurious emissions aspect mentioned in the ground truth, but the core receiver-side mechanism is accurately described.",
+        "actionability": "The recommendation to 'Inspect and replace the faulty O-RU RF filter module' is a clear, technically appropriate subsystem-level action. It lacks specific parameters or thresholds (e.g., specific dB limits for replacement), but it is actionable for an engineer.",
+        "causal_soundness": "The causal chain from degraded filters to increased noise floor/interference and resulting RSRP degradation is technically coherent. The link to UL_BLER is implied by the SNR degradation but not explicitly stated, and the transmit-side self-interference is omitted, making the chain slightly incomplete compared to the full ground truth mechanism."
+      }
+    },
+    {
+      "window_id": "c3_w845",
+      "window_index": 845,
+      "condition": 3,
+      "fault_type": "Buffer Overflow (Gradual Buildup)",
+      "citation_validity": 3.0,
+      "fault_specificity": 4.0,
+      "actionability": 3.0,
+      "causal_soundness": 4.0,
+      "composite": 3.4,
+      "citation_valid": false,
+      "justifications": {
+        "citation_validity": "The generated explanation cites 'TS 38.321' generally. While this is the correct specification for MAC layer procedures including Buffer Status Reports (BSR), it lacks the specific clause references (e.g., §6.1.3.1 or §5.4.5) required for a high score. The ground truth expects specific sections defining BSR formats and procedures, making the general citation indirect and less precise.",
+        "fault_specificity": "The explanation correctly identifies the fault as a 'Gradual uplink buffer overflow' at the 'O-DU MAC layer'. It links this to sustained high PRB utilization and poor radio conditions. However, it does not explicitly detail the mechanism of BSR signaling failure or the specific distinction from network congestion (UE-side saturation vs. cell-wide exhaustion) as emphasized in the ground truth, though the core mechanism is correctly identified.",
+        "actionability": "The recommendation to 'Tune the O-DU MAC scheduler parameters' is relevant to the subsystem but vague. It does not specify which parameters (e.g., BSR periodicity, grant allocation thresholds, or QoS flow mapping) or provide measurable operational steps. It falls short of a concrete remediation with specific thresholds.",
+        "causal_soundness": "The causal chain is technically coherent: poor RSRP leads to lower effective throughput/retransmissions, while high data volume leads to buffer growth. The link between PRB utilization and buffer overflow is plausible. However, the explanation slightly conflates 'high PRB utilization' (which usually implies the scheduler is working) with the inability to clear the buffer, without explicitly clarifying that the *rate* of data arrival exceeds the *capacity* granted, which is the precise mechanism of overflow. The intermediate link regarding BSR triggering is mentioned but not deeply integrated into the causal flow."
+      }
+    },
+    {
+      "window_id": "c3_w846",
+      "window_index": 846,
+      "condition": 3,
+      "fault_type": "Buffer Overflow (Gradual Buildup)",
+      "citation_validity": 3.0,
+      "fault_specificity": 4.0,
+      "actionability": 4.0,
+      "causal_soundness": 4.0,
+      "composite": 3.6,
+      "citation_valid": false,
+      "justifications": {
+        "citation_validity": "The generated explanation cites 'TS 38.321' generally. While this is the correct specification for MAC layer procedures including BSR, it lacks the specific clause references (e.g., §6.1.3.1 or §5.4.5) required for a high score. The citation is related and correct in scope but not specific enough to be considered 'highly specific'.",
+        "fault_specificity": "The explanation correctly identifies the fault as a gradual buffer overflow at the O-DU MAC layer. It links this to uplink resource block utilization and poor radio conditions. However, it does not explicitly detail the mechanism of BSR signaling failure or the specific growth of Estimated_UL_Buffer as the primary driver, relying more on the correlation of PRB utilization and RSRP. It is a correct fault family with a minor lack of mechanistic depth regarding the BSR interaction.",
+        "actionability": "The recommended action to 'Adjust the MAC scheduler uplink grant allocation strategy and verify buffer status report (BSR) thresholds' is technically appropriate and targets the correct subsystem (O-DU MAC). However, it lacks specific parameter values, concrete thresholds, or measurable operational steps (e.g., specific timer values or PRB allocation ratios), preventing it from achieving a score of 5.",
+        "causal_soundness": "The causal chain is technically coherent: poor RSRP leads to inefficient uplink grants, causing buffer buildup. The use of SHAP values to support the attribution to PRB utilization and RSRP is consistent with the evidence. The link between the cause (insufficient grants due to poor conditions) and the symptom (buffer overflow) is sound, though the intermediate step of how BSRs specifically fail to resolve the issue is implied rather than explicitly detailed in the causal trace."
+      }
+    },
+    {
+      "window_id": "c3_w713",
+      "window_index": 713,
+      "condition": 3,
+      "fault_type": "Doppler Shift (Severe)",
+      "citation_validity": 4.0,
+      "fault_specificity": 4.0,
+      "actionability": 4.0,
+      "causal_soundness": 4.0,
+      "composite": 4.0,
+      "citation_valid": true,
+      "justifications": {
+        "citation_validity": "The generated explanation cites 'TR 38.901' and specifically references 'Equation 7.6-31'. While the ground truth specifies §7.6.6 and §7.6.10, Equation 7.6-31 in TR 38.901 is indeed associated with the time-varying channel model and Doppler effects. However, the citation lacks the specific section numbers (§7.6.6/§7.6.10) required for high specificity, making it correct but less precise than the ground truth standard.",
+        "fault_specificity": "The explanation correctly identifies the fault as severe Doppler shift caused by high UE velocity leading to rapid channel phase variations. It links this to RSRP variability and DL_MCS reduction. It misses the specific nuance of 'dual mobility' or scatterer movement mentioned in the ground truth's causal mechanism, but the core mechanism of velocity-induced phase variation is correctly identified.",
+        "actionability": "The recommended action to 'enable and optimize high-speed mobility state detection and adjust channel estimation filter lengths' is technically appropriate for the O-DU/O-RU components. It identifies the correct subsystem and type of configuration change (filter length/mobility state) but lacks specific parameter thresholds or concrete operational steps (e.g., specific filter window sizes or velocity thresholds), preventing a score of 5.",
+        "causal_soundness": "The causal chain (High Velocity -> Rapid Phase Variation -> Channel Estimation Error -> Conservative MCS/RSRP Fluctuation) is technically coherent and consistent with the provided SHAP evidence (RSRP_std, DL_MCS). The link between Doppler and RSRP fluctuation is plausible in the context of estimation errors affecting link adaptation, though the explanation could be more explicit about how phase variation directly impacts the RSRP metric versus just the SINR/MCS."
+      }
+    },
+    {
+      "window_id": "c3_w611",
+      "window_index": 611,
+      "condition": 3,
+      "fault_type": "Doppler Shift (Severe)",
+      "citation_validity": 4.0,
+      "fault_specificity": 4.0,
+      "actionability": 4.0,
+      "causal_soundness": 4.0,
+      "composite": 4.0,
+      "citation_valid": true,
+      "justifications": {
+        "citation_validity": "The generated explanation cites TR 38.901 Clause 7.6.6, which is the correct specific clause for time-varying Doppler shift as defined in the ground truth. However, it fails to cite Clause 7.6.10 (Dual mobility), which is also part of the expected reference and relevant to the compounded effect of moving scatterers mentioned in the ground truth mechanism. The citation is correct but less comprehensive than the expected standard.",
+        "fault_specificity": "The explanation correctly identifies the fault as severe Doppler shift caused by high UE velocity and rapid channel phase variation. It links this to the observed symptoms (RSRP variance, DL_MCS reduction). However, it misses the specific technical detail regarding 'dual mobility' or moving scatterers (D_n,m term) which is a key part of the expected causal mechanism in the ground truth, making the mechanism slightly less specific than the full ground truth description.",
+        "actionability": "The recommended action to 'adjust channel estimation filter lengths' at the O-DU/O-RU is a technically appropriate and clear subsystem-level action for mitigating Doppler effects. It lacks specific parameter values or thresholds (e.g., specific filter length values or MCS thresholds), which prevents it from scoring a 5, but it is concrete enough to be actionable by an engineer.",
+        "causal_soundness": "The causal chain (High Velocity -> Rapid Phase Variation -> Channel Estimation Error -> Conservative MCS/RSRP Fluctuation) is technically coherent and aligns with the ground truth. The link between the cause and the KPIs (RSRP, DL_MCS) is sound. The score is not a 5 because the explanation does not explicitly detail the intermediate step of how the estimation error forces the scheduler's conservative behavior in as much technical depth as the ground truth (e.g., coherence time exceedance), though the implication is clear."
+      }
+    },
+    {
+      "window_id": "c3_w658",
+      "window_index": 658,
+      "condition": 3,
+      "fault_type": "Doppler Shift (Severe)",
+      "citation_validity": 4.0,
+      "fault_specificity": 4.0,
+      "actionability": 3.0,
+      "causal_soundness": 4.0,
+      "composite": 3.8,
+      "citation_valid": true,
+      "justifications": {
+        "citation_validity": "The generated explanation cites TR 38.901 §7.6.6, which is the correct section for time-varying Doppler shift. However, it fails to cite §7.6.10 (Dual mobility) which is part of the expected ground truth for severe Doppler scenarios involving scatterer movement, making the citation less specific than the ideal standard.",
+        "fault_specificity": "The explanation correctly identifies severe Doppler shift caused by high UE velocity and rapid phase variation. It links this to RSRP variability and DL_MCS degradation. It misses the specific mechanism of dual mobility (moving scatterers) mentioned in the ground truth, but the core fault mechanism is correctly identified.",
+        "actionability": "The recommendation to 'enable advanced channel estimation and frequency offset tracking' is technically relevant to the O-DU/O-RU but lacks specific parameters, thresholds, or concrete configuration steps. It is a subsystem-level action without measurable operational details.",
+        "causal_soundness": "The causal chain from high velocity to phase variation to channel estimation failure and finally to MCS reduction is technically coherent. The link between Doppler and RSRP fluctuation is plausible in the context of estimation errors, though the explanation does not explicitly detail the UL_NPRB or TX_Bytes impact mentioned in the ground truth, leaving the KPI chain slightly incomplete."
+      }
+    },
+    {
+      "window_id": "c3_w648",
+      "window_index": 648,
+      "condition": 3,
+      "fault_type": "Faulty RF Filters (Temporal)",
+      "citation_validity": 3.0,
+      "fault_specificity": 4.0,
+      "actionability": 4.0,
+      "causal_soundness": 4.0,
+      "composite": 3.6,
+      "citation_valid": false,
+      "justifications": {
+        "citation_validity": "The generated explanation cites 'TS 38.141-1' generally. While this is the correct specification for RF conformance, it lacks the specific clause references (§7.5, §7.6) required for a high score. It also completely omits TS 38.104 §6.6, which is necessary to address the transmitter spurious emissions aspect of the faulty RF filter fault described in the ground truth.",
+        "fault_specificity": "The explanation correctly identifies the O-RU RF filter degradation and the resulting out-of-band interference/desensitization. However, it focuses primarily on the receiver side (RSRP, UL_NPRB) and does not explicitly detail the transmit-side stopband failure or spurious emissions, which is a key part of the 'Faulty RF Filters' mechanism in the ground truth.",
+        "actionability": "The recommendation to 'Inspect and replace the faulty O-RU RF filter module' is a clear, technically appropriate subsystem-level action. It lacks specific parameters or thresholds (e.g., specific dB degradation limits or test points), preventing a score of 5, but is sufficiently concrete for operational use.",
+        "causal_soundness": "The causal chain from filter degradation to out-of-band interference and subsequent KPI degradation (RSRP, UL_NPRB) is technically coherent. The link between receiver desensitization and UL_NPRB is plausible in the context of noise floor elevation affecting resource block allocation/quality, though the explanation is slightly less detailed on the specific mechanism of UL_BLER or RSRP degradation compared to the full ground truth description."
+      }
+    },
+    {
+      "window_id": "c3_w715",
+      "window_index": 715,
+      "condition": 3,
+      "fault_type": "Faulty Handover Algorithm (Too Frequent)",
+      "citation_validity": 4.0,
+      "fault_specificity": 4.0,
+      "actionability": 5.0,
+      "causal_soundness": 2.0,
+      "composite": 3.8,
+      "citation_valid": true,
+      "justifications": {
+        "citation_validity": "The generated explanation cites 'TS 38.331' in the header and 'TS 38.331 §5.5.4.4' in the reasoning trace. While the specific clause §5.5.4.4 (Event A3) is correct and highly relevant, the primary citation field lacks the specific section number, making it less precise than a perfect score. However, the reasoning trace provides the exact expected reference.",
+        "fault_specificity": "The explanation correctly identifies the fault as 'ping-pong handovers' due to a faulty algorithm and mentions the A3 event. However, it incorrectly attributes the root cause to 'excessively high packet counts' and 'throughput' as the drivers of the algorithm fault, rather than the misconfiguration of parameters (a3-Offset, hysteresis, timeToTrigger) which is the true technical mechanism. The mechanism is partially correct (A3 triggering) but the causal driver is misidentified.",
+        "actionability": "The recommended action is concrete and technically appropriate: 'Tune the A3 offset (a3-Offset) and hysteresis parameters in the xApp on the Near-RT RIC'. This specifies the exact parameters and the O-RAN component where the change should be made.",
+        "causal_soundness": "The causal chain is technically inconsistent. It claims that high packet counts and throughput *trigger* unnecessary handovers. In 5G, handover decisions are based on RSRP/RSRQ/SINR measurements (Event A3), not directly on packet counts or byte throughput. While high traffic might correlate with the scenario, it does not cause the A3 event to trigger incorrectly; parameter misconfiguration does. The link between 'high packets' and 'A3 triggering' is technically flawed."
+      }
+    },
+    {
+      "window_id": "c3_w684",
+      "window_index": 684,
+      "condition": 3,
+      "fault_type": "Resource Allocation Bugs",
+      "citation_validity": 3.0,
+      "fault_specificity": 4.0,
+      "actionability": 4.0,
+      "causal_soundness": 3.0,
+      "composite": 3.4,
+      "citation_valid": false,
+      "justifications": {
+        "citation_validity": "The generated explanation cites 'TS 38.321' generally, whereas the ground truth requires the specific clause '§5.4.3.1.3'. While the specification is correct, the lack of clause specificity makes the support indirect compared to the expected high specificity.",
+        "fault_specificity": "The explanation correctly identifies the fault family (Resource Allocation Bugs) and mentions the token-bucket scheduler and Bj variable. However, it lacks the specific technical details of the corruption modes (e.g., PBR misconfiguration, priority ordering violation) described in the ground truth, making it slightly less specific than a perfect score.",
+        "actionability": "The recommendation to 'Audit and reconfigure the token-bucket scheduler parameters' is a clear, technically appropriate subsystem-level action. It does not specify exact thresholds or parameter values (e.g., specific PBR values), which prevents it from achieving a score of 5.",
+        "causal_soundness": "The causal chain is plausible but weak. It links high DL PRBs and low UL NPRBs to MAC allocation failure. However, it fails to explicitly connect the mechanism (Bj corruption/PBR issues) to the specific KPI degradation (UL_SNR) or explain how the token bucket state directly causes the observed imbalance in the provided reasoning trace, leaving an intermediate link incomplete."
+      }
+    },
+    {
+      "window_id": "c3_w710",
+      "window_index": 710,
+      "condition": 3,
+      "fault_type": "Resource Allocation Bugs",
+      "citation_validity": 4.0,
+      "fault_specificity": 3.0,
+      "actionability": 3.0,
+      "causal_soundness": 3.0,
+      "composite": 3.4,
+      "citation_valid": true,
+      "justifications": {
+        "citation_validity": "The generated explanation cites 'TS 38.321' in the header but specifies 'TS 38.321 §5.4.3.1.3' in the reasoning trace. This matches the expected specific clause for token-bucket resource allocation. The score is 4 rather than 5 because the primary citation field lacks the clause specificity, though the reasoning trace provides the correct detailed reference.",
+        "fault_specificity": "The explanation correctly identifies the fault family (Resource Allocation Bugs) and the general mechanism (token-bucket/prioritization failure). However, it lacks the specific technical details of the causal mechanism defined in the ground truth, such as Bj token corruption, PBR misconfiguration, or priority ordering violations. It describes the symptom (PRB asymmetry) more than the specific internal bug mechanism.",
+        "actionability": "The recommended action to 'Inspect and debug the MAC scheduler token-bucket implementation' is relevant to the correct subsystem (O-DU). However, it is vague and does not provide concrete remediation steps, specific parameters to check (e.g., PBR values, Bj state), or measurable operational thresholds, making it less actionable than a specific configuration fix.",
+        "causal_soundness": "The causal chain is plausible but weak. It links high DL PRBs and low UL NPRBs to a token-bucket failure. However, the ground truth specifies that the bug causes irregular PRBs and UL_SNR degradation via suboptimal power distribution. The generated explanation does not clearly articulate the mechanism by which the token-bucket bug leads to the specific observed KPI asymmetry (DL high/UL low) beyond a generic 'failure in proper logical channel prioritization'. The link between the specific SHAP values and the internal MAC state corruption is not technically rigorous."
+      }
+    },
+    {
+      "window_id": "c3_w686",
+      "window_index": 686,
+      "condition": 3,
+      "fault_type": "Resource Allocation Bugs",
+      "citation_validity": 5.0,
+      "fault_specificity": 4.0,
+      "actionability": 3.0,
+      "causal_soundness": 3.0,
+      "composite": 4.0,
+      "citation_valid": true,
+      "justifications": {
+        "citation_validity": "The generated explanation cites TS 38.321 §5.4.3.1.3 in the reasoning trace, which exactly matches the expected specific clause for the token-bucket resource allocation procedure.",
+        "fault_specificity": "The explanation correctly identifies the MAC scheduler and the token-bucket/PBR mechanism as the root cause. However, it lacks the specific detail of *how* the bug manifests (e.g., Bj corruption or PBR misconfiguration) and incorrectly attributes the primary anomaly to downlink PRBs, whereas the standard mechanism described in the ground truth focuses on UL grant allocation across logical channels.",
+        "actionability": "The recommendation to 'Reset and reinitialize the MAC layer scheduler logic' is a valid subsystem-level action but is vague. It does not specify concrete parameters, thresholds, or configuration checks (e.g., verifying PBR values or Bj state) that would be required for a precise remediation.",
+        "causal_soundness": "The causal chain is plausible but weak. It links the MAC scheduler bug to both DL and UL anomalies. While UL starvation is consistent with the ground truth, the strong emphasis on DL PRB anomalies as the primary driver is not fully supported by the specific UL-centric mechanism described in the ground truth (which focuses on UL grants and logical channel prioritization). The connection between the specific token-bucket bug and the observed DL KPIs is not technically explicit."
+      }
+    }
+  ],
+  "summary": {
+    "n_expected": 30,
+    "n_valid_explanations": 24,
+    "n_scored": 24,
+    "n_missing_explanations": 6,
+    "n_judge_errors": 0,
+    "explanation_completeness_rate": 0.8,
+    "citation_validity_rate": 0.542,
+    "citation_validity": {
+      "mean": 3.583,
+      "sd": 0.584,
+      "min": 3.0,
+      "max": 5.0
+    },
+    "fault_specificity": {
+      "mean": 4.042,
+      "sd": 0.359,
+      "min": 3.0,
+      "max": 5.0
+    },
+    "actionability": {
+      "mean": 3.792,
+      "sd": 0.509,
+      "min": 3.0,
+      "max": 5.0
+    },
+    "causal_soundness": {
+      "mean": 3.75,
+      "sd": 0.608,
+      "min": 2.0,
+      "max": 5.0
+    },
+    "composite": {
+      "mean": 3.75,
+      "sd": 0.278
+    }
+  },
+  "missing_explanations": [
+    {
+      "window_id": "c3_w717",
+      "window_index": 717,
+      "condition": 3,
+      "fault_type": "Normal",
+      "status": "missing_explanation",
+      "reason": "The Track C record has no valid explanation with a non-empty root_cause."
+    },
+    {
+      "window_id": "c3_w682",
+      "window_index": 682,
+      "condition": 3,
+      "fault_type": "Normal",
+      "status": "missing_explanation",
+      "reason": "The Track C record has no valid explanation with a non-empty root_cause."
+    },
+    {
+      "window_id": "c3_w879",
+      "window_index": 879,
+      "condition": 3,
+      "fault_type": "Normal",
+      "status": "missing_explanation",
+      "reason": "The Track C record has no valid explanation with a non-empty root_cause."
+    },
+    {
+      "window_id": "c3_w866",
+      "window_index": 866,
+      "condition": 3,
+      "fault_type": "Normal",
+      "status": "missing_explanation",
+      "reason": "The Track C record has no valid explanation with a non-empty root_cause."
+    },
+    {
+      "window_id": "c3_w827",
+      "window_index": 827,
+      "condition": 3,
+      "fault_type": "Normal",
+      "status": "missing_explanation",
+      "reason": "The Track C record has no valid explanation with a non-empty root_cause."
+    },
+    {
+      "window_id": "c3_w843",
+      "window_index": 843,
+      "condition": 3,
+      "fault_type": "Normal",
+      "status": "missing_explanation",
+      "reason": "The Track C record has no valid explanation with a non-empty root_cause."
+    }
+  ],
+  "inter_rater": null
+}
