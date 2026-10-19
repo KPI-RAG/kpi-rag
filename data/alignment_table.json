@@ -1,5 +1,5 @@
 {
-  "version": "alignment_table_v1.2",
+  "version": "alignment_table_v1.4",
   "updated_at": "2026-10-17",
   "status": "11/11 rows present (10 synthetic fault types + 1 Jamming). v1.2 completes all pending validations: (1) Rows 8 & 9 causal_mechanism text synchronized with onset_pattern definitions (Gradual Buildup vs Sudden Spike) and legacy static/temporal terminology replaced; (2) Row 6 3gpp_version finalized to TS 38.331 V19.4.0; (3) pending_validations fully cleared.",
   "classification_scheme": {
