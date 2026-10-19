@@ -1,0 +1,28 @@
+{
+  "cascade": {
+    "test_windows": 6312,
+    "true_faults": 300,
+    "flagged_as_fault": 382,
+    "true_faults_detected": 266,
+    "false_alarms": 116,
+    "binary_recall": 0.8866666666666667,
+    "binary_precision": 0.6963350785340314,
+    "exact_fault_type_correct": 199,
+    "exact_accuracy_on_all_true_faults": 0.6633333333333333,
+    "exact_accuracy_on_detected_faults": 0.7481203007518797,
+    "family_accuracy_on_all_true_faults": 0.75,
+    "exact_accuracy_excluding_jamming": 0.5145631067961165,
+    "binary_recall_excluding_jamming": 0.8349514563106796
+  },
+  "retrieval": {
+    "queries": 382,
+    "system_top1_similarity_min": 0.5932562351226807,
+    "system_top1_similarity_median": 0.7186550796031952,
+    "system_top1_similarity_max": 0.7530661821365356,
+    "system_low_confidence_flags": 0,
+    "diagnostic_queries_on_true_faults": 266,
+    "diagnostic_label_free_p_at_1_vs_true": 0.45112781954887216,
+    "diagnostic_label_free_p_at_5_vs_true": 0.33458646616541354,
+    "diagnostic_majority_class_share": 0.3533834586466165
+  }
+}

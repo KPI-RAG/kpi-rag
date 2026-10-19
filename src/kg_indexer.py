@@ -1,0 +1,89 @@
+import logging
+from functools import lru_cache
+import chromadb
+from sentence_transformers import SentenceTransformer
+
+logger = logging.getLogger(__name__)
+
+
+@lru_cache(maxsize=4)
+def get_model(model_name: str) -> SentenceTransformer:
+    """One model instance per name for the whole process."""
+    return SentenceTransformer(model_name)
+
+def get_collection(cfg: dict) -> chromadb.Collection:
+    """Open (or create, with cosine distance) the collection named in cfg["rag"]."""
+    path = cfg["rag"]["chroma_db_path"]
+    name = cfg["rag"]["collection_name"]
+    client = chromadb.PersistentClient(path=path)
+    collection = client.get_or_create_collection(name=name, metadata={"hnsw:space": "cosine"})
+    logger.info("Loaded collection %s with %d documents", name, collection.count())
+    return collection
+
+def embed_tickets(tickets: list[dict], model_name: str) -> tuple[list[str], list[list[float]], list[dict], list[str]]:
+    """Embed each ticket's window-specific KPI narrative (``description``).
+
+    ticket_text is one template per fault class (11 distinct texts) and the QnA's
+    root-cause answer is the class name, so neither says anything the label doesn't.
+    The description is the only per-incident evidence. Its first 256 tokens (MiniLM's
+    window) cover the radio KPIs; averaging all paragraphs was measured to retrieve
+    worse, so truncation is kept on purpose.
+    Returns (documents, embeddings, metadatas, ids).
+    """
+    logger.info("Embedding %d tickets using model %s", len(tickets), model_name)
+    model = get_model(model_name)
+
+    documents = []
+    metadatas = []
+    ids = []
+
+    for ticket in tickets:
+        doc = ticket["description"]
+        documents.append(doc)
+        metadatas.append({
+            "ticket_id": ticket["ticket_id"],
+            "anomaly_type": ticket["anomaly_type"]
+        })
+        ids.append(ticket["ticket_id"])
+        
+    embeddings_np = model.encode(documents)
+    embeddings = embeddings_np.tolist()
+    
+    return documents, embeddings, metadatas, ids
+
+def index_tickets(tickets: list[dict], collection: chromadb.Collection, model_name: str) -> int:
+    """Add tickets whose ids are not already in the collection. Returns how many were added."""
+    if not tickets:
+        return 0
+        
+    tickets = list({t["ticket_id"]: t for t in tickets}.values())   # one per id: Chroma rejects duplicate ids in a batch
+    documents, embeddings, metadatas, ids = embed_tickets(tickets, model_name)
+    
+    # Check for existing IDs to skip duplicates
+    existing_result = collection.get(ids=ids)
+    existing_ids = set(existing_result["ids"])
+    
+    new_docs, new_embs, new_metas, new_ids = [], [], [], []
+    for doc, emb, meta, tid in zip(documents, embeddings, metadatas, ids):
+        if tid not in existing_ids:
+            new_docs.append(doc)
+            new_embs.append(emb)
+            new_metas.append(meta)
+            new_ids.append(tid)
+            
+    if new_ids:
+        collection.add(
+            documents=new_docs,
+            embeddings=new_embs,
+            metadatas=new_metas,
+            ids=new_ids
+        )
+        
+    logger.info("Indexed %d new tickets out of %d provided", len(new_ids), len(tickets))
+    return len(new_ids)
+
+def clear_collection(collection: chromadb.Collection) -> None:
+    """Delete every document (needed before a rebuild, since index_tickets skips existing ids)."""
+    ids = collection.get()["ids"]
+    if ids:
+        collection.delete(ids=ids)

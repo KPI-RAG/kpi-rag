@@ -1,0 +1,35 @@
+import streamlit as st
+import pandas as pd
+
+def render_kpi_signal_panel(
+    signal_statistics: dict[str, float],
+    window_length: int = 128,  # matches config.yaml data.window_length
+) -> None:
+    if not signal_statistics:
+        st.info("No signal data available")
+        return
+        
+    # Only window-level statistics reach Layer 3, so this shows mean ± std bands,
+    # not the raw 128-sample time series.
+    st.subheader(f"KPI Window Statistics (mean ± std over {window_length} timesteps @ 100 ms)")
+    
+    # signal_statistics is now flat: {"RSRP_mean": -77.6, "RSRP_std": 0.78, ...}
+    # Collect unique channel names by stripping trailing _mean/_std/_min/_max
+    channels = set()
+    for key in signal_statistics:
+        for suffix in ("_mean", "_std", "_min", "_max"):
+            if key.endswith(suffix):
+                channels.add(key[: -len(suffix)])
+                break
+
+    data = {}
+    for channel in sorted(channels):
+        mean = signal_statistics.get(f"{channel}_mean", 0.0)
+        std = signal_statistics.get(f"{channel}_std", 0.0)
+        
+        data[f"{channel} (mean)"] = [mean] * window_length
+        data[f"{channel} (upper)"] = [mean + std] * window_length
+        data[f"{channel} (lower)"] = [mean - std] * window_length
+        
+    df = pd.DataFrame(data)
+    st.line_chart(df)

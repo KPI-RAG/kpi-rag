@@ -1,0 +1,73 @@
+import argparse
+import logging
+import os
+from src.config_loader import load_config
+from src.data_loader import (
+    load_jsonl_files,
+    filter_anomalous,
+    extract_tickets,
+    apply_train_split,
+    verify_ticket_order,
+)
+from src.kg_indexer import get_collection, index_tickets, clear_collection
+from src.utils import setup_logging
+
+logger = logging.getLogger(__name__)
+
+def build_index(cfg: dict, rebuild: bool = False) -> int:
+    """Index the train-split tickets. rebuild=True empties the collection first:
+    index_tickets() skips ids that exist, so without it a stale index survives."""
+    raw_path = cfg["data"]["raw_path"]
+    indices_path = cfg["data"]["indices_path"]
+    embedding_model = cfg["rag"]["embedding_model"]
+    
+    records = load_jsonl_files(raw_path)
+    logger.info("Loaded %d raw records", len(records))
+    
+    anomalous = filter_anomalous(records)
+    logger.info("Filtered to %d anomalous records", len(anomalous))
+    
+    tickets = extract_tickets(anomalous)
+    logger.info("Extracted %d tickets", len(tickets))
+
+    handoff_path = os.path.join(
+        cfg["data"].get("processed_path", "data/processed"), "layer2_rag_handoff_sessionsplit.json"
+    )
+    if os.path.exists(handoff_path):
+        verify_ticket_order(tickets, handoff_path)
+    else:
+        logger.warning("%s not found: ticket order (ticket_id == window index) is NOT verified", handoff_path)
+
+    train_idx_path = os.path.join(indices_path, cfg["data"]["train_idx_file"])
+    train_tickets = apply_train_split(tickets, train_idx_path)
+    logger.info("Applied train split, %d tickets remaining", len(train_tickets))
+    
+    if not train_tickets:
+        # never clear a working index because the raw data is missing or empty
+        raise RuntimeError(f"No training tickets loaded from {raw_path}; refusing to (re)build the index")
+
+    collection = get_collection(cfg)
+    logger.info("Got collection %s", collection.name if hasattr(collection, 'name') else 'unknown')
+    if rebuild:
+        clear_collection(collection)
+        logger.info("Cleared collection before rebuild")
+
+    indexed_count = index_tickets(train_tickets, collection, embedding_model)
+    logger.info("Indexed %d documents", indexed_count)
+    
+    return indexed_count
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Build ChromaDB index from TelecomTS data")
+    parser.add_argument("--config", type=str, default="configs/config.yaml", help="Path to config.yaml")
+    parser.add_argument("--rebuild", action="store_true", help="empty the collection before indexing")
+    args = parser.parse_args()
+
+    setup_logging(__name__)
+
+    cfg = load_config(args.config)
+    indexed_count = build_index(cfg, rebuild=args.rebuild)
+    logger.info("Indexed %d tickets into ChromaDB", indexed_count)
+
+if __name__ == "__main__":
+    main()

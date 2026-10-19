@@ -1,0 +1,55 @@
+rag:
+  embedding_model: "all-MiniLM-L6-v2"
+  chroma_db_path: "data/chroma_db"
+  collection_name: "telecomts_descriptions"   # per-window KPI narratives, cosine
+  top_k: 5
+  cosine_threshold: 0.35
+
+llm:
+  backend: "gemini"   # gemini | groq | ollama
+  # Not in Google's public catalogue, but the API accepts it and all Track C runs used it.
+  # Fallbacks if it disappears: gemini-2.5-flash-lite, gemini-2.0-flash-lite.
+  gemini_model: "gemini-3.5-flash-lite"
+  ollama_model: "llama3.1:8b"
+  ollama_base_url: "http://localhost:11434"
+  groq_model: "llama-3.1-8b-instant"
+  max_retries: 3
+  temperature: 0.1
+  min_request_interval_s: 2.0   # seconds between LLM calls, all backends
+  backoff_base_s: 5             # exponential backoff on 429 (when no Retry-After)
+  backoff_max_s: 60
+
+data:
+  raw_path: "data/raw"
+  processed_path: "data/processed"
+  indices_path: "data/indices"
+  train_idx_file: "train_idx_sessionsplit.npy"   # only these windows are indexed
+  test_idx_file: "test_idx_sessionsplit.npy"
+  rca_evidence_path: "data/processed/rca_evidence.json"
+  layer2_output_file: "layer2_output_sessionsplit_phase2.json"
+  alignment_table_path: "data/alignment_table.json"
+  n_features: 496
+  feature_dims: 496
+  window_length: 128
+  n_channels: 18
+  n_anomalous: 1235       # 935 train + 300 test
+  random_state: 42
+
+evaluation:
+  citation_validity_threshold: 0.70   # Track B pass mark (pre-registered)
+  n_eval_samples: 30
+  samples_per_fault: 3                # default for run_eval_track_c.py --n-per-fault
+  g_eval_dimensions:                  # 1-5 each; scored by Rodina's G-Eval LLM judge (Track B)
+    - "Citation Validity"
+    - "Fault Specificity"
+    - "Actionability"
+    - "Causal Soundness"
+
+dashboard:
+  title: "KPI-RAG: 5G Fault Diagnosis"
+
+models:
+  model1_path: "data/models/model1.cbm"
+  model2_path: "data/models/model2.cbm"
+
+
