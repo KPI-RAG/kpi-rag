@@ -7,14 +7,71 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from rca_utils import (
-    load_alignment_table,
-    lookup_fault,
-    is_jamming,
-    extract_standards_evidence,
+logger = logging.getLogger(__name__)
+
+# Alignment-table fields that are passed through as standards evidence.
+_STANDARDS_FIELDS = (
+    "3gpp_reference",
+    "3gpp_release",
+    "3gpp_version",
+    "clause_text",
+    "relation_type",
+    "support_class",
+    "evidence_strength",
+    "kg_evidence_summary",
+    "oran_component",
+    "oran_component_rationale",
+    "oran_spec_reference",
+    "validation_status",
 )
 
-logger = logging.getLogger(__name__)
+
+def is_jamming(fault: str | None) -> bool:
+    """Return True when the fault label denotes Jamming."""
+    return "jamming" in str(fault or "").strip().lower()
+
+
+def load_alignment_table(path: str | Path) -> dict[str, Any]:
+    """Load the alignment table JSON as a dict keyed by ``telecomts_fault``.
+
+    The Jamming row has no 3GPP mapping; its pipeline note is exposed under
+    the ``_jamming_note`` key so the RCA builder can use it as the fallback.
+    """
+    with Path(path).open(encoding="utf-8") as fh:
+        data = json.load(fh)
+    rows = data["rows"] if isinstance(data, dict) else data
+
+    table: dict[str, Any] = {}
+    for row in rows:
+        name = row.get("telecomts_fault")
+        if not name:
+            continue
+        table[name] = row
+        if is_jamming(name):
+            table["_jamming_note"] = {
+                "pipeline_fallback": (
+                    row.get("kg_evidence_summary")
+                    or "Ticket-retrieval evidence only. Alignment table not applicable."
+                )
+            }
+    return table
+
+
+def lookup_fault(table: dict[str, Any], fault: str) -> dict[str, Any] | None:
+    """Return the alignment row for ``fault`` (case-insensitive), else None."""
+    if fault in table and not fault.startswith("_"):
+        return table[fault]
+    wanted = str(fault or "").strip().lower()
+    for key, row in table.items():
+        if not key.startswith("_") and key.lower() == wanted:
+            return row
+    return None
+
+
+def extract_standards_evidence(row: dict[str, Any]) -> dict[str, Any]:
+    """Select the standards-related fields of an alignment row."""
+    return {field: row.get(field) for field in _STANDARDS_FIELDS}
+
 
 def build_rca_coverage_summary(evidence: list[dict[str, Any]]) -> dict[str, Any]:
     """Summarize KPI evidence using model-derived affected_kpis as the profile."""

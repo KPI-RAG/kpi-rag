@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+
+# Secrets
+.env
+
+# Large or downloaded data (see README, "Raw data")
+data/raw/
+data/TeleQnA.json
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

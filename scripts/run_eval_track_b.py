@@ -16,6 +16,19 @@ from typing import Optional
 import httpx
 from openai import OpenAI
 
+import logging
+import sys
+
+from src.config_loader import load_config
+from src.utils import setup_logging
+from src.evaluator import (
+    load_scores_from_jsonl,
+    compute_track_b,
+    save_results,
+)
+
+logger = logging.getLogger(__name__)
+
 
 # Composite metric weights
 # Primary overall-quality metric: treats all four dimensions equally.
@@ -901,19 +914,47 @@ def run_geval_track_b(
 
 
 # Command-line interface
+def run_track_b(scores_path: str, output_path: str, cfg: dict) -> None:
+    """Aggregate pre-scored G-Eval records (JSONL) into Track B metrics."""
+    scores = load_scores_from_jsonl(scores_path)
+    results = compute_track_b(scores, cfg)
+
+    logger.info("Track B Results - n=%d", results.n)
+    logger.info("  Citation Validity Rate : %.1f%%", results.citation_validity_rate * 100)
+    logger.info("  Mean Overall Score     : %.2f/5.0", results.mean_overall)
+    logger.info("  Meets 70%% threshold   : %s", results.meets_threshold)
+
+    save_results(results, None, output_path)
+    logger.info("Track B results saved to %s", output_path)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="KPI-RAG Track B G-Eval evaluation"
+        description=(
+            "KPI-RAG Track B evaluation. Either judge Track C explanations "
+            "with G-Eval (--explanations and --alignment), or aggregate "
+            "pre-scored records (--scores)."
+        )
     )
 
     parser.add_argument(
+        "--scores",
+        default=None,
+        help="JSONL file of pre-scored GEvalScores (aggregation-only mode).",
+    )
+    parser.add_argument(
+        "--config",
+        default="configs/config.yaml",
+        help="Path to config.yaml (used with --scores).",
+    )
+    parser.add_argument(
         "--explanations",
-        required=True,
+        default=None,
         help="JSONL file containing Track C explanation records.",
     )
     parser.add_argument(
         "--alignment",
-        required=True,
+        default=None,
         help="JSON standards/fault alignment table.",
     )
     parser.add_argument(
@@ -961,6 +1002,23 @@ def main() -> None:
     )
 
     args = parser.parse_args()
+
+    # Aggregation-only mode: score a pre-judged JSONL file.
+    if args.scores:
+        setup_logging(__name__)
+        try:
+            cfg = load_config(args.config)
+            run_track_b(args.scores, args.output, cfg)
+        except FileNotFoundError as e:
+            logger.error("File not found: %s", e)
+            sys.exit(1)
+        except ValueError as e:
+            logger.error("Invalid input: %s", e)
+            sys.exit(1)
+        return
+
+    if not args.explanations or not args.alignment:
+        parser.error("provide --scores, or both --explanations and --alignment")
 
     # Resolve credentials and endpoint.
     api_key = args.api_key or os.getenv("GROQ_API_KEY", "")

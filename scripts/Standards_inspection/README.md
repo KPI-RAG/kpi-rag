@@ -97,3 +97,10 @@ python scripts/Standards_inspection/targeted_fault_search.py
 python scripts/Standards_inspection/semantic_fault_search.py
 python scripts/Standards_inspection/validate_fault_graph.py
 python scripts/Standards_inspection/inspect_fault_evidence.py
+```
+
+## Inputs and limitations
+
+- The `data/3GPP_KG/` files named above are **not committed** to this repository: the GraphML knowledge graph must be obtained separately and placed there before running these scripts.
+- The scripts hard-code Windows-style paths (for example `data\\3GPP_KG\\gsma_entities.csv`), so they run as written on Windows only. Edit the path constants at the top of each script to run them elsewhere.
+- The outputs of this workflow are already summarised in `data/alignment_table.json`; the project does not need these scripts at runtime.
