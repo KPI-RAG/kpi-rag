@@ -367,9 +367,6 @@ More detail: [`Data_and_Models/README.md`](Data_and_Models/README.md),
   windows of the first are named as the second.
 - Track B and Track C measure citations differently (clause depth versus specification number),
   so their rates are not comparable.
-- [`scripts/Standards_inspection/`](scripts/Standards_inspection/README.md) needs the 3GPP
-  knowledge-graph files in `data/3GPP_KG/`, which are not committed, and uses Windows-style
-  paths. The project does not need these scripts at runtime.
 
 ## Team
 
