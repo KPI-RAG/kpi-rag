@@ -1,0 +1,23 @@
+# 10c_false_alarm_filter_threshold  |  2026-10-13 23:08 UTC  |  python 3.12.13 on jupyter-farida-gaber44
+== A. CV screening (seed 42, 5 folds): macro-F1 on real validation faults / share rejected, per tau ==
+  fold 1: tau=0.5: F1 0.288 rej 9.6%  tau=0.6: F1 0.289 rej 5.6%  tau=0.7: F1 0.295 rej 3.0%  tau=0.8: F1 0.298 rej 1.9%  tau=0.9: F1 0.331 rej 0.0%  (63s)
+  fold 2: tau=0.5: F1 0.363 rej 30.4%  tau=0.6: F1 0.359 rej 26.7%  tau=0.7: F1 0.354 rej 21.5%  tau=0.8: F1 0.347 rej 17.3%  tau=0.9: F1 0.346 rej 15.7%  (59s)
+  fold 3: tau=0.5: F1 0.387 rej 1.6%  tau=0.6: F1 0.390 rej 0.5%  tau=0.7: F1 0.390 rej 0.5%  tau=0.8: F1 0.390 rej 0.5%  tau=0.9: F1 0.428 rej 0.0%  (57s)
+  fold 4: tau=0.5: F1 0.246 rej 23.8%  tau=0.6: F1 0.261 rej 16.3%  tau=0.7: F1 0.241 rej 12.9%  tau=0.8: F1 0.247 rej 10.2%  tau=0.9: F1 0.249 rej 8.2%  (56s)
+  fold 5: tau=0.5: F1 0.458 rej 0.0%  tau=0.6: F1 0.458 rej 0.0%  tau=0.7: F1 0.458 rej 0.0%  tau=0.8: F1 0.458 rej 0.0%  tau=0.9: F1 0.458 rej 0.0%  (57s)
+     macro_f1  faults_rejected
+0.5     0.348            0.131
+0.6     0.351            0.098
+0.7     0.348            0.076
+0.8     0.348            0.060
+0.9     0.362            0.048
+  no-reject reference (step 10): 0.3888 ± 0.1079; taus with <= 10 % faults rejected and F1 within 2 SD: [0.6, 0.7, 0.8, 0.9]; chosen tau = 0.9
+
+== B. Cascade on the held-out sessions per tau (post-hoc) ==
+  tau=0.5    FP 116 -> rejected 13, residual 103 (dominant Co-Channel Interference (Mild) 68%)  TP 266 -> rejected 0, correct label 201  useful precision 0.545
+  tau=0.6    FP 116 -> rejected 5, residual 111 (dominant Co-Channel Interference (Mild) 70%)  TP 266 -> rejected 0, correct label 201  useful precision 0.533
+  tau=0.7    FP 116 -> rejected 2, residual 114 (dominant Co-Channel Interference (Mild) 71%)  TP 266 -> rejected 0, correct label 201  useful precision 0.529
+  tau=0.8    FP 116 -> rejected 0, residual 116 (dominant Co-Channel Interference (Mild) 71%)  TP 266 -> rejected 0, correct label 201  useful precision 0.526
+  tau=0.9    FP 116 -> rejected 0, residual 116 (dominant Co-Channel Interference (Mild) 71%)  TP 266 -> rejected 0, correct label 201  useful precision 0.526
+  tau=argmax FP 116 -> rejected 16, residual 100 (dominant Co-Channel Interference (Mild) 68%)  TP 266 -> rejected 0, correct label 201  useful precision 0.549
+saved results/10c_false_alarm_filter_threshold/results.json

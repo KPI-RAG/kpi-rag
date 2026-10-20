@@ -243,8 +243,8 @@ The Layer 2 training pipeline (feature engineering, model experiments) lives in 
 | Member | Main contributions |
 |---|---|
 | Ahmed Mohamed Al Shobaki (team leader) | Retrieval and its redesign, prompt design, LLM explanation layer and citation validation, Track C, dashboard, deployment, test suite |
-| Farida El Ghabary | Synthetic training data and the Model 2 recipe |
-| Raneem Alnaghy | Recording-session reconstruction and the session-level split; reject-option study |
+| Farida El Ghabary | Synthetic training data and the synthetic-data model |
+| Raneem Alnaghy | Recording-session reconstruction and the session-level split; false-alarm filter study |
 | Rodina Khallaf | 3GPP Release 19 / O-RAN alignment table; Track B (G-Eval) and Track D (TeleQnA) evaluations |
 
 ## Acknowledgements

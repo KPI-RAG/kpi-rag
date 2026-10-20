@@ -1,0 +1,46 @@
+# 08_model2_best_plus_synthetic_data  |  2026-10-13 14:09 UTC  |  python 3.12.13 on jupyter-farida-gaber44
+step 06 best variant: trend (0.3888) -> G features=True, fixed parser=False, exclude pair=False
+step 07 ranking: [('quant', 0.428), ('catboost_c22', 0.4016), ('lightgbm_rich', 0.3909), ('xgboost_rich', 0.358), ('catboost_rich', 0.3464), ('minirocket', 0.328), ('hydra', 0.3135), ('extratrees_rich', 0.309), ('catboost_A', 0.291)]
+algorithms in step 08: ['catboost', 'quant', 'catboost_c22', 'lightgbm']
+  seed=123   fold=3  syn=3951  catboost=0.4152  quant=0.4422  catboost_c22=0.4096  lightgbm=0.4027  (204s)
+  seed=123   fold=4  syn=4397  catboost=0.2606  quant=0.2980  catboost_c22=0.2787  lightgbm=0.3086  (213s)
+  seed=123   fold=5  syn=4393  catboost=0.5535  quant=0.4382  catboost_c22=0.5293  lightgbm=0.4480  (212s)
+  seed=2024  fold=1  syn=4427  catboost=0.3791  quant=0.3002  catboost_c22=0.4107  lightgbm=0.4343  (216s)
+  seed=2024  fold=2  syn=4349  catboost=0.3486  quant=0.4062  catboost_c22=0.3531  lightgbm=0.4358  (210s)
+  seed=2024  fold=3  syn=3951  catboost=0.3875  quant=0.4747  catboost_c22=0.4466  lightgbm=0.4341  (202s)
+  seed=2024  fold=4  syn=4397  catboost=0.2433  quant=0.3036  catboost_c22=0.2809  lightgbm=0.2913  (214s)
+  seed=2024  fold=5  syn=4393  catboost=0.5948  quant=0.4370  catboost_c22=0.5862  lightgbm=0.4085  (210s)
+  seed=99    fold=1  syn=4427  catboost=0.3746  quant=0.3277  catboost_c22=0.4353  lightgbm=0.4777  (215s)
+  seed=99    fold=2  syn=4349  catboost=0.3528  quant=0.4062  catboost_c22=0.3688  lightgbm=0.4134  (210s)
+  seed=99    fold=3  syn=3951  catboost=0.4370  quant=0.4547  catboost_c22=0.4322  lightgbm=0.4602  (197s)
+  seed=99    fold=4  syn=4397  catboost=0.2586  quant=0.2814  catboost_c22=0.2772  lightgbm=0.3230  (215s)
+  seed=99    fold=5  syn=4393  catboost=0.6132  quant=0.4461  catboost_c22=0.6201  lightgbm=0.4297  (209s)
+
+== Macro-F1 over 25 folds ==
+                mean     std
+real_only     0.2908  0.0921
+synthetic_data_model  0.3743  0.0960
+catboost      0.3911  0.1057
+quant         0.3811  0.0727
+catboost_c22  0.4096  0.0963
+lightgbm      0.4122  0.0609
+
+== Paired comparisons (Nadeau-Bengio corrected t-test) ==
+  catboost     vs real_only   : d=+0.1003  p=0.0006  Wilcoxon p=0.0000  wins 25/25
+  quant        vs real_only   : d=+0.0903  p=0.0311  Wilcoxon p=0.0000  wins 21/25
+  catboost_c22 vs real_only   : d=+0.1187  p=0.0010  Wilcoxon p=0.0000  wins 25/25
+  lightgbm     vs real_only   : d=+0.1214  p=0.0261  Wilcoxon p=0.0000  wins 22/25
+  catboost     vs synthetic_data_model: d=+0.0168  p=0.2717  Wilcoxon p=0.0061  wins 19/25
+  quant        vs synthetic_data_model: d=+0.0068  p=0.8496  Wilcoxon p=0.4908  wins 14/25
+  catboost_c22 vs synthetic_data_model: d=+0.0352  p=0.0377  Wilcoxon p=0.0000  wins 23/25
+  lightgbm     vs synthetic_data_model: d=+0.0378  p=0.3682  Wilcoxon p=0.0219  wins 19/25
+
+Best in CV: lightgbm (0.4122)
+
+== POST-HOC test check (3 held-out sessions, 300 fault windows; not used to decide) ==
+  catboost     macro-F1=0.5908  accuracy=0.7033
+  quant        macro-F1=0.4915  accuracy=0.6367
+  catboost_c22 macro-F1=0.5717  accuracy=0.6933
+  lightgbm     macro-F1=0.6090  accuracy=0.7333
+  reference (synthetic-data report): real-only 0.586 / 0.705; synthetic+B+FFT 0.557 / 0.680; Phase 1 accuracy 0.677
+saved results/08_model2_best_plus_synthetic_data/results.json
