@@ -1,12 +1,12 @@
 # KPI-RAG Phase 2 — Data & Models: Methods, Experiments and Results
 
-Farida El Ghabary · Group 15 · Supervisor Prof. Yuanzhu Chen · 2026-10-14
-Code and all result files: `kpi_rag/phase2/` (server) = `Farida/Phase 2 - Data & Models/` (Drive).
+Farida El Ghabary · 2026-10-14
+Code and all result files: `Data_and_Models/3_Final_system/` in the project repository on GitHub.
 
 ## 1. Summary
 
 Phase 2 took the Phase 1 pipeline (CatBoost cascade on 64 Config A statistics, session-level split) and
-Farida's post-Phase-1 synthetic-data work, reproduced both exactly, found and fixed two defects in Model 1,
+the post-Phase-1 synthetic-data work, reproduced both exactly, found and fixed two defects in Model 1,
 validated the synthetic method statistically, compared nine algorithms and five feature/augmentation
 strategies under one frozen protocol, and delivered a final cascade with the Phase 1 Layer 2 JSON schema.
 
@@ -31,7 +31,7 @@ were used once per step as a post-hoc check, never for selection.
 - Protocol (frozen in step 01): StratifiedGroupKFold by session, 5 folds × 5 seeds; Nadeau-Bengio corrected
   paired t-test (Wilcoxon as check); a change is adopted only if corrected p < 0.05, the gain is material
   (≥ 0.03 macro-F1 or a material cascade gain) and it holds on the held-out sessions.
-- Baseline reproduced to 4 decimals: Model 2 real-only 0.2908 ± 0.0902; Farida's final v3 + Config B + FFT 0.3743.
+- Baseline reproduced to 4 decimals: Model 2 real-only 0.2908 ± 0.0902; the synthetic-data model (synthetic data + Config B + FFT) 0.3743.
 - The TelecomTS paper's own benchmark uses a random split of overlapping windows (`src/run.py`, line 26), so its
   numbers (e.g. Toto 0.848) are not comparable with session-level results and were not reproduced.
 
@@ -95,13 +95,13 @@ paper's scale ablation. Adding the trend features (adopted + G) is the only vari
 held-out sessions (PR-AUC 0.893 → 0.917, +4 TP, +7 FP) but p = 0.23 → *promising, uncertain*; by the rule
 **Model 1 stays the step-03 detector**. Session 0 remains at a 94–98 % false-alarm rate for every variant (§4.2).
 
-## 5. Synthetic data (Farida's v3) — audit and experiments
+## 5. Synthetic data (v3) — audit and experiments
 
 Audit of `src/v3.py` (verbatim port of `Synthetic_Data_Part1.ipynb` Part 7): donors and hosts come only from
 the 28 training sessions; generation is nested inside CV (effects, references, bounds and hosts rebuilt from
 training-fold sessions; validation = real windows only); seeds fixed; physical limits and real-data bounds
 enforced; statistical gating (Wilcoxon, α = 0.001). The 25-fold cache (step 09z) reproduces inline generation
-exactly (max difference 0.0). Her final model reproduced in 25/25 folds (0.3743).
+exactly (max difference 0.0). The synthetic-data model reproduced in 25/25 folds (0.3743).
 
 | Experiment | Result | Decision |
 |---|---|---|
@@ -124,12 +124,12 @@ alternatives were not tested in Phase 2 (time); see §10.
 QUANT 0.428 (p = 0.008), CatBoost + catch22 0.402 (p = 0.021), LightGBM 0.391 (p = 0.020) beat the baseline
 significantly; XGBoost 0.358, CatBoost on the same 240 features 0.346, MiniRocket 0.328, Hydra 0.314,
 ExtraTrees 0.309 did not. With synthetic data (step 08) LightGBM reached 0.412 but not significantly over
-Farida's recipe (p = 0.37) → by the pre-registered rule no algorithm switch.
+the synthetic-data model (p = 0.37) → by the pre-registered rule no algorithm switch.
 
 ### 6.2 Final candidates measured for real (step 09c)
 | Candidate | CV macro-F1 | test macro-F1 / accuracy | test acc. sessions 1 / 13 / 17 |
 |---|---|---|---|
-| Farida's recipe (CatBoost + v3 + B + FFT) | 0.374 | 0.537 / 0.663 | 1.00 / 0.25 / 0.64 |
+| the synthetic-data model (CatBoost + v3 + B + FFT) | 0.374 | 0.537 / 0.663 | 1.00 / 0.25 / 0.64 |
 | **+ trend features (final)** | **0.389** | **0.591 / 0.703** | 0.99 / 0.29 / 0.72 |
 | QUANT, real only | 0.426 | 0.463 / 0.623 | 1.00 / 0.10 / 0.63 |
 | CatBoost + catch22, real only | 0.393 | 0.608 / 0.730 | 1.00 / 0.29 / 0.77 |
@@ -142,16 +142,16 @@ only two training sessions; QUANT's quantile/shape features transfer between the
 do not. On the held-out sessions (where both Jamming sessions are in training) the vote's advantage vanishes
 and session 13 drags it down. HNC-Gradual → Buffer Overflow confusion remains (30 of 37 test windows).
 
-## 7. The cascade and the reject option (step 10, 10c)
+## 7. The cascade and the false-alarm filter (step 10, 10c)
 
-Cascade = step-03 Model 1 (t = 0.5) → Model 2 (Farida's recipe + trend). Raneem's reject option adds a
+Cascade = step-03 Model 1 (t = 0.5) → Model 2 (the synthetic-data model + trend). Raneem's false-alarm filter adds a
 "Normal" class to Model 2 from the 1,000 Normal training windows the detector finds hardest; in Phase 2 these
 are chosen **out-of-fold** (session-grouped OOF probabilities) so Model 2 never sees its own validation
 sessions. The 1,000 hardest windows have p ≥ 0.991 — the idle-link windows of sessions 0 and 5 (§4.2).
 
 | Model 2 (25 session folds) | macro-F1 | real faults wrongly rejected |
 |---|---|---|
-| no reject class | 0.389 ± 0.108 | 0 % |
+| no false-alarm filter | 0.389 ± 0.108 | 0 % |
 | + hard-negative Normal class | 0.369 ± 0.116 | 19.8 % |
 | + random Normal class (control) | 0.361 ± 0.090 | 17.8 % |
 
@@ -159,11 +159,11 @@ sessions. The 1,000 hardest windows have p ≥ 0.991 — the idle-link windows o
 |---|---|---|---|---|---|
 | Phase 1 | 1,105 | — | 82.2 % | — | — |
 | Phase 2, no reject | **116** | 0 | 64.7 % (75 windows) | 0 | 0.521 |
-| Phase 2, hard-negative reject | 116 | 16 | 68.0 % | 0 | 0.549 |
+| Phase 2, hard-negative false-alarm filter | 116 | 16 | 68.0 % | 0 | 0.549 |
 | Phase 2, random reject | 116 | 21 | 66.3 % | 3 | 0.545 |
 
 Raneem's promotion rule (residual catch-all < 41.1 % and macro-F1 within 2 SD) is **not met** by either variant.
-Diagnosis: the reject class solves the Phase 1 problem — 1,105 false alarms dominated by idle-link windows,
+Diagnosis: the false-alarm filter solves the Phase 1 problem — 1,105 false alarms dominated by idle-link windows,
 of which Raneem's in-sample hard negatives removed 83 % — but after the Model 1 fixes only 116 false alarms
 remain and they are a different population (Normal windows of test sessions 3/4 whose levels resemble faults).
 In absolute terms the catch-all shrank from ≈ 908 windows (82 % of 1,105) to 75 (65 % of 116): Model 1
@@ -172,7 +172,7 @@ windows). Because the argmax decision also rejects ~20 % of real faults in cross
 probability policy (reject only if P(Normal) ≥ τ, τ = 0.5 … 0.9): fault rejection in CV falls from 13 % (τ = 0.5)
 to 4.8 % (τ = 0.9), but the number of residual false alarms removed on the held-out sessions falls from 13 to 0
 at the same time. No threshold removes false alarms without rejecting real faults, so **the final pipeline has
-no reject class**; the reject option is a negative result under the fixed Model 1, with the Phase 1 numbers
+no false-alarm filter**; the false-alarm filter is a negative result under the fixed Model 1, with the Phase 1 numbers
 explaining why it had looked so promising (its hard negatives matched the idle-link false alarms that the
 Model 1 fix has since removed).
 
@@ -192,6 +192,8 @@ writes the artifacts in `results/final/`:
 Validation: 6,312 records, schema identical to Phase 1 (`window_index, anomaly_type, confidence, shap_top3,
 signal_statistics`), 0 invalid field values (every `channel` is one of the 16 KPIs; `shap_effect` and
 `feature_vs_normal` take only the Phase 1 values), and reloading the saved models reproduces every prediction.
+
+On 18 October 2026 an audit found that the KPI names of the patch features in `shap_top3` were in the wrong order: the code named them patch by patch, while the features are built KPI by KPI, so 121 of the 382 fault records showed a wrong KPI. The names were corrected and the JSON regenerated; labels, confidences, models and metrics did not change.
 
 | Layer 2 output | Phase 1 JSON | Phase 2 JSON |
 |---|---|---|
@@ -230,7 +232,7 @@ Antenna Failure, 6 Doppler) and 34 missed faults (11 HNC-Sudden, 8 RF Filters, 6
 
 ## 9. How to run
 ```
-cd kpi_rag/phase2
+cd Data_and_Models/3_Final_system
 python scripts/01_freeze_data_and_reproduce_baseline.py   # ... through 11_final_pipeline.py
 ```
 All randomness is seeded; `requirements.txt` pins the versions; aeon/shap live in `~/.kpi_rag_vendor`.
@@ -249,14 +251,14 @@ class. Result (25 session folds): pair F1 0.298 → 0.247, macro-F1 0.389 → 0.
 
 **Only 10 fault sessions (12c).** Session-level bootstrap confidence intervals and a power analysis quantify the
 uncertainty: the gains of synthetic data and of the final model over the real-only baseline are large and
-certain (+0.098, 95 % CI [+0.078, +0.117], Cohen's d = 1.9); the gain of the trend features over Farida's recipe
+certain (+0.098, 95 % CI [+0.078, +0.117], Cohen's d = 1.9); the gain of the trend features over the synthetic-data model
 is small (+0.015, CI [+0.004, +0.025], d = 0.5) and a paired test would need ≈ 31 folds, i.e. **2–3× the present
 number of fault sessions**, to reach p < 0.05. The Model 1 fix (+0.052 PR-AUC, CI [+0.023, +0.085]) and the
 trend features for Model 1 (+0.040, CI [+0.020, +0.065]) are in between. (Caveat: bootstrap over overlapping
 seed-folds is optimistic; decisions used the corrected t-test.)
 
 ## 11. Limits, open problems and what would be needed
-- Only 10 fault sessions (2 with Jamming): the dominant limit for both models; gains over Farida's recipe are
+- Only 10 fault sessions (2 with Jamming): the dominant limit for both models; gains over the synthetic-data model are
   consistent but not significant under the conservative corrected test.
 - Session 0 (idle link vs blocked link) and test session 13 (HNC-Gradual / Buffer Overflow) are unresolved by any
   model tried; they need more recordings (especially jamming with and without traffic) or richer context
