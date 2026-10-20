@@ -26,7 +26,7 @@ from src import pipeline as P
 from src.data import csv_labels, load_splits
 from src.models import anomaly_detector, rebalance_80_20
 from src.utils import StepLog, library_versions
-from src.synthetic_data import V3, fit_predict_w
+from src.synthetic_data import SyntheticGenerator, fit_predict_w
 
 log = StepLog("final")
 OUT = log.dir
@@ -66,7 +66,7 @@ log(f"Model 1 trained on {len(yk)} rows ({X1.shape[1]} features) and saved")
 # ---- Model 2 -----------------------------------------------------------------------------------------
 fault = y_bin == 1
 real_rows, real_y = d["train_idx"][fault], d["train_y"][fault]
-eng = V3(d)
+eng = SyntheticGenerator(d)
 eng._load_text([r for r in real_rows if int(r) not in eng.ROW2IDX])
 sig = np.stack([eng.real_sig(r) for r in real_rows])            # Phase 1 parser signals (as in the cache)
 X2 = P.model2_features(sig)
@@ -92,7 +92,7 @@ log(f"Model 2 trained on {len(ytr)} rows ({Xtr.shape[1]} features; classes {len(
 
 spec = {"model1": {"variant": M1, "features": P.M1_NAMES if WITH_G else P.A_NAMES, "threshold": C.MODEL1_THRESHOLD,
                    "params": C.MODEL1_PARAMS, "class_weighting": C.MODEL1_CLASS_WEIGHTING, "parser": "correct (raw_kpis.npy)"},
-        "model2": {"recipe": "v3 500/class + Config B + FFT + G1G2G3", "features": P.M2_NAMES,
+        "model2": {"recipe": "synthetic 500/class + Config B + FFT + G1G2G3", "features": P.M2_NAMES,
                    "reject_class": REJECT, "reject_tau": TAU, "calibrated_confidence": False, "idle_link_flag": [P.IDLE_TX, P.IDLE_PRB, P.IDLE_PKT], "parser": "Phase 1 regex replica (matches the synthetic cache)"},
         "versions": library_versions()}
 json.dump(spec, open(os.path.join(OUT, "feature_spec.json"), "w"), indent=2)

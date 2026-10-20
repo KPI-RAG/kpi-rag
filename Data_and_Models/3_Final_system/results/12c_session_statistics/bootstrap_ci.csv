@@ -1,5 +1,5 @@
 comparison,unit,n,mean_diff,ci95_low,ci95_high,p_boot(diff<=0),cohen_d,folds_needed_alpha05_power80,sessions_equiv
-the synthetic-data model (v3+B+FFT) vs real-only baseline,seed-fold,25,0.0835,0.064,0.1032,0.0,1.617,4,8
+the synthetic-data model (synthetic+B+FFT) vs real-only baseline,seed-fold,25,0.0835,0.064,0.1032,0.0,1.617,4,8
 final (+trend) vs real-only baseline,seed-fold,25,0.098,0.078,0.1174,0.0,1.905,3,6
 final (+trend) vs the synthetic-data model,seed-fold,25,0.0145,0.0039,0.0253,0.0035,0.508,31,62
 QUANT real-only vs the synthetic-data model,seed-fold,25,0.0518,0.0195,0.082,0.001,0.629,20,40

@@ -2,7 +2,7 @@
 
 The original sweep (26-Sep): 100 -> 500 windows per class, macro-F1 still rising at 500
 (0.329 -> 0.351, CatBoost, Config A). Here: 500 (the synthetic-data model), 1000, 2000 per class, with the
-step-06 setting (v3 + Config B + FFT + trend features) and three algorithms:
+step-06 setting (synthetic + Config B + FFT + trend features) and three algorithms:
 CatBoost (the synthetic-data model), LightGBM, QUANT (raw windows).
 Screening design as in the original: seeds [42, 7] x 5 session folds = 10 folds. Within a fold the
 synthetic windows are generated ONCE at 2000/class and truncated to 500 / 1000 per class
@@ -30,7 +30,7 @@ from src import synthetic_data as V
 from src.data import load_splits
 from src.evaluation import nadeau_bengio_ttest
 from src.utils import StepLog
-from src.synthetic_data import IDX_B_FFT, V3, fit_predict_w, full_feats, macro
+from src.synthetic_data import IDX_B_FFT, SyntheticGenerator, fit_predict_w, full_feats, macro
 
 AMOUNTS = [500, 1000, 2000]
 SEEDS = [42, 7]
@@ -42,7 +42,7 @@ d = load_splits()
 fault = d["train_y"] != C.NORMAL_LABEL
 real_rows, real_y = d["train_idx"][fault], d["train_y"][fault]
 real_sess = d["session_ids"][real_rows]
-eng = V3(d)                                        # same parser as the synthetic-data model
+eng = SyntheticGenerator(d)                                        # same parser as the synthetic-data model
 eng._load_text([r for r in real_rows if int(r) not in eng.ROW2IDX])
 sig = np.stack([eng.real_sig(r) for r in real_rows])
 full = np.stack([full_feats(x) for x in sig])

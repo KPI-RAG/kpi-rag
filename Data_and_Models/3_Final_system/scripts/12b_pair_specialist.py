@@ -28,7 +28,7 @@ from src import config as C
 from src import features as F
 from src.data import csv_labels, load_splits
 from src.utils import StepLog
-from src.synthetic_data import IDX_B_FFT, V3, fit_predict_w, full_feats, macro, synthetic_windows
+from src.synthetic_data import IDX_B_FFT, SyntheticGenerator, fit_predict_w, full_feats, macro, synthetic_windows
 
 HNC, BO = "High Network Congestion (Gradual Buildup)", "Buffer Overflow (Gradual Buildup)"
 PAIR = [HNC, BO]
@@ -61,7 +61,7 @@ log = StepLog("12b_pair_specialist")
 d = load_splits(); labels = csv_labels()
 fault = d["train_y"] != C.NORMAL_LABEL
 real_rows, real_y, real_sess = d["train_idx"][fault], d["train_y"][fault], d["train_sessions"][fault]
-eng = V3(d); eng._load_text([r for r in real_rows if int(r) not in eng.ROW2IDX])
+eng = SyntheticGenerator(d); eng._load_text([r for r in real_rows if int(r) not in eng.ROW2IDX])
 sig = np.stack([eng.real_sig(r) for r in real_rows])
 full = np.stack([full_feats(x) for x in sig]); Gf = F.from_signals(sig); A_ref = full[:, :64]
 host_sess = d["session_ids"][eng.host_rows]

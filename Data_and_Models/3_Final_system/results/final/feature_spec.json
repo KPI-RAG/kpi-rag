@@ -79,7 +79,7 @@
     "parser": "correct (raw_kpis.npy)"
   },
   "model2": {
-    "recipe": "v3 500/class + Config B + FFT + G1G2G3",
+    "recipe": "synthetic 500/class + Config B + FFT + G1G2G3",
     "features": [
       "RSRP_mean",
       "RSRP_std",

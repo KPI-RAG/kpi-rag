@@ -1,6 +1,6 @@
 # Step 12b notes — specialist for HNC-Gradual vs Buffer Overflow (negative result)
 
-Design: 2-class CatBoost trained only on the two classes (real + v3 synthetic windows of the training fold)
+Design: 2-class CatBoost trained only on the two classes (real + synthetic windows of the training fold)
 with growth-shape features of the congestion channels (slope, late/early ratio, time-to-peak, peak/mean of
 Estimated_UL_Buffer, PRB utilisation, NPRB, packets, bytes, BLER) + differences between buffer, PRB and
 packet growth; it re-decides every window the main Model 2 (final recipe) labels as either class.

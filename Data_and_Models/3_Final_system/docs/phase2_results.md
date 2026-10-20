@@ -15,7 +15,7 @@ strategies under one frozen protocol, and delivered a final cascade with the Pha
 | Model 1 on the 5 held-out sessions | TP 269 / **FP 1,105**, precision 0.196, F1 0.32 | TP 266 / **FP 116**, precision 0.70, F1 0.78 | §4 |
 | Model 2 test accuracy (300 fault windows) | 0.677 | **0.703** (macro-F1 0.537 → 0.591) | §6 |
 | Model 2 CV macro-F1 (25 session folds) | 0.291 (baseline) | **0.389** (p = 0.002 vs baseline) | §5–6 |
-| Synthetic data (v3) vs real-only | "consistent, not significant" | **significant, p = 0.006, 25/25 folds** | §5 |
+| Synthetic data vs real-only | "consistent, not significant" | **significant, p = 0.006, 25/25 folds** | §5 |
 | Catch-all (false alarms → CCI-Mild) | 82 % | [pending step 10] | §7 |
 
 Everything was decided on the 28 training sessions (session-grouped cross-validation); the 5 test sessions
@@ -95,7 +95,7 @@ paper's scale ablation. Adding the trend features (adopted + G) is the only vari
 held-out sessions (PR-AUC 0.893 → 0.917, +4 TP, +7 FP) but p = 0.23 → *promising, uncertain*; by the rule
 **Model 1 stays the step-03 detector**. Session 0 remains at a 94–98 % false-alarm rate for every variant (§4.2).
 
-## 5. Synthetic data (v3) — audit and experiments
+## 5. Synthetic data — audit and experiments
 
 Audit of `src/synthetic_data.py` (verbatim port of `Synthetic_Data_Part1.ipynb` Part 7): donors and hosts come only from
 the 28 training sessions; generation is nested inside CV (effects, references, bounds and hosts rebuilt from
@@ -105,7 +105,7 @@ exactly (max difference 0.0). The synthetic-data model reproduced in 25/25 folds
 
 | Experiment | Result | Decision |
 |---|---|---|
-| v3 + Config B + FFT vs real-only (step 06) | 0.374 vs 0.291, **p = 0.006, 25/25 folds** | synthetic method validated |
+| synthetic + Config B + FFT vs real-only (step 06) | 0.374 vs 0.291, **p = 0.006, 25/25 folds** | synthetic method validated |
 | Next step 1: exclude HNC-G/BO from augmentation | 0.377, variance ↑ (0.126) | no gain |
 | Next step 2: + trend/co-movement features | **0.389**, p = 0.002 vs baseline, 24/25 | adopted |
 | Parser fix in the generator | 0.385 | negligible; kept for correctness in the final pipeline where possible |
@@ -129,7 +129,7 @@ the synthetic-data model (p = 0.37) → by the pre-registered rule no algorithm 
 ### 6.2 Final candidates measured for real (step 09c)
 | Candidate | CV macro-F1 | test macro-F1 / accuracy | test acc. sessions 1 / 13 / 17 |
 |---|---|---|---|
-| the synthetic-data model (CatBoost + v3 + B + FFT) | 0.374 | 0.537 / 0.663 | 1.00 / 0.25 / 0.64 |
+| the synthetic-data model (CatBoost + synthetic + B + FFT) | 0.374 | 0.537 / 0.663 | 1.00 / 0.25 / 0.64 |
 | **+ trend features (final)** | **0.389** | **0.591 / 0.703** | 0.99 / 0.29 / 0.72 |
 | QUANT, real only | 0.426 | 0.463 / 0.623 | 1.00 / 0.10 / 0.63 |
 | CatBoost + catch22, real only | 0.393 | 0.608 / 0.730 | 1.00 / 0.29 / 0.77 |
@@ -184,7 +184,7 @@ writes the artifacts in `results/final/`:
 | Artifact | Content |
 |---|---|
 | `model1.cbm` | CatBoost detector, 64 Config A features (correct parser), 80/20 rebalance, no class weights, t = 0.5; trained on 4,675 rows |
-| `model2.cbm` | CatBoost 11-class classifier, 496 features (Config B + FFT + G1 G2 G3), real 935 + 4,250 v3 synthetic windows (5,185 rows) |
+| `model2.cbm` | CatBoost 11-class classifier, 496 features (Config B + FFT + G1 G2 G3), real 935 + 4,250 synthetic windows (5,185 rows) |
 | `feature_spec.json`, `normal_means.json` | feature names/order, parser per model, hyper-parameters, library versions; reference means for `feature_vs_normal` |
 | `layer2_output_sessionsplit_phase2.json` | 6,312 test windows, exact Phase 1 schema |
 | `validation.json` | schema checks, cascade counts, side-by-side with Phase 1, reload test |

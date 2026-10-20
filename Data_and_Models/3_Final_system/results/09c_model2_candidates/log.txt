@@ -1,49 +1,49 @@
 # 09c_model2_candidates  |  2026-10-13 18:04 UTC  |  python 3.12.13 on jupyter-farida-gaber44
 real fault windows 935 | B+FFT 400 | +G 496 | A+catch22 416
-  seed=42    fold=1  catboost_v3=0.339  catboost_v3_G=0.342  quant_real=0.445  catboost_c22=0.510  vote_2=0.533  vote_3=0.523  (217s)
-  seed=42    fold=2  catboost_v3=0.330  catboost_v3_G=0.372  quant_real=0.458  catboost_c22=0.363  vote_2=0.426  vote_3=0.420  (213s)
-  seed=42    fold=3  catboost_v3=0.402  catboost_v3_G=0.434  quant_real=0.420  catboost_c22=0.411  vote_2=0.434  vote_3=0.448  (214s)
-  seed=42    fold=4  catboost_v3=0.260  catboost_v3_G=0.260  quant_real=0.337  catboost_c22=0.233  vote_2=0.273  vote_3=0.282  (218s)
-  seed=42    fold=5  catboost_v3=0.467  catboost_v3_G=0.506  quant_real=0.451  catboost_c22=0.577  vote_2=0.610  vote_3=0.601  (217s)
-  seed=7     fold=1  catboost_v3=0.333  catboost_v3_G=0.346  quant_real=0.447  catboost_c22=0.433  vote_2=0.519  vote_3=0.511  (213s)
-  seed=7     fold=2  catboost_v3=0.338  catboost_v3_G=0.360  quant_real=0.491  catboost_c22=0.324  vote_2=0.444  vote_3=0.435  (216s)
-  seed=7     fold=3  catboost_v3=0.400  catboost_v3_G=0.425  quant_real=0.419  catboost_c22=0.415  vote_2=0.419  vote_3=0.435  (215s)
-  seed=7     fold=4  catboost_v3=0.248  catboost_v3_G=0.253  quant_real=0.332  catboost_c22=0.234  vote_2=0.229  vote_3=0.249  (215s)
-  seed=7     fold=5  catboost_v3=0.566  catboost_v3_G=0.575  quant_real=0.441  catboost_c22=0.508  vote_2=0.637  vote_3=0.613  (213s)
-  seed=123   fold=1  catboost_v3=0.338  catboost_v3_G=0.332  quant_real=0.446  catboost_c22=0.439  vote_2=0.516  vote_3=0.507  (213s)
-  seed=123   fold=2  catboost_v3=0.334  catboost_v3_G=0.394  quant_real=0.456  catboost_c22=0.394  vote_2=0.457  vote_3=0.438  (215s)
-  seed=123   fold=3  catboost_v3=0.440  catboost_v3_G=0.399  quant_real=0.415  catboost_c22=0.393  vote_2=0.398  vote_3=0.413  (211s)
-  seed=123   fold=4  catboost_v3=0.239  catboost_v3_G=0.253  quant_real=0.336  catboost_c22=0.232  vote_2=0.232  vote_3=0.263  (214s)
-  seed=123   fold=5  catboost_v3=0.495  catboost_v3_G=0.581  quant_real=0.442  catboost_c22=0.489  vote_2=0.662  vote_3=0.570  (216s)
-  seed=2024  fold=1  catboost_v3=0.379  catboost_v3_G=0.373  quant_real=0.448  catboost_c22=0.460  vote_2=0.538  vote_3=0.531  (214s)
-  seed=2024  fold=2  catboost_v3=0.316  catboost_v3_G=0.337  quant_real=0.498  catboost_c22=0.381  vote_2=0.408  vote_3=0.409  (215s)
-  seed=2024  fold=3  catboost_v3=0.427  catboost_v3_G=0.399  quant_real=0.410  catboost_c22=0.396  vote_2=0.392  vote_3=0.408  (213s)
-  seed=2024  fold=4  catboost_v3=0.266  catboost_v3_G=0.244  quant_real=0.336  catboost_c22=0.245  vote_2=0.236  vote_3=0.262  (216s)
-  seed=2024  fold=5  catboost_v3=0.518  catboost_v3_G=0.571  quant_real=0.437  catboost_c22=0.492  vote_2=0.640  vote_3=0.581  (216s)
-  seed=99    fold=1  catboost_v3=0.376  catboost_v3_G=0.388  quant_real=0.455  catboost_c22=0.424  vote_2=0.537  vote_3=0.511  (215s)
-  seed=99    fold=2  catboost_v3=0.312  catboost_v3_G=0.334  quant_real=0.469  catboost_c22=0.361  vote_2=0.432  vote_3=0.433  (217s)
-  seed=99    fold=3  catboost_v3=0.424  catboost_v3_G=0.434  quant_real=0.433  catboost_c22=0.373  vote_2=0.456  vote_3=0.431  (213s)
-  seed=99    fold=4  catboost_v3=0.245  catboost_v3_G=0.222  quant_real=0.342  catboost_c22=0.243  vote_2=0.210  vote_3=0.237  (218s)
-  seed=99    fold=5  catboost_v3=0.568  catboost_v3_G=0.586  quant_real=0.490  catboost_c22=0.501  vote_2=0.684  vote_3=0.639  (217s)
+  seed=42    fold=1  catboost_synthetic=0.339  catboost_synthetic_G=0.342  quant_real=0.445  catboost_c22=0.510  vote_2=0.533  vote_3=0.523  (217s)
+  seed=42    fold=2  catboost_synthetic=0.330  catboost_synthetic_G=0.372  quant_real=0.458  catboost_c22=0.363  vote_2=0.426  vote_3=0.420  (213s)
+  seed=42    fold=3  catboost_synthetic=0.402  catboost_synthetic_G=0.434  quant_real=0.420  catboost_c22=0.411  vote_2=0.434  vote_3=0.448  (214s)
+  seed=42    fold=4  catboost_synthetic=0.260  catboost_synthetic_G=0.260  quant_real=0.337  catboost_c22=0.233  vote_2=0.273  vote_3=0.282  (218s)
+  seed=42    fold=5  catboost_synthetic=0.467  catboost_synthetic_G=0.506  quant_real=0.451  catboost_c22=0.577  vote_2=0.610  vote_3=0.601  (217s)
+  seed=7     fold=1  catboost_synthetic=0.333  catboost_synthetic_G=0.346  quant_real=0.447  catboost_c22=0.433  vote_2=0.519  vote_3=0.511  (213s)
+  seed=7     fold=2  catboost_synthetic=0.338  catboost_synthetic_G=0.360  quant_real=0.491  catboost_c22=0.324  vote_2=0.444  vote_3=0.435  (216s)
+  seed=7     fold=3  catboost_synthetic=0.400  catboost_synthetic_G=0.425  quant_real=0.419  catboost_c22=0.415  vote_2=0.419  vote_3=0.435  (215s)
+  seed=7     fold=4  catboost_synthetic=0.248  catboost_synthetic_G=0.253  quant_real=0.332  catboost_c22=0.234  vote_2=0.229  vote_3=0.249  (215s)
+  seed=7     fold=5  catboost_synthetic=0.566  catboost_synthetic_G=0.575  quant_real=0.441  catboost_c22=0.508  vote_2=0.637  vote_3=0.613  (213s)
+  seed=123   fold=1  catboost_synthetic=0.338  catboost_synthetic_G=0.332  quant_real=0.446  catboost_c22=0.439  vote_2=0.516  vote_3=0.507  (213s)
+  seed=123   fold=2  catboost_synthetic=0.334  catboost_synthetic_G=0.394  quant_real=0.456  catboost_c22=0.394  vote_2=0.457  vote_3=0.438  (215s)
+  seed=123   fold=3  catboost_synthetic=0.440  catboost_synthetic_G=0.399  quant_real=0.415  catboost_c22=0.393  vote_2=0.398  vote_3=0.413  (211s)
+  seed=123   fold=4  catboost_synthetic=0.239  catboost_synthetic_G=0.253  quant_real=0.336  catboost_c22=0.232  vote_2=0.232  vote_3=0.263  (214s)
+  seed=123   fold=5  catboost_synthetic=0.495  catboost_synthetic_G=0.581  quant_real=0.442  catboost_c22=0.489  vote_2=0.662  vote_3=0.570  (216s)
+  seed=2024  fold=1  catboost_synthetic=0.379  catboost_synthetic_G=0.373  quant_real=0.448  catboost_c22=0.460  vote_2=0.538  vote_3=0.531  (214s)
+  seed=2024  fold=2  catboost_synthetic=0.316  catboost_synthetic_G=0.337  quant_real=0.498  catboost_c22=0.381  vote_2=0.408  vote_3=0.409  (215s)
+  seed=2024  fold=3  catboost_synthetic=0.427  catboost_synthetic_G=0.399  quant_real=0.410  catboost_c22=0.396  vote_2=0.392  vote_3=0.408  (213s)
+  seed=2024  fold=4  catboost_synthetic=0.266  catboost_synthetic_G=0.244  quant_real=0.336  catboost_c22=0.245  vote_2=0.236  vote_3=0.262  (216s)
+  seed=2024  fold=5  catboost_synthetic=0.518  catboost_synthetic_G=0.571  quant_real=0.437  catboost_c22=0.492  vote_2=0.640  vote_3=0.581  (216s)
+  seed=99    fold=1  catboost_synthetic=0.376  catboost_synthetic_G=0.388  quant_real=0.455  catboost_c22=0.424  vote_2=0.537  vote_3=0.511  (215s)
+  seed=99    fold=2  catboost_synthetic=0.312  catboost_synthetic_G=0.334  quant_real=0.469  catboost_c22=0.361  vote_2=0.432  vote_3=0.433  (217s)
+  seed=99    fold=3  catboost_synthetic=0.424  catboost_synthetic_G=0.434  quant_real=0.433  catboost_c22=0.373  vote_2=0.456  vote_3=0.431  (213s)
+  seed=99    fold=4  catboost_synthetic=0.245  catboost_synthetic_G=0.222  quant_real=0.342  catboost_c22=0.243  vote_2=0.210  vote_3=0.237  (218s)
+  seed=99    fold=5  catboost_synthetic=0.568  catboost_synthetic_G=0.586  quant_real=0.490  catboost_c22=0.501  vote_2=0.684  vote_3=0.639  (217s)
 
 == CV macro-F1 over 25 session folds ==
                  mean     std
-catboost_v3    0.3743  0.0960
-catboost_v3_G  0.3888  0.1079
+catboost_synthetic    0.3743  0.0960
+catboost_synthetic_G  0.3888  0.1079
 quant_real     0.4261  0.0508
 catboost_c22   0.3932  0.0979
 vote_2         0.4528  0.1397
 vote_3         0.4460  0.1173
 
-== Paired vs the synthetic-data model (catboost_v3), Nadeau-Bengio corrected t-test ==
-  catboost_v3_G  d=+0.0145  p=0.3591  Wilcoxon p=0.0219  wins 18/25  -> no
+== Paired vs the synthetic-data model (catboost_synthetic), Nadeau-Bengio corrected t-test ==
+  catboost_synthetic_G  d=+0.0145  p=0.3591  Wilcoxon p=0.0219  wins 18/25  -> no
   quant_real     d=+0.0518  p=0.2579  Wilcoxon p=0.0067  wins 18/25  -> no
   catboost_c22   d=+0.0189  p=0.5730  Wilcoxon p=0.2752  wins 12/25  -> no
   vote_2         d=+0.0785  p=0.0795  Wilcoxon p=0.0003  wins 19/25  -> no
   vote_3         d=+0.0717  p=0.0512  Wilcoxon p=0.0000  wins 21/25  -> no
 
 == Per-class F1, pooled out-of-fold (CV) ==
-                                           catboost_v3  catboost_v3_G  quant_real  catboost_c22  vote_2  vote_3  support
+                                           catboost_synthetic  catboost_synthetic_G  quant_real  catboost_c22  vote_2  vote_3  support
 Antenna Failure                                  0.867          0.866       0.790         0.792   0.845   0.838       98
 Buffer Overflow (Gradual Buildup)                0.611          0.604       0.363         0.601   0.569   0.594      117
 Co-Channel Interference (Mild)                   0.586          0.561       0.559         0.368   0.568   0.547      126
@@ -57,11 +57,11 @@ Jamming                                          0.000          0.000       0.99
 Resource Allocation Bugs                         0.282          0.309       0.079         0.298   0.289   0.288       43
 
 == HELD-OUT TEST SESSIONS (post-hoc) ==
-  catboost_v3    macro-F1=0.5368  accuracy=0.6633  per-session acc={1: 1.0, 13: 0.246, 17: 0.642}
-  catboost_v3_G  macro-F1=0.5908  accuracy=0.7033  per-session acc={1: 0.989, 13: 0.29, 17: 0.715}
+  catboost_synthetic    macro-F1=0.5368  accuracy=0.6633  per-session acc={1: 1.0, 13: 0.246, 17: 0.642}
+  catboost_synthetic_G  macro-F1=0.5908  accuracy=0.7033  per-session acc={1: 0.989, 13: 0.29, 17: 0.715}
   quant_real     macro-F1=0.4630  accuracy=0.6233  per-session acc={1: 1.0, 13: 0.101, 17: 0.628}
   catboost_c22   macro-F1=0.6078  accuracy=0.7300  per-session acc={1: 1.0, 13: 0.29, 17: 0.766}
   vote_2         macro-F1=0.5158  accuracy=0.6600  per-session acc={1: 1.0, 13: 0.058, 17: 0.73}
   vote_3         macro-F1=0.5735  accuracy=0.6967  per-session acc={1: 1.0, 13: 0.159, 17: 0.759}
-  reference: Phase 1 accuracy 0.677; the synthetic-data report real-only 0.586/0.705, v3+B+FFT 0.557/0.680
+  reference: Phase 1 accuracy 0.677; the synthetic-data report real-only 0.586/0.705, synthetic+B+FFT 0.557/0.680
 saved results/09c_model2_candidates/results.json

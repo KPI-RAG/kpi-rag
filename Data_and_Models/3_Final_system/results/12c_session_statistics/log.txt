@@ -1,6 +1,6 @@
 # 12c_session_statistics  |  2026-10-15 09:19 UTC  |  python 3.12.13 on jupyter-farida-gaber44
 == Model 2 (macro-F1, 25 seed-folds; each fold holds out ~2 fault sessions) ==
-  the synthetic-data model (v3+B+FFT) vs real-only baseline      d=+0.0835  95% CI [+0.0640, +0.1032]  P(d<=0)=0.000  Cohen d=1.62  folds needed=4
+  the synthetic-data model (synthetic+B+FFT) vs real-only baseline      d=+0.0835  95% CI [+0.0640, +0.1032]  P(d<=0)=0.000  Cohen d=1.62  folds needed=4
   final (+trend) vs real-only baseline             d=+0.0980  95% CI [+0.0780, +0.1174]  P(d<=0)=0.000  Cohen d=1.90  folds needed=3
   final (+trend) vs the synthetic-data model                     d=+0.0145  95% CI [+0.0039, +0.0253]  P(d<=0)=0.004  Cohen d=0.51  folds needed=31
   QUANT real-only vs the synthetic-data model                    d=+0.0518  95% CI [+0.0195, +0.0820]  P(d<=0)=0.001  Cohen d=0.63  folds needed=20

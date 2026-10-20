@@ -21,5 +21,5 @@
   heavy-tailed KPI scales, their ridge/kernel features generalise poorly across sessions.
 - Reference line check: `catboost_A` reproduces the baseline again (0.2910 vs 0.2908).
 - Step 08 takes the top 3 (quant, catboost_c22, lightgbm) + CatBoost, and trains them on
-  real + the v3 synthetic data with the trend features.
+  real + the synthetic data with the trend features.
 - Environment: aeon 1.6.0 installed with `--no-deps` in `~/.kpi_rag_vendor` (see requirements.txt).

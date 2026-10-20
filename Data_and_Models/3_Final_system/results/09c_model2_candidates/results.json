@@ -1,22 +1,22 @@
 {
   "cv_means": {
-    "catboost_v3": 0.3743,
-    "catboost_v3_G": 0.3888,
+    "catboost_synthetic": 0.3743,
+    "catboost_synthetic_G": 0.3888,
     "quant_real": 0.4261,
     "catboost_c22": 0.3932,
     "vote_2": 0.4528,
     "vote_3": 0.446
   },
   "cv_std": {
-    "catboost_v3": 0.096,
-    "catboost_v3_G": 0.1079,
+    "catboost_synthetic": 0.096,
+    "catboost_synthetic_G": 0.1079,
     "quant_real": 0.0508,
     "catboost_c22": 0.0979,
     "vote_2": 0.1397,
     "vote_3": 0.1173
   },
-  "paired_vs_catboost_v3": {
-    "catboost_v3_G": {
+  "paired_vs_catboost_synthetic": {
+    "catboost_synthetic_G": {
       "mean_diff": 0.0145,
       "p_corrected": 0.3591,
       "p_wilcoxon": 0.0219,
@@ -53,7 +53,7 @@
     }
   },
   "test": {
-    "catboost_v3": {
+    "catboost_synthetic": {
       "macro_f1": 0.5368,
       "accuracy": 0.6633,
       "per_session_accuracy": {
@@ -75,7 +75,7 @@
         "Resource Allocation Bugs": 1.0
       }
     },
-    "catboost_v3_G": {
+    "catboost_synthetic_G": {
       "macro_f1": 0.5908,
       "accuracy": 0.7033,
       "per_session_accuracy": {

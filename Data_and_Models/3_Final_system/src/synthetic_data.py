@@ -1,4 +1,4 @@
-"""the synthetic-data method v3 + FFT + Config B (Final Experiments, 26-Sep).
+"""the synthetic-data method + FFT + Config B (Final Experiments, 26-Sep).
 
 Ported VERBATIM from Synthetic_Data_Part1.ipynb (Part 7, cells 16b-18, 21, 22a, 28, 29) so
 that the synthetic-data model results reproduce exactly. Only the notebook globals are wired up here
@@ -49,7 +49,7 @@ N_THREADS = max(1, (os.cpu_count() or 4) - 2)     # as in cell 29
 IDX_B_FFT = np.r_[0:320, 576:656]                 # Config B (A + patchwise) + FFT = 400
 
 
-class V3:
+class SyntheticGenerator:
     """Holds the notebook state that estimate_effects() / generate() read as globals."""
 
     def __init__(self, d, fixed_parse=False):
@@ -289,7 +289,7 @@ def synth_cache_path(seed, fold, n_target=500, tag="bug", exclude=()):
 
 def synthetic_windows(eng, real_rows, real_sess, A_ref, host_sess, tr, va, seed, fold,
                       n_target=500, tag="bug", exclude=()):
-    """Nested v3 generation for one CV fold, cached on disk.
+    """Nested synthetic-data generation for one CV fold, cached on disk.
 
     Returns (S, Y): raw synthetic windows (n, 16, 128) and labels. Generation is identical to
     the notebook (same RNG seed = seed*100 + fold-1, same hosts, bounds and effects); the cache

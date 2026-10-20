@@ -17,7 +17,7 @@ Model 2 is the **diagnosis**. Only for windows Model 1 flagged, it names which o
 
 ## 4. Why do we use synthetic data?
 We only have 935 real fault windows from 10 recordings — too few to learn 11 faults well. The synthetic-data method
-(v3) takes the measured effect of a real fault and transplants it onto a real normal window, giving ~4,400
+takes the measured effect of a real fault and transplants it onto a real normal window, giving ~4,400
 extra, realistic fault windows per training round. Important: synthetic windows are used only for training,
 never for scoring, and never from the held-out recordings.
 
@@ -32,7 +32,7 @@ never for scoring, and never from the held-out recordings.
 1. Re-built everything as clean scripts that reproduce the old numbers exactly (so we can trust comparisons).
 2. Fixed the two Model 1 bugs.
 3. Added "trend" features (how KPIs grow over time, how many move together) from the TelecomTS paper.
-4. Proved the v3 synthetic-data method statistically; kept the synthetic-data model as the final Model 2.
+4. Proved the synthetic-data method statistically; kept the synthetic-data model as the final Model 2.
 5. Compared 9 algorithms, more synthetic data, a false-alarm filter, several Model 1 fixes — kept only what
    held up on unseen recordings.
 6. Added an "idle link" review flag and a family-level metric. (A probability calibration was tried and rejected: it flattened every score to 8.5 %.)

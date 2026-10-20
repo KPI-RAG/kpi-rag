@@ -1,7 +1,7 @@
 """Step 06 - Model 2: reproduce the synthetic-data model experiment, then run the report's "Next Steps".
 
 Starting point (Final Experiments 26-Sep, Synthetic_Data_Report_v2):
-    final  = real + synthetic v3 (500/class, 10 classes) with Config B + FFT (400 features)
+    final  = real + synthetic (500/class, 10 classes) with Config B + FFT (400 features)
              CV macro-F1 0.3743 (configBC_records.csv, column B_fft)
 Variants, all on the SAME nested 5 seeds x 5 session folds (synthetic data rebuilt from
 training-fold sessions only; validation = real windows only):
@@ -28,7 +28,7 @@ from src import features as F
 from src.data import load_splits
 from src.evaluation import nadeau_bengio_ttest
 from src.utils import StepLog
-from src.synthetic_data import IDX_B_FFT, N_THREADS, V3, fit_predict_w, full_feats, macro
+from src.synthetic_data import IDX_B_FFT, N_THREADS, SyntheticGenerator, fit_predict_w, full_feats, macro
 
 PAIR = ("High Network Congestion (Gradual Buildup)", "Buffer Overflow (Gradual Buildup)")
 VARIANTS = ["final", "excl_pair", "trend", "trend_fixed"]
@@ -45,7 +45,7 @@ real_sess = d["session_ids"][real_rows]
 orig = pd.read_csv(os.path.join(C.REAL_PARSED_DIR, "configBC_records.csv"))
 base = pd.read_csv(os.path.join(C.RESULTS, "01_baseline", "baseline_folds.csv"))
 
-eng = {"bug": V3(d), "fixed": V3(d, fixed_parse=True)}
+eng = {"bug": SyntheticGenerator(d), "fixed": SyntheticGenerator(d, fixed_parse=True)}
 assert np.array_equal(eng["bug"].cache_rows[:int(np.isin(real_y, eng["bug"].SYNTHETIC_FAULTS).sum())],
                       d["train_idx"][np.isin(d["train_y"], eng["bug"].SYNTHETIC_FAULTS)]), "cache layout"
 log(f"fault order (fixes the RNG sequence): {eng['bug'].SYNTHETIC_FAULTS}")

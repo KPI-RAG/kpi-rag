@@ -1,7 +1,7 @@
 {
   "comparisons": [
     {
-      "comparison": "the synthetic-data model (v3+B+FFT) vs real-only baseline",
+      "comparison": "the synthetic-data model (synthetic+B+FFT) vs real-only baseline",
       "unit": "seed-fold",
       "n": 25,
       "mean_diff": 0.0835,

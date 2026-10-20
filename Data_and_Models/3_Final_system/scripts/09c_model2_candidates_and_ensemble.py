@@ -1,12 +1,12 @@
 """Step 09c - Final Model 2 candidates, measured for real: CV + held-out sessions + per class.
 
 Candidates (all on the same 25 session folds; synthetic windows from the step-09z cache):
-    catboost_v3      the synthetic-data model: real + v3 (500/class) + Config B + FFT, CatBoost
-    catboost_v3_G    the same + G1 G2 G3 trend features (step 06 "trend")
+    catboost_synthetic      the synthetic-data model: real + synthetic (500/class) + Config B + FFT, CatBoost
+    catboost_synthetic_G    the same + G1 G2 G3 trend features (step 06 "trend")
     quant_real       QUANT on the raw real windows only (no synthetic data)
     catboost_c22     CatBoost on Config A + catch22, real only (step 07 runner-up)
-    vote_2           equal-weight soft vote of catboost_v3_G + quant_real
-    vote_3           equal-weight soft vote of catboost_v3_G + quant_real + catboost_c22
+    vote_2           equal-weight soft vote of catboost_synthetic_G + quant_real
+    vote_3           equal-weight soft vote of catboost_synthetic_G + quant_real + catboost_c22
 Soft votes average class probabilities (no weights learned from the outer folds => no leak).
 Decision rule (STATUS.md): a candidate replaces the synthetic-data model only if corrected p < 0.05
 AND >= 0.03 macro-F1 in CV AND it holds on the held-out sessions.
@@ -34,14 +34,14 @@ from src.data import csv_labels, load_splits
 from src.evaluation import nadeau_bengio_ttest
 from src.models import balanced_class_weights, fault_classifier
 from src.utils import StepLog
-from src.synthetic_data import IDX_B_FFT, V3, fit_predict_w, full_feats, macro, synthetic_windows
+from src.synthetic_data import IDX_B_FFT, SyntheticGenerator, fit_predict_w, full_feats, macro, synthetic_windows
 
 log = StepLog("09c_model2_candidates")
 d = load_splits()
 fault = d["train_y"] != C.NORMAL_LABEL
 real_rows, real_y = d["train_idx"][fault], d["train_y"][fault]
 real_sess = d["session_ids"][real_rows]
-eng = V3(d)
+eng = SyntheticGenerator(d)
 eng._load_text([r for r in real_rows if int(r) not in eng.ROW2IDX])
 sig = np.stack([eng.real_sig(r) for r in real_rows])
 full = np.stack([full_feats(x) for x in sig])
@@ -86,12 +86,12 @@ def all_probas(tr_idx, va_idx, seed, fold, S_va, X_va_full, G_va, C22_va, ytr_re
     Xb = np.vstack([full[tr_idx][:, IDX_B_FFT], X_syn[:, IDX_B_FFT]])
     Xg = np.hstack([Xb, np.vstack([G[tr_idx], G_syn])])
     P = {}
-    P["catboost_v3"] = proba_catboost(Xb, ytr, X_va_full[:, IDX_B_FFT], seed)
-    P["catboost_v3_G"] = proba_catboost(Xg, ytr, np.hstack([X_va_full[:, IDX_B_FFT], G_va]), seed)
+    P["catboost_synthetic"] = proba_catboost(Xb, ytr, X_va_full[:, IDX_B_FFT], seed)
+    P["catboost_synthetic_G"] = proba_catboost(Xg, ytr, np.hstack([X_va_full[:, IDX_B_FFT], G_va]), seed)
     P["quant_real"] = proba_quant(sig[tr_idx], ytr_real, S_va, seed)
     P["catboost_c22"] = proba_cb_c22(np.hstack([A_ref[tr_idx], C22[tr_idx]]), ytr_real, C22_va, seed)
-    P["vote_2"] = (P["catboost_v3_G"] + P["quant_real"]) / 2
-    P["vote_3"] = (P["catboost_v3_G"] + P["quant_real"] + P["catboost_c22"]) / 3
+    P["vote_2"] = (P["catboost_synthetic_G"] + P["quant_real"]) / 2
+    P["vote_3"] = (P["catboost_synthetic_G"] + P["quant_real"] + P["catboost_c22"]) / 3
     return P
 
 
@@ -108,7 +108,7 @@ def synthetic_windows_all(seed):
     S = np.stack(raw); np.savez_compressed(path, S=S, Y=Y); return S, Y
 
 
-CANDS = ["catboost_v3", "catboost_v3_G", "quant_real", "catboost_c22", "vote_2", "vote_3"]
+CANDS = ["catboost_synthetic", "catboost_synthetic_G", "quant_real", "catboost_c22", "vote_2", "vote_3"]
 ckpt = log.path("folds_partial.csv")
 rows = pd.read_csv(ckpt).to_dict("records") if os.path.exists(ckpt) else []
 done = {(r["seed"], r["fold"]) for r in rows}
@@ -132,10 +132,10 @@ res.to_csv(log.path("folds.csv"), index=False)
 log("\n== CV macro-F1 over 25 session folds ==")
 log(res[CANDS].agg(["mean", "std"]).T.round(4).to_string())
 stats = {}
-log("\n== Paired vs the synthetic-data model (catboost_v3), Nadeau-Bengio corrected t-test ==")
+log("\n== Paired vs the synthetic-data model (catboost_synthetic), Nadeau-Bengio corrected t-test ==")
 for c in CANDS[1:]:
-    diff, t_stat, p, w = nadeau_bengio_ttest(res[c] - res["catboost_v3"], res.n_train, res.n_val)
-    wins = int((res[c] > res["catboost_v3"]).sum())
+    diff, t_stat, p, w = nadeau_bengio_ttest(res[c] - res["catboost_synthetic"], res.n_train, res.n_val)
+    wins = int((res[c] > res["catboost_synthetic"]).sum())
     ok = diff >= 0.03 and p < 0.05
     stats[c] = {"mean_diff": round(diff, 4), "p_corrected": round(p, 4), "p_wilcoxon": round(w, 4),
                 "wins": wins, "meets_rule": bool(ok)}
@@ -170,9 +170,9 @@ for c in CANDS:
                "per_session_accuracy": per_sess, "per_class_f1": dict(zip(CLASSES, np.round(f1, 3)))}
     pd.DataFrame(confusion_matrix(y_te, pred, labels=CLASSES), index=CLASSES, columns=CLASSES).to_csv(log.path(f"confusion_test_{c}.csv"))
     log(f"  {c:14s} macro-F1={test[c]['macro_f1']:.4f}  accuracy={test[c]['accuracy']:.4f}  per-session acc={per_sess}")
-log("  reference: Phase 1 accuracy 0.677; the synthetic-data report real-only 0.586/0.705, v3+B+FFT 0.557/0.680")
+log("  reference: Phase 1 accuracy 0.677; the synthetic-data report real-only 0.586/0.705, synthetic+B+FFT 0.557/0.680")
 pd.DataFrame({c: test[c]["per_class_f1"] for c in CANDS}).round(3).to_csv(log.path("per_class_f1_test.csv"))
 
 log.save_json("results.json", {"cv_means": res[CANDS].mean().round(4).to_dict(), "cv_std": res[CANDS].std().round(4).to_dict(),
-                               "paired_vs_catboost_v3": stats, "test": test})
+                               "paired_vs_catboost_synthetic": stats, "test": test})
 log.close()

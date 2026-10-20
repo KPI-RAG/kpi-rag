@@ -16,4 +16,4 @@
 - **Not solved:** HNC-Gradual is still predicted as Buffer Overflow in 86–89 % of cases, and
   CCI-Severe as CCI-Mild in 32–38 %. These two pairs need a different idea (step 06 trend
   features inside the synthetic pipeline, class grouping as a reporting complement).
-- Comparison point for step 06: real-only + G features (0.332) vs the v3 + B + FFT (0.374).
+- Comparison point for step 06: real-only + G features (0.332) vs the synthetic + B + FFT (0.374).

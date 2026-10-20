@@ -1,8 +1,8 @@
 """Step 08 - Combine the two best levers for Model 2: the best algorithms (step 07)
-trained on real + the v3 synthetic data (step 06 setting).
+trained on real + the synthetic data (step 06 setting).
 
 Settings are read from the previous steps' results, so this script is deterministic:
-  - from results/06: the best v3 variant (final / excl_pair / trend / trend_fixed) decides
+  - from results/06: the best synthetic-data variant (final / excl_pair / trend / trend_fixed) decides
     whether the pair HNC-Gradual + Buffer Overflow is excluded from augmentation, whether
     the G1 G2 G3 trend features are added, and which parser is used.
   - from results/07: the top-3 algorithms by mean macro-F1 (CatBoost is always included
@@ -12,7 +12,7 @@ rebuilt from training-fold sessions only, validation = real windows only, macro-
 Nadeau-Bengio corrected t-test vs the synthetic-data model and vs the Phase 1 baseline.
 One post-hoc test check (test fault windows of the 3 held-out sessions).
 
-Run from the phase2 folder:   python scripts/08_model2_best_algorithms_plus_v3.py
+Run from the phase2 folder:   python scripts/08_model2_best_algorithms_plus_synthetic_data.py
 """
 import json
 import os
@@ -36,10 +36,10 @@ from src.data import csv_labels, load_splits
 from src.evaluation import nadeau_bengio_ttest
 from src.models import balanced_class_weights
 from src.utils import StepLog
-from src.synthetic_data import IDX_B_FFT, V3, fit_predict_w, full_feats, macro
+from src.synthetic_data import IDX_B_FFT, SyntheticGenerator, fit_predict_w, full_feats, macro
 
 PAIR = ("High Network Congestion (Gradual Buildup)", "Buffer Overflow (Gradual Buildup)")
-log = StepLog("08_model2_best_plus_v3")
+log = StepLog("08_model2_best_plus_synthetic_data")
 
 # ---- settings from steps 06 and 07 ---------------------------------------------------------
 r06 = json.load(open(os.path.join(C.RESULTS, "06_model2_synthetic_data_experiments", "results.json")))
@@ -62,7 +62,7 @@ fault = d["train_y"] != C.NORMAL_LABEL
 real_rows, real_y = d["train_idx"][fault], d["train_y"][fault]
 real_X = d["train_X"][fault][:, :C.N_FEATURES_A]
 real_sess = d["session_ids"][real_rows]
-eng = V3(d, fixed_parse=FIXED)
+eng = SyntheticGenerator(d, fixed_parse=FIXED)
 eng._load_text([r for r in real_rows if int(r) not in eng.ROW2IDX])
 sig = np.stack([eng.real_sig(r) for r in real_rows])
 full = np.stack([full_feats(x) for x in sig])
@@ -193,7 +193,7 @@ for algo in ALGOS:
     test[algo] = {"macro_f1": round(f1_score(y_te, pred, average="macro", zero_division=0), 4),
                   "accuracy": round(accuracy_score(y_te, pred), 4)}
     log(f"  {algo:12s} macro-F1={test[algo]['macro_f1']:.4f}  accuracy={test[algo]['accuracy']:.4f}")
-log("  reference (synthetic-data report): real-only 0.586 / 0.705; v3+B+FFT 0.557 / 0.680; Phase 1 accuracy 0.677")
+log("  reference (synthetic-data report): real-only 0.586 / 0.705; synthetic+B+FFT 0.557 / 0.680; Phase 1 accuracy 0.677")
 
 log.save_json("results.json", {"settings": {"best06": best06, "use_G": USE_G, "fixed_parser": FIXED,
                                             "exclude_pair": bool(EXCLUDE), "algorithms": ALGOS},

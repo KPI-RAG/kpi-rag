@@ -1,4 +1,4 @@
-,catboost_v3,catboost_v3_G,quant_real,catboost_c22,vote_2,vote_3
+,catboost_synthetic,catboost_synthetic_G,quant_real,catboost_c22,vote_2,vote_3
 Antenna Failure,0.6,0.636,0.455,0.571,0.545,0.571
 Buffer Overflow (Gradual Buildup),0.444,0.507,0.115,0.436,0.14,0.355
 Co-Channel Interference (Mild),0.4,0.462,0.552,0.491,0.565,0.491

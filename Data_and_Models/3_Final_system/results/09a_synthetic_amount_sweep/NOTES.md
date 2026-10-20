@@ -1,6 +1,6 @@
 # Step 09a notes — does more synthetic data help? (extends the cell-23 sweep of the synthetic-data notebook)
 
-Screening as in the original: seeds 42 & 7 × 5 session folds = 10 folds; v3 + Config B + FFT + trend
+Screening as in the original: seeds 42 & 7 × 5 session folds = 10 folds; synthetic + Config B + FFT + trend
 features; synthetic windows generated once per fold at 2000/class and truncated (identical
 to generating 500 / 1000 directly).
 

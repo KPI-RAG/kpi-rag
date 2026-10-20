@@ -55,12 +55,12 @@ def compare(name, a, b, unit):
 
 log("== Model 2 (macro-F1, 25 seed-folds; each fold holds out ~2 fault sessions) ==")
 f06 = pd.read_csv(os.path.join(R, "06_model2_synthetic_data_experiments", "folds.csv")).sort_values(["seed", "fold"])
-compare("the synthetic-data model (v3+B+FFT) vs real-only baseline", f06["final"], f06["real_only"], "seed-fold")
+compare("the synthetic-data model (synthetic+B+FFT) vs real-only baseline", f06["final"], f06["real_only"], "seed-fold")
 compare("final (+trend) vs real-only baseline", f06["trend"], f06["real_only"], "seed-fold")
 compare("final (+trend) vs the synthetic-data model", f06["trend"], f06["final"], "seed-fold")
 f09 = pd.read_csv(os.path.join(R, "09c_model2_candidates", "folds.csv")).sort_values(["seed", "fold"])
-compare("QUANT real-only vs the synthetic-data model", f09["quant_real"], f09["catboost_v3"], "seed-fold")
-compare("vote(CB+trend, QUANT) vs the synthetic-data model", f09["vote_2"], f09["catboost_v3"], "seed-fold")
+compare("QUANT real-only vs the synthetic-data model", f09["quant_real"], f09["catboost_synthetic"], "seed-fold")
+compare("vote(CB+trend, QUANT) vs the synthetic-data model", f09["vote_2"], f09["catboost_synthetic"], "seed-fold")
 
 log("\n== Model 1 (PR-AUC, 25 seed-folds) ==")
 f03 = pd.read_csv(os.path.join(R, "03_model1_fixes", "folds.csv"))

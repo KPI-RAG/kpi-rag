@@ -21,7 +21,7 @@ New here? Read `PROJECT_STORY.md` first (plain-language overview), then the full
 | Windows handed to the explanation layer as "fault" | 1,374 (1,105 wrong) | **382 (116 wrong)** |
 
 Final configuration: Model 1 = CatBoost on 64 statistics, correct parser, imbalance corrected once, threshold 0.5,
-raw probability as confidence (calibration tested and rejected). Model 2 = CatBoost, real + the v3 synthetic data (500/class), Config B + FFT + trend
+raw probability as confidence (calibration tested and rejected). Model 2 = CatBoost, real + the synthetic data (500/class), Config B + FFT + trend
 features, 11 classes, no false-alarm filter. Full numbers and the reasoning: `docs/phase2_results.md` (and `.docx`).
 
 ## Where things are
@@ -55,7 +55,7 @@ features, 11 classes, no false-alarm filter. Full numbers and the reasoning: `do
 The scripts expect these input files under `KPI_RAG_ROOT` (set it to your own data folder):
 `Models Improvement/Data Splits/` (Raneem's session split: `train_X/y/idx`, `test_idx`, `session_id_by_row`),
 `Models Improvement/Synthetic/` (`raw_kpis.npy` and `raw_meta.csv` = the REAL dataset parsed once,
-plus the v3 files `signal_cache_v3.npz`, `effects_v3.pkl`, `fault_recipes.json`, `context.csv`), and `data/telecomts.csv`.
+plus the synthetic-data cache files `signal_cache_v3.npz`, `effects_v3.pkl`, `fault_recipes.json`, `context.csv`), and `data/telecomts.csv`.
 Step 01 stores the SHA-256 of each input in `results/01_baseline/manifest.json`.
 No synthetic windows are ever used for validation or testing.
 
@@ -70,7 +70,7 @@ No synthetic windows are ever used for validation or testing.
 | `05a_model1_new_features` / `05b_model2_new_features` | Do the new trend/co-movement features help? | 01 (for 05b) | 5 / 40 min |
 | `06_model2_synthetic_data_experiments` | Reproduce the synthetic-data model; the report's next steps 1–2 | 01 | 2 h |
 | `07_model2_algorithms` | Is CatBoost the right algorithm? (9 methods) | 01, aeon | 2 h |
-| `08_model2_best_algorithms_plus_v3` | Best algorithms + synthetic data | 06, 07 | 1.5 h |
+| `08_model2_best_algorithms_plus_synthetic_data` | Best algorithms + synthetic data | 06, 07 | 1.5 h |
 | `09a_synthetic_amount_sweep` | Does more synthetic data help? | — | 2.5 h |
 | `09z_build_synth_cache` | Build the synthetic-window cache (25 folds) | — | 10 min |
 | `09c_model2_candidates_and_ensemble` | Final Model 2 candidates, per-class + per-session results; also writes the full-training synthetic cache `all_s42_n500_bug.npz` | 09z | 1.5 h |

@@ -9,7 +9,7 @@
 | 2026-10-13 | Adopt fixed Model 1 (correct parser, no double weighting) | both are bug fixes; FP 1105 → 116 on test, 25/25 folds fewer FA | Farida |
 | 2026-10-13 | Algorithm/setting changes need p < 0.05 AND ≥ 0.03 AND hold on test; LightGBM (+0.04, p=0.37) not adopted | "tiny differences do not matter" | Farida |
 | 2026-10-13 | Keep 500 synthetic windows per class | 09a: no effect for CatBoost | — |
-| 2026-10-13 | Final Model 2 = the synthetic-data model + trend features (CatBoost, real + v3, Config B + FFT + G) | 09c: consistent in CV (18/25) and test (acc 0.703 vs Phase 1 0.677) | Farida |
+| 2026-10-13 | Final Model 2 = the synthetic-data model + trend features (CatBoost, real + synthetic, Config B + FFT + G) | 09c: consistent in CV (18/25) and test (acc 0.703 vs Phase 1 0.677) | Farida |
 | 2026-10-13 | One training job at a time; no parallel workers | container limit 16 GB; two restarts | — |
 | 2026-10-13 | Not pursued: TabPFN, Mantis, more algorithms, deep nets, HIVE-COTE 2 | evidence review: no expected gain at n=935 vs cost | — |
 | 2026-10-14 | Run of the remaining steps: Model 1 shift experiments (10a) → cascade + false-alarm filter (10) → final pipeline (11) → report (12) | planned run | Farida |

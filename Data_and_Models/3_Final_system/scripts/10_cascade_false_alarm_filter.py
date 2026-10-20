@@ -1,7 +1,7 @@
 """Step 10 - The complete cascade (Model 1 -> Model 2) and Raneem's reject option.
 
 Model 1: the variant selected by step 10a's rule (else the adopted step-03 detector), t = 0.5.
-Model 2: the synthetic-data model + trend (CatBoost, real + v3 500/class from the cache, Config B + FFT + G).
+Model 2: the synthetic-data model + trend (CatBoost, real + synthetic 500/class from the cache, Config B + FFT + G).
 Reject option (Raneem, Phase 2 part 1): add a "Normal" class to Model 2 so false alarms can be
 sent back instead of being forced into a fault label (Phase 1: 82% of FPs -> CCI-Mild).
     none          no reject class (reference)
@@ -36,7 +36,7 @@ from src.data import csv_labels, features, load_splits
 from src.evaluation import binary_report
 from src.models import anomaly_detector, rebalance_80_20
 from src.utils import StepLog
-from src.synthetic_data import IDX_B_FFT, V3, fit_predict_w, full_feats, macro, synthetic_windows
+from src.synthetic_data import IDX_B_FFT, SyntheticGenerator, fit_predict_w, full_feats, macro, synthetic_windows
 
 log = StepLog("10_cascade_false_alarm_filter")
 d = load_splits()
@@ -95,7 +95,7 @@ np.save(log.path("oof_model1_prob.npy"), oof)
 fault = y_bin == 1
 real_rows, real_y = d["train_idx"][fault], y_all[fault]
 real_sess = sess[fault]
-eng = V3(d)
+eng = SyntheticGenerator(d)
 eng._load_text([r for r in real_rows if int(r) not in eng.ROW2IDX])
 sig = np.stack([eng.real_sig(r) for r in real_rows])
 full = np.stack([full_feats(x) for x in sig])

@@ -29,7 +29,7 @@ from src import features as F
 from src.data import csv_labels, features, load_splits
 from src.models import anomaly_detector, rebalance_80_20
 from src.utils import StepLog
-from src.synthetic_data import IDX_B_FFT, V3, fit_predict_w, full_feats, macro, synthetic_windows
+from src.synthetic_data import IDX_B_FFT, SyntheticGenerator, fit_predict_w, full_feats, macro, synthetic_windows
 
 TAUS = [0.5, 0.6, 0.7, 0.8, 0.9]
 log = StepLog("10c_false_alarm_filter_threshold")
@@ -39,7 +39,7 @@ oof = np.load(os.path.join(C.RESULTS, "10_cascade_false_alarm_filter", "oof_mode
 normal_idx = np.where(y_bin == 0)[0]
 fault = y_bin == 1
 real_rows, real_y, real_sess = d["train_idx"][fault], y_all[fault], sess[fault]
-eng = V3(d); eng._load_text([r for r in real_rows if int(r) not in eng.ROW2IDX])
+eng = SyntheticGenerator(d); eng._load_text([r for r in real_rows if int(r) not in eng.ROW2IDX])
 sig = np.stack([eng.real_sig(r) for r in real_rows])
 full = np.stack([full_feats(x) for x in sig]); Gf = F.from_signals(sig); A_ref = full[:, :64]
 host_sess = d["session_ids"][eng.host_rows]

@@ -1,6 +1,6 @@
 """Step 09z - Build the synthetic-window cache once (speed-up for every later step).
 
-Generates the v3 synthetic windows (500 per class, the synthetic-data model setting) for all
+Generates the synthetic windows (500 per class, the synthetic-data model setting) for all
 5 seeds x 5 session folds and stores them in results/cache/synth/. Later experiments load
 them instead of re-running the ~10-minute single-threaded generator per fold.
 Runs 3 folds in parallel (fits the 16 GB container limit). Identical output to the inline
@@ -21,7 +21,7 @@ from sklearn.model_selection import StratifiedGroupKFold
 from src import config as C
 from src.data import load_splits
 from src.utils import StepLog
-from src.synthetic_data import V3, synth_cache_path, synthetic_windows
+from src.synthetic_data import SyntheticGenerator, synth_cache_path, synthetic_windows
 
 N_TARGET, TAG, WORKERS = 500, "bug", 3
 _state = {}
@@ -30,7 +30,7 @@ _state = {}
 def _init():
     d = load_splits()
     fault = d["train_y"] != C.NORMAL_LABEL
-    eng = V3(d)
+    eng = SyntheticGenerator(d)
     _state.update(d=d, eng=eng, real_rows=d["train_idx"][fault], real_y=d["train_y"][fault],
                   real_sess=d["session_ids"][d["train_idx"][fault]],
                   A_ref=d["train_X"][fault][:, :C.N_FEATURES_A],
