@@ -1,15 +1,15 @@
 """Step 08 - Combine the two best levers for Model 2: the best algorithms (step 07)
-trained on real + Farida's v3 synthetic data (step 06 setting).
+trained on real + the v3 synthetic data (step 06 setting).
 
 Settings are read from the previous steps' results, so this script is deterministic:
   - from results/06: the best v3 variant (final / excl_pair / trend / trend_fixed) decides
     whether the pair HNC-Gradual + Buffer Overflow is excluded from augmentation, whether
     the G1 G2 G3 trend features are added, and which parser is used.
   - from results/07: the top-3 algorithms by mean macro-F1 (CatBoost is always included
-    as the reference = Farida's recipe).
+    as the reference = the synthetic-data model).
 Protocol unchanged: 935 real fault windows, 5 seeds x 5 SESSION folds, synthetic windows
 rebuilt from training-fold sessions only, validation = real windows only, macro-F1,
-Nadeau-Bengio corrected t-test vs Farida's final model and vs the Phase 1 baseline.
+Nadeau-Bengio corrected t-test vs the synthetic-data model and vs the Phase 1 baseline.
 One post-hoc test check (test fault windows of the 3 held-out sessions).
 
 Run from the phase2 folder:   python scripts/08_model2_best_algorithms_plus_v3.py
@@ -42,7 +42,7 @@ PAIR = ("High Network Congestion (Gradual Buildup)", "Buffer Overflow (Gradual B
 log = StepLog("08_model2_best_plus_v3")
 
 # ---- settings from steps 06 and 07 ---------------------------------------------------------
-r06 = json.load(open(os.path.join(C.RESULTS, "06_model2_farida_next_steps", "results.json")))
+r06 = json.load(open(os.path.join(C.RESULTS, "06_model2_synthetic_data_experiments", "results.json")))
 means06 = {k: v for k, v in r06["means"].items() if k != "real_only"}
 best06 = max(means06, key=means06.get)
 USE_G = best06 in ("trend", "trend_fixed")
@@ -154,16 +154,16 @@ for seed in C.CV_SEEDS:
             + f"  ({time.time()-t0:.0f}s)")
 
 res = pd.DataFrame(rows).sort_values(["seed", "fold"])
-r06f = pd.read_csv(os.path.join(C.RESULTS, "06_model2_farida_next_steps", "folds.csv")).sort_values(["seed", "fold"])
-res = res.merge(r06f[["seed", "fold", "final", "real_only"]].rename(columns={"final": "farida_final"}), on=["seed", "fold"])
+r06f = pd.read_csv(os.path.join(C.RESULTS, "06_model2_synthetic_data_experiments", "folds.csv")).sort_values(["seed", "fold"])
+res = res.merge(r06f[["seed", "fold", "final", "real_only"]].rename(columns={"final": "synthetic_data_model"}), on=["seed", "fold"])
 res.to_csv(log.path("folds.csv"), index=False)
 
 log("\n== Macro-F1 over 25 folds ==")
-cols = ["real_only", "farida_final"] + ALGOS
+cols = ["real_only", "synthetic_data_model"] + ALGOS
 log(res[cols].agg(["mean", "std"]).T.round(4).to_string())
 stats = {}
 log("\n== Paired comparisons (Nadeau-Bengio corrected t-test) ==")
-for ref in ("real_only", "farida_final"):
+for ref in ("real_only", "synthetic_data_model"):
     for a in ALGOS:
         diff, t_stat, p, w = nadeau_bengio_ttest(res[a] - res[ref], res.n_train, res.n_val)
         wins = int((res[a] > res[ref]).sum())
@@ -193,7 +193,7 @@ for algo in ALGOS:
     test[algo] = {"macro_f1": round(f1_score(y_te, pred, average="macro", zero_division=0), 4),
                   "accuracy": round(accuracy_score(y_te, pred), 4)}
     log(f"  {algo:12s} macro-F1={test[algo]['macro_f1']:.4f}  accuracy={test[algo]['accuracy']:.4f}")
-log("  reference (Farida's report): real-only 0.586 / 0.705; v3+B+FFT 0.557 / 0.680; Phase 1 accuracy 0.677")
+log("  reference (synthetic-data report): real-only 0.586 / 0.705; v3+B+FFT 0.557 / 0.680; Phase 1 accuracy 0.677")
 
 log.save_json("results.json", {"settings": {"best06": best06, "use_G": USE_G, "fixed_parser": FIXED,
                                             "exclude_pair": bool(EXCLUDE), "algorithms": ALGOS},

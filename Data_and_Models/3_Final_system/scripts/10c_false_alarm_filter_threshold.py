@@ -11,7 +11,7 @@ Reported per tau: 11-class macro-F1 on real validation faults, share of faults r
 held-out cascade (same Model 1 as step 10): FP rejected, residual catch-all, TP lost, useful precision.
 Policy is chosen on the CV columns (fault rejection <= 10 % with the best macro-F1); test is post-hoc.
 
-Run from the phase2 folder:   python scripts/10c_reject_policy.py
+Run from the phase2 folder:   python scripts/10c_false_alarm_filter_threshold.py
 """
 import json
 import os
@@ -32,10 +32,10 @@ from src.utils import StepLog
 from src.v3 import IDX_B_FFT, V3, fit_predict_w, full_feats, macro, synthetic_windows
 
 TAUS = [0.5, 0.6, 0.7, 0.8, 0.9]
-log = StepLog("10c_reject_policy")
+log = StepLog("10c_false_alarm_filter_threshold")
 d = load_splits(); labels = csv_labels()
 y_all = d["train_y"]; y_bin = (y_all != C.NORMAL_LABEL).astype(int); sess = d["train_sessions"]
-oof = np.load(os.path.join(C.RESULTS, "10_cascade_reject", "oof_model1_prob.npy"))
+oof = np.load(os.path.join(C.RESULTS, "10_cascade_false_alarm_filter", "oof_model1_prob.npy"))
 normal_idx = np.where(y_bin == 0)[0]
 fault = y_bin == 1
 real_rows, real_y, real_sess = d["train_idx"][fault], y_all[fault], sess[fault]
@@ -88,7 +88,7 @@ for f_i, (tr, va) in enumerate(cv.split(A_ref, real_y, groups=real_sess)):
 res = pd.DataFrame(rows); res.to_csv(log.path("folds.csv"), index=False)
 cvtab = pd.DataFrame({tau: {"macro_f1": res[f"f1@{tau}"].mean(), "faults_rejected": res[f"rej@{tau}"].mean()} for tau in TAUS}).T
 log(cvtab.round(3).to_string())
-ref = json.load(open(os.path.join(C.RESULTS, "10_cascade_reject", "results.json")))
+ref = json.load(open(os.path.join(C.RESULTS, "10_cascade_false_alarm_filter", "results.json")))
 ref_f1, ref_sd = ref["model2_cv"]["none"]["mean"], ref["model2_cv"]["none"]["std"]
 ok = [tau for tau in TAUS if cvtab.loc[tau, "faults_rejected"] <= 0.10 and abs(cvtab.loc[tau, "macro_f1"] - ref_f1) <= 2 * ref_sd]
 chosen = max(ok, key=lambda t: cvtab.loc[t, "macro_f1"]) if ok else None

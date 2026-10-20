@@ -2,7 +2,7 @@
 
 Problem: the final Model 2 predicts "Buffer Overflow" for 30 of the 37 HNC-Gradual test windows
 (pooled OOF: HNC-Gradual F1 = 0.00). Both faults are gradual congestion build-ups.
-Hypothesis (physics, TelecomTS paper Table 10 / Farida's fault recipes): in Buffer Overflow the UL buffer
+Hypothesis (physics, TelecomTS paper Table 10 / the synthetic-data fault recipes): in Buffer Overflow the UL buffer
 (Estimated_UL_Buffer) grows while PRB utilisation stays flat (the link cannot drain); in HNC-Gradual PRB
 utilisation and packet counts grow with the buffer (more users). A 2-class model trained ONLY on these two
 classes, with growth-shape features of those channels, should separate them better than the 11-class model.

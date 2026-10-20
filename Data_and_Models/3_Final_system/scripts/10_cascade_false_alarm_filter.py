@@ -1,7 +1,7 @@
 """Step 10 - The complete cascade (Model 1 -> Model 2) and Raneem's reject option.
 
 Model 1: the variant selected by step 10a's rule (else the adopted step-03 detector), t = 0.5.
-Model 2: Farida's recipe + trend (CatBoost, real + v3 500/class from the cache, Config B + FFT + G).
+Model 2: the synthetic-data model + trend (CatBoost, real + v3 500/class from the cache, Config B + FFT + G).
 Reject option (Raneem, Phase 2 part 1): add a "Normal" class to Model 2 so false alarms can be
 sent back instead of being forced into a fault label (Phase 1: 82% of FPs -> CCI-Mild).
     none          no reject class (reference)
@@ -16,7 +16,7 @@ Evaluation B (cascade on the 5 held-out sessions, 6,312 windows, post-hoc): fals
 Promotion rule (Raneem's, verified): residual catch-all < 41.1% (half of 82.2%) AND 11-class
     macro-F1 within 2 SD of the no-reject reference.
 
-Run from the phase2 folder:   python scripts/10_cascade_reject_option.py
+Run from the phase2 folder:   python scripts/10_cascade_false_alarm_filter.py
 """
 import json
 import os
@@ -38,7 +38,7 @@ from src.models import anomaly_detector, rebalance_80_20
 from src.utils import StepLog
 from src.v3 import IDX_B_FFT, V3, fit_predict_w, full_feats, macro, synthetic_windows
 
-log = StepLog("10_cascade_reject")
+log = StepLog("10_cascade_false_alarm_filter")
 d = load_splits()
 labels = csv_labels()
 y_all = d["train_y"]

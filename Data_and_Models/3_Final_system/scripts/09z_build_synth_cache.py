@@ -1,6 +1,6 @@
 """Step 09z - Build the synthetic-window cache once (speed-up for every later step).
 
-Generates Farida's v3 synthetic windows (500 per class, her final setting) for all
+Generates the v3 synthetic windows (500 per class, the synthetic-data model setting) for all
 5 seeds x 5 session folds and stores them in results/cache/synth/. Later experiments load
 them instead of re-running the ~10-minute single-threaded generator per fold.
 Runs 3 folds in parallel (fits the 16 GB container limit). Identical output to the inline

@@ -1,18 +1,18 @@
-"""Step 06 - Model 2: reproduce Farida's final experiment, then run her "Next Steps".
+"""Step 06 - Model 2: reproduce the synthetic-data model experiment, then run the report's "Next Steps".
 
 Starting point (Final Experiments 26-Sep, Synthetic_Data_Report_v2):
     final  = real + synthetic v3 (500/class, 10 classes) with Config B + FFT (400 features)
              CV macro-F1 0.3743 (configBC_records.csv, column B_fft)
 Variants, all on the SAME nested 5 seeds x 5 session folds (synthetic data rebuilt from
 training-fold sessions only; validation = real windows only):
-    final        reproduction of her final model           -> must match her records
+    final        reproduction of the synthetic-data model           -> must match the original records
     excl_pair    next step 1: no augmentation for HNC Gradual + Buffer Overflow
     trend        next step 2: + trend/timing features G1 G2 G3 (src/features.py, 96)
     trend_fixed  trend + BLER parser fix (correct signals from raw_kpis.npy)
-Comparison: each variant vs her real-only baseline (0.2908, step 01) and vs `final`,
+Comparison: each variant vs the real-only baseline (0.2908, step 01) and vs `final`,
 Nadeau-Bengio corrected t-test. Checkpointed per fold; safe to re-run (resumes).
 
-Run from the phase2 folder:   python scripts/06_model2_farida_final_and_next_steps.py
+Run from the phase2 folder:   python scripts/06_model2_synthetic_data_experiments.py
 """
 import os
 import sys
@@ -34,7 +34,7 @@ PAIR = ("High Network Congestion (Gradual Buildup)", "Buffer Overflow (Gradual B
 VARIANTS = ["final", "excl_pair", "trend", "trend_fixed"]
 TOL = 1e-3
 
-log = StepLog("06_model2_farida_next_steps")
+log = StepLog("06_model2_synthetic_data_experiments")
 d = load_splits()
 fault = d["train_y"] != C.NORMAL_LABEL
 real_rows = d["train_idx"][fault]
@@ -42,7 +42,7 @@ real_y = d["train_y"][fault]
 real_X = d["train_X"][fault][:, :C.N_FEATURES_A]
 real_sess = d["session_ids"][real_rows]
 
-her = pd.read_csv(os.path.join(C.REAL_PARSED_DIR, "configBC_records.csv"))
+orig = pd.read_csv(os.path.join(C.REAL_PARSED_DIR, "configBC_records.csv"))
 base = pd.read_csv(os.path.join(C.RESULTS, "01_baseline", "baseline_folds.csv"))
 
 eng = {"bug": V3(d), "fixed": V3(d, fixed_parse=True)}
@@ -113,25 +113,25 @@ for seed in C.CV_SEEDS:
         Xf_va = np.hstack([rf["full"][va][:, IDX_B_FFT], rf["G"][va]])
         rec["trend_fixed"] = macro(yva, fit_predict_w(Xf, ya3, np.ones(len(ya3)), Xf_va, seed)[1])
 
-        ref = her[(her.seed == seed) & (her.fold == f_i + 1)].B_fft.iloc[0]
-        rec["her_final"] = ref
+        ref = orig[(orig.seed == seed) & (orig.fold == f_i + 1)].B_fft.iloc[0]
+        rec["original_reference"] = ref
         rows.append(rec)
         pd.DataFrame(rows).to_csv(ckpt, index=False)
         ok = abs(rec["final"] - ref) <= TOL
-        log(f"  seed={seed:<5} fold={f_i+1}  final={rec['final']:.4f} (her {ref:.4f} "
+        log(f"  seed={seed:<5} fold={f_i+1}  final={rec['final']:.4f} (original {ref:.4f} "
             f"{'MATCH' if ok else 'DIFF'})  excl_pair={rec['excl_pair']:.4f}  "
             f"trend={rec['trend']:.4f}  trend_fixed={rec['trend_fixed']:.4f}")
         if not ok and len(rows) == 1:
-            log("STOP: the reproduction of her final model does not match on the first fold.")
+            log("STOP: the reproduction of the synthetic-data model does not match on the first fold.")
             log.close()
             sys.exit(2)
 
 res = pd.DataFrame(rows).merge(base[["seed", "fold", "f1_macro"]].rename(columns={"f1_macro": "real_only"}),
                                on=["seed", "fold"]).sort_values(["seed", "fold"])
 res.to_csv(log.path("folds.csv"), index=False)
-n_match = int((np.abs(res["final"] - res["her_final"]) <= TOL).sum())
-log(f"\nReproduction of her final model: {n_match}/25 folds match her records "
-    f"(mean {res['final'].mean():.4f} vs her {res['her_final'].mean():.4f})")
+n_match = int((np.abs(res["final"] - res["original_reference"]) <= TOL).sum())
+log(f"\nReproduction of the synthetic-data model: {n_match}/25 folds match the original records "
+    f"(mean {res['final'].mean():.4f} vs original {res['original_reference'].mean():.4f})")
 
 log("\n== Macro-F1 over 25 folds ==")
 cols = ["real_only", "final"] + VARIANTS[1:]

@@ -1,14 +1,14 @@
 """Step 09c - Final Model 2 candidates, measured for real: CV + held-out sessions + per class.
 
 Candidates (all on the same 25 session folds; synthetic windows from the step-09z cache):
-    catboost_v3      Farida's final recipe: real + v3 (500/class) + Config B + FFT, CatBoost
+    catboost_v3      the synthetic-data model: real + v3 (500/class) + Config B + FFT, CatBoost
     catboost_v3_G    the same + G1 G2 G3 trend features (step 06 "trend")
     quant_real       QUANT on the raw real windows only (no synthetic data)
     catboost_c22     CatBoost on Config A + catch22, real only (step 07 runner-up)
     vote_2           equal-weight soft vote of catboost_v3_G + quant_real
     vote_3           equal-weight soft vote of catboost_v3_G + quant_real + catboost_c22
 Soft votes average class probabilities (no weights learned from the outer folds => no leak).
-Decision rule (STATUS.md): a candidate replaces Farida's recipe only if corrected p < 0.05
+Decision rule (STATUS.md): a candidate replaces the synthetic-data model only if corrected p < 0.05
 AND >= 0.03 macro-F1 in CV AND it holds on the held-out sessions.
 Real results written: per-class precision/recall/F1 (CV pooled and test), confusion matrices
 (CSV), per-session test accuracy, and results.json.
@@ -132,7 +132,7 @@ res.to_csv(log.path("folds.csv"), index=False)
 log("\n== CV macro-F1 over 25 session folds ==")
 log(res[CANDS].agg(["mean", "std"]).T.round(4).to_string())
 stats = {}
-log("\n== Paired vs Farida's recipe (catboost_v3), Nadeau-Bengio corrected t-test ==")
+log("\n== Paired vs the synthetic-data model (catboost_v3), Nadeau-Bengio corrected t-test ==")
 for c in CANDS[1:]:
     diff, t_stat, p, w = nadeau_bengio_ttest(res[c] - res["catboost_v3"], res.n_train, res.n_val)
     wins = int((res[c] > res["catboost_v3"]).sum())
@@ -170,7 +170,7 @@ for c in CANDS:
                "per_session_accuracy": per_sess, "per_class_f1": dict(zip(CLASSES, np.round(f1, 3)))}
     pd.DataFrame(confusion_matrix(y_te, pred, labels=CLASSES), index=CLASSES, columns=CLASSES).to_csv(log.path(f"confusion_test_{c}.csv"))
     log(f"  {c:14s} macro-F1={test[c]['macro_f1']:.4f}  accuracy={test[c]['accuracy']:.4f}  per-session acc={per_sess}")
-log("  reference: Phase 1 accuracy 0.677; Farida's report real-only 0.586/0.705, v3+B+FFT 0.557/0.680")
+log("  reference: Phase 1 accuracy 0.677; the synthetic-data report real-only 0.586/0.705, v3+B+FFT 0.557/0.680")
 pd.DataFrame({c: test[c]["per_class_f1"] for c in CANDS}).round(3).to_csv(log.path("per_class_f1_test.csv"))
 
 log.save_json("results.json", {"cv_means": res[CANDS].mean().round(4).to_dict(), "cv_std": res[CANDS].std().round(4).to_dict(),

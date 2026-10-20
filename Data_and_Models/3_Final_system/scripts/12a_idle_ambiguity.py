@@ -53,7 +53,7 @@ log("  idle share by fault type:\n" + tab[tab.fault == 1].groupby("label").idle.
 
 # 2. calibration -----------------------------------------------------------------------------------------
 log("\n== 2. Model 1 calibration (isotonic on step-10 OOF probabilities) ==")
-oof = np.load(os.path.join(C.RESULTS, "10_cascade_reject", "oof_model1_prob.npy"))
+oof = np.load(os.path.join(C.RESULTS, "10_cascade_false_alarm_filter", "oof_model1_prob.npy"))
 cal = IsotonicRegression(out_of_bounds="clip").fit(oof, y)
 
 

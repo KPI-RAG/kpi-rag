@@ -11,7 +11,7 @@ import time
 pattern, nxt = sys.argv[1], sys.argv[2]
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if pattern.startswith("file:"):
-    # wait until a result file exists (e.g. file:results/10_cascade_reject/results.json)
+    # wait until a result file exists (e.g. file:results/10_cascade_false_alarm_filter/results.json)
     target = os.path.join(root, pattern[5:])
     while not os.path.exists(target):
         time.sleep(60)

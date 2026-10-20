@@ -1,8 +1,8 @@
 """Step 11 - Train the final models on all 28 training sessions and produce the Layer 2 JSON.
 
 Choices are read from the previous steps:
-    Model 1 : results/10_cascade_reject/results.json -> model1_variant (adopted | adopted+G | jitter)
-    Model 2 : Farida's recipe + trend (decision 2026-10-13); reject class only if step 10 promoted it
+    Model 1 : results/10_cascade_false_alarm_filter/results.json -> model1_variant (adopted | adopted+G | jitter)
+    Model 2 : the synthetic-data model + trend (decision 2026-10-13); reject class only if step 10 promoted it
 Outputs (results/final/):
     model1.cbm, model2.cbm, feature_spec.json, normal_means.json,
     layer2_output_sessionsplit_phase2.json  (6,312 test windows, Phase 1 schema),
@@ -33,15 +33,15 @@ OUT = log.dir
 d = load_splits()
 labels = csv_labels()
 raw = np.load(C.RAW_KPIS, mmap_mode="r")
-r10 = json.load(open(os.path.join(C.RESULTS, "10_cascade_reject", "results.json")))
+r10 = json.load(open(os.path.join(C.RESULTS, "10_cascade_false_alarm_filter", "results.json")))
 M1 = r10["model1_variant"]
 WITH_G = M1 != "adopted"
 REJECT = r10["promotion"]["hard1000"]["promoted"]       # reject class only if step 10 promoted it
 TAU = None
-pol = os.path.join(C.RESULTS, "10c_reject_policy", "policy.json")
+pol = os.path.join(C.RESULTS, "10c_false_alarm_filter_threshold", "policy.json")
 if REJECT and os.path.exists(pol):                    # step 10c: reject iff P(Normal) >= tau
     TAU = json.load(open(pol)).get("reject_tau")
-log(f"Model 1 variant: {M1} | Model 2: Farida's recipe + trend | reject class: {REJECT} | reject tau: {TAU}")
+log(f"Model 1 variant: {M1} | Model 2: the synthetic-data model + trend | reject class: {REJECT} | reject tau: {TAU}")
 
 # ---- Model 1 -----------------------------------------------------------------------------------------
 y_bin = (d["train_y"] != C.NORMAL_LABEL).astype(int)
@@ -74,7 +74,7 @@ z = np.load(os.path.join(C.RESULTS, "cache", "synth", f"all_s{C.SEED}_n500_bug.n
 Xs, Ys = P.model2_features(z["S"]), z["Y"]
 Xtr, ytr = [X2, Xs], [real_y, Ys]
 if REJECT:
-    oof = np.load(os.path.join(C.RESULTS, "10_cascade_reject", "oof_model1_prob.npy"))
+    oof = np.load(os.path.join(C.RESULTS, "10_cascade_false_alarm_filter", "oof_model1_prob.npy"))
     normal_idx = np.where(y_bin == 0)[0]
     hard = normal_idx[np.argsort(oof[normal_idx])[::-1][:1000]]
     rows = d["train_idx"][hard]
@@ -92,7 +92,7 @@ log(f"Model 2 trained on {len(ytr)} rows ({Xtr.shape[1]} features; classes {len(
 
 spec = {"model1": {"variant": M1, "features": P.M1_NAMES if WITH_G else P.A_NAMES, "threshold": C.MODEL1_THRESHOLD,
                    "params": C.MODEL1_PARAMS, "class_weighting": C.MODEL1_CLASS_WEIGHTING, "parser": "correct (raw_kpis.npy)"},
-        "model2": {"recipe": "Farida v3 500/class + Config B + FFT + G1G2G3", "features": P.M2_NAMES,
+        "model2": {"recipe": "v3 500/class + Config B + FFT + G1G2G3", "features": P.M2_NAMES,
                    "reject_class": REJECT, "reject_tau": TAU, "calibrated_confidence": False, "idle_link_flag": [P.IDLE_TX, P.IDLE_PRB, P.IDLE_PKT], "parser": "Phase 1 regex replica (matches the synthetic cache)"},
         "versions": library_versions()}
 json.dump(spec, open(os.path.join(OUT, "feature_spec.json"), "w"), indent=2)
@@ -134,7 +134,7 @@ fam = lambda a: np.array([FAMILY.get(x, x) for x in a])
 rep["class_grouping_reporting_complement"] = {
     "congestion_family": sorted(FAMILY), "exact_11_class_accuracy_on_true_faults": round(float((pred == y_te)[is_fault].mean()), 4),
     "family_level_accuracy_on_true_faults": round(float((fam(pred) == fam(y_te))[is_fault].mean()), 4),
-    "note": "labels in the JSON stay the 11 classes; the family metric is a reporting complement (Farida's next step 3)"}
+    "note": "labels in the JSON stay the 11 classes; the family metric is a reporting complement (next step 3)"}
 rep["idle_link_flagged_records"] = sum(1 for r in records if any(P.IDLE_NOTE in e.get("note", "") for e in r["shap_top3"]))
 # Phase 1 side by side (Raneem's JSON, copied from Drive into results/final/)
 p1 = os.path.join(OUT, "phase1_layer2_reference.json")
