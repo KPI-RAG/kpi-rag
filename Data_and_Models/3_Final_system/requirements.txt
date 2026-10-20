@@ -1,4 +1,4 @@
-# Versions used to produce the results in results/ (Queen's JupyterHub, Python 3.12.13)
+# Versions used to produce the results in results/ (Python 3.12.13)
 numpy==2.4.6
 pandas==3.0.3
 scikit-learn==1.9.0
