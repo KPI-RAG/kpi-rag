@@ -3,17 +3,12 @@ import pandas as pd
 from pathlib import Path
 from collections import defaultdict
 
-GRAPH_PATH = Path(
-    r"data\3GPP_KG\tkg\rel19_3gpp_telecom_kg.graphml"
-)
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DATA_DIR = REPO_ROOT / "data" / "3GPP_KG"
 
-CANDIDATES_PATH = Path(
-    r"data\3GPP_KG\fault_coverage_candidates.csv"
-)
-
-OUTPUT_PATH = Path(
-    r"data\3GPP_KG\fault_graph_evidence.csv"
-)
+GRAPH_PATH = DATA_DIR / "tkg" / "rel19_3gpp_telecom_kg.graphml"
+CANDIDATES_PATH = DATA_DIR / "fault_coverage_candidates.csv"
+OUTPUT_PATH = DATA_DIR / "fault_graph_evidence.csv"
 
 NS = {
     "g": "http://graphml.graphdrawing.org/xmlns"

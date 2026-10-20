@@ -1,8 +1,11 @@
 import pandas as pd
 from pathlib import Path
 
-INPUT = Path(r"data\3GPP_KG\fault_coverage_candidates.csv")
-OUTPUT = Path(r"data\3GPP_KG\fault_top_candidates.csv")
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DATA_DIR = REPO_ROOT / "data" / "3GPP_KG"
+
+INPUT = DATA_DIR / "fault_coverage_candidates.csv"
+OUTPUT = DATA_DIR / "fault_top_candidates.csv"
 
 df = pd.read_csv(INPUT).fillna("")
 

@@ -1,9 +1,10 @@
 import json
 from pathlib import Path
 
-path = Path(
-    r"data\3GPP_KG\chunks\rel19_text_chunks.jsonl"
-)
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DATA_DIR = REPO_ROOT / "data" / "3GPP_KG"
+
+path = DATA_DIR / "chunks" / "rel19_text_chunks.jsonl"
 
 total = 0
 non_empty = 0
