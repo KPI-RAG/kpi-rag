@@ -281,8 +281,8 @@ to the model alone when the top retrieval score is below 0.50 gives 76.00 % (456
 supported questions, the baseline scored 12 and ungated RAG 10.
 
 ```bash
-uv run python "scripts/run_eval_track_d_(teleqna).py" --config configs/config.yaml --audit-only   # coverage only
-uv run python "scripts/run_eval_track_d_(teleqna).py" --config configs/config.yaml --output data/processed/track_d_full.json
+uv run python scripts/run_eval_track_d.py --config configs/config.yaml --audit-only   # coverage only
+uv run python scripts/run_eval_track_d.py --config configs/config.yaml --output data/processed/track_d_full.json
 ```
 
 ## Testing

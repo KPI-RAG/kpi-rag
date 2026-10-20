@@ -12,7 +12,7 @@ Use these scripts from the repository root unless otherwise noted.
 - `run_eval_track_a.py` — recompute Track A detection/classification and retrieval metrics.
 - `run_eval_track_b.py` — score generated explanations with a G-Eval judge.
 - `run_eval_track_c.py` — generate explanation variants across citation ablation conditions.
-- `run_eval_track_d_(teleqna).py` — evaluate KPI-RAG retrieval coverage and answer quality on TeleQnA.
+- `run_eval_track_d.py` — evaluate KPI-RAG retrieval coverage and answer quality on TeleQnA.
 
 ## Script details
 
@@ -90,13 +90,13 @@ uv run python scripts/run_eval_track_c.py --output data/processed/my_run --dry-r
 
 Flags: `--output` (default `data/processed/track_c_v3`), `--config`, `--n-per-fault`, `--dry-run`, `--force`, `--summarise-only`. A run never overwrites existing results unless `--force` is given.
 
-### 7) `run_eval_track_d_(teleqna).py`
+### 7) `run_eval_track_d.py`
 Purpose:
 - Measure retrieval coverage and answer accuracy with and without retrieved context on 600 TeleQnA questions.
 
 ```bash
-uv run python "scripts/run_eval_track_d_(teleqna).py" --config configs/config.yaml --audit-only
-uv run python "scripts/run_eval_track_d_(teleqna).py" --config configs/config.yaml --output data/processed/track_d_full.json
+uv run python scripts/run_eval_track_d.py --config configs/config.yaml --audit-only
+uv run python scripts/run_eval_track_d.py --config configs/config.yaml --output data/processed/track_d_full.json
 ```
 
 Flags: `--config` (required), `--output`, `--model` (default `gemini-3.5-flash-lite`), `--base-url`, `--api-key`, `--max-per-category` (default 200), `--top-k` (default 5), `--delay`, `--audit-only`.
