@@ -26,7 +26,7 @@ from src import pipeline as P
 from src.data import csv_labels, load_splits
 from src.models import anomaly_detector, rebalance_80_20
 from src.utils import StepLog, library_versions
-from src.v3 import V3, fit_predict_w
+from src.synthetic_data import V3, fit_predict_w
 
 log = StepLog("final")
 OUT = log.dir

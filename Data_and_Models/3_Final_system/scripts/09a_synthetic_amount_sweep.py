@@ -26,11 +26,11 @@ from sklearn.model_selection import StratifiedGroupKFold
 
 from src import config as C
 from src import features as F
-from src import v3 as V
+from src import synthetic_data as V
 from src.data import load_splits
 from src.evaluation import nadeau_bengio_ttest
 from src.utils import StepLog
-from src.v3 import IDX_B_FFT, V3, fit_predict_w, full_feats, macro
+from src.synthetic_data import IDX_B_FFT, V3, fit_predict_w, full_feats, macro
 
 AMOUNTS = [500, 1000, 2000]
 SEEDS = [42, 7]

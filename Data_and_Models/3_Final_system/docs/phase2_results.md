@@ -97,7 +97,7 @@ held-out sessions (PR-AUC 0.893 → 0.917, +4 TP, +7 FP) but p = 0.23 → *promi
 
 ## 5. Synthetic data (v3) — audit and experiments
 
-Audit of `src/v3.py` (verbatim port of `Synthetic_Data_Part1.ipynb` Part 7): donors and hosts come only from
+Audit of `src/synthetic_data.py` (verbatim port of `Synthetic_Data_Part1.ipynb` Part 7): donors and hosts come only from
 the 28 training sessions; generation is nested inside CV (effects, references, bounds and hosts rebuilt from
 training-fold sessions; validation = real windows only); seeds fixed; physical limits and real-data bounds
 enforced; statistical gating (Wilcoxon, α = 0.001). The 25-fold cache (step 09z) reproduces inline generation

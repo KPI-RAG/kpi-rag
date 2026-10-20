@@ -34,7 +34,7 @@ from src.data import csv_labels, load_splits
 from src.evaluation import nadeau_bengio_ttest
 from src.models import balanced_class_weights, fault_classifier
 from src.utils import StepLog
-from src.v3 import IDX_B_FFT, V3, fit_predict_w, full_feats, macro, synthetic_windows
+from src.synthetic_data import IDX_B_FFT, V3, fit_predict_w, full_feats, macro, synthetic_windows
 
 log = StepLog("09c_model2_candidates")
 d = load_splits()

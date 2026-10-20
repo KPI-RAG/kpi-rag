@@ -29,7 +29,7 @@ from src import features as F
 from src.data import csv_labels, features, load_splits
 from src.models import anomaly_detector, rebalance_80_20
 from src.utils import StepLog
-from src.v3 import IDX_B_FFT, V3, fit_predict_w, full_feats, macro, synthetic_windows
+from src.synthetic_data import IDX_B_FFT, V3, fit_predict_w, full_feats, macro, synthetic_windows
 
 TAUS = [0.5, 0.6, 0.7, 0.8, 0.9]
 log = StepLog("10c_false_alarm_filter_threshold")

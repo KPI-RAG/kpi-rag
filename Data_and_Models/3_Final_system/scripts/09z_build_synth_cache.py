@@ -21,7 +21,7 @@ from sklearn.model_selection import StratifiedGroupKFold
 from src import config as C
 from src.data import load_splits
 from src.utils import StepLog
-from src.v3 import V3, synth_cache_path, synthetic_windows
+from src.synthetic_data import V3, synth_cache_path, synthetic_windows
 
 N_TARGET, TAG, WORKERS = 500, "bug", 3
 _state = {}
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     log(f"cache complete: 25 folds, {total:.0f} MB in results/cache/synth/")
 
     # Equivalence check: seed 42 fold 1 regenerated inline (as steps 06/08 did) == cache
-    from src.v3 import full_feats
+    from src.synthetic_data import full_feats
     _init()
     s = _state
     cv = StratifiedGroupKFold(n_splits=C.N_FOLDS, shuffle=True, random_state=42)

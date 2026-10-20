@@ -93,7 +93,7 @@ installed with `--no-deps`). See `requirements.txt`.
 The server has **16 GB RAM** (`/sys/fs/cgroup/memory.max`), although the host
 shows 1 TB. Running steps 08 and 09a concurrently exceeded it and the container restarted,
 killing both jobs (checkpoints made the loss ~30 min). **Rule: one training job at a time;**
-QUANT/ExtraTrees with `n_jobs <= 8`; CatBoost `thread_count` as in `src/v3.py`.
+QUANT/ExtraTrees with `n_jobs <= 8`; CatBoost `thread_count` as in `src/synthetic_data.py`.
 
 ## Long jobs
 Long scripts run in the background on the server and save a checkpoint after each fold, so they

@@ -41,7 +41,7 @@ from src.data import load_splits
 from src.evaluation import nadeau_bengio_ttest
 from src.models import balanced_class_weights, fault_classifier
 from src.utils import StepLog
-from src.v3 import fft_feats
+from src.synthetic_data import fft_feats
 
 log = StepLog("07_model2_algorithms")
 d = load_splits()

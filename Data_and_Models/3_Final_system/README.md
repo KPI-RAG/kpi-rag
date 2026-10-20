@@ -39,7 +39,7 @@ features, 11 classes, no false-alarm filter. Full numbers and the reasoning: `do
 │   ├── data.py           session-split loading, integrity checks, Config A features, Phase 1 parser replica
 │   ├── models.py         Model 1 / Model 2 recipes, 80/20 rebalancing
 │   ├── features.py       new feature groups (segment shift, shape, co-movement)
-│   ├── v3.py             the synthetic-data method v3 + FFT + Config B (verbatim port) + cache helper
+│   ├── synthetic_data.py the synthetic-data method + FFT + Config B (verbatim port) + cache helper
 │   ├── evaluation.py     metrics, threshold rules, Nadeau-Bengio corrected paired t-test
 │   ├── pipeline.py       final cascade -> Layer 2 JSON (Phase 1 schema), idle flag, validation
 │   └── utils.py          per-step logging and result saving

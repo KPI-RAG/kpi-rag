@@ -1,7 +1,7 @@
 # Step 06 notes — the synthetic-data model reproduced + the report's Next Steps 1 & 2
 
 **Reproduction: 25/25 folds match the original `configBC_records.csv` (B_fft) to 4 decimals; mean 0.3743.**
-`src/v3.py` is therefore a faithful port of the 26-Sep notebook (Part 7, cells 16b-29).
+`src/synthetic_data.py` is therefore a faithful port of the 26-Sep notebook (Part 7, cells 16b-29).
 
 | Variant (25 session folds, nested synthetic generation) | macro-F1 | vs real-only 0.2908 | vs the synthetic-data model |
 |---|---|---|---|

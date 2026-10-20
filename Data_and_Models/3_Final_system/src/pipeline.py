@@ -13,7 +13,7 @@ import numpy as np
 
 from . import config as C
 from . import features as F
-from .v3 import IDX_B_FFT, full_feats
+from .synthetic_data import IDX_B_FFT, full_feats
 
 CHANNELS = ["RSRP", "DL_BLER", "DL_MCS", "UL_BLER", "UL_MCS", "UL_NPRB", "UL_SNR", "TX_Bytes", "RX_Bytes",
             "Estimated_UL_Buffer", "PRBs_DL_Current", "PRBs_UL_Current", "PRB_Utilization_DL",

@@ -28,7 +28,7 @@ from src import features as F
 from src.data import load_splits
 from src.evaluation import nadeau_bengio_ttest
 from src.utils import StepLog
-from src.v3 import IDX_B_FFT, N_THREADS, V3, fit_predict_w, full_feats, macro
+from src.synthetic_data import IDX_B_FFT, N_THREADS, V3, fit_predict_w, full_feats, macro
 
 PAIR = ("High Network Congestion (Gradual Buildup)", "Buffer Overflow (Gradual Buildup)")
 VARIANTS = ["final", "excl_pair", "trend", "trend_fixed"]
