@@ -1,8 +1,8 @@
-"""Farida's synthetic-data method v3 + FFT + Config B (Final Experiments, 26-Sep).
+"""the synthetic-data method v3 + FFT + Config B (Final Experiments, 26-Sep).
 
 Ported VERBATIM from Synthetic_Data_Part1.ipynb (Part 7, cells 16b-18, 21, 22a, 28, 29) so
-that her final results reproduce exactly. Only the notebook globals are wired up here
-(loaded from her saved artifacts in Models Improvement/Synthetic/):
+that the synthetic-data model results reproduce exactly. Only the notebook globals are wired up here
+(loaded from the saved synthetic-data artifacts in Models Improvement/Synthetic/):
     signal_cache_v3.npz  real signals of the 750 synthetic-class fault windows + 4200 hosts
     effects_v3.pkl       LEVEL_FLOOR / STD_FLOOR used by the generator
     fault_recipes.json   fault order (it fixes the random-number sequence)
@@ -289,7 +289,7 @@ def synth_cache_path(seed, fold, n_target=500, tag="bug", exclude=()):
 
 def synthetic_windows(eng, real_rows, real_sess, A_ref, host_sess, tr, va, seed, fold,
                       n_target=500, tag="bug", exclude=()):
-    """Farida's nested v3 generation for one CV fold, cached on disk.
+    """Nested v3 generation for one CV fold, cached on disk.
 
     Returns (S, Y): raw synthetic windows (n, 16, 128) and labels. Generation is identical to
     the notebook (same RNG seed = seed*100 + fold-1, same hosts, bounds and effects); the cache

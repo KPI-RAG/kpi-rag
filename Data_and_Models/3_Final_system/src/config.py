@@ -35,7 +35,7 @@ CV_SEEDS   = [42, 7, 123, 2024, 99]
 N_FOLDS    = 5
 THREADS    = 4
 
-# Phase 1 baseline (Farida, final_confirm_records.csv) - must reproduce
+# Phase 1 baseline (final_confirm_records.csv) - must reproduce
 BASELINE_MEAN = 0.2908
 BASELINE_STD  = 0.0902
 BASELINE_TOL  = 0.005
