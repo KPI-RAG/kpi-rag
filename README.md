@@ -365,7 +365,6 @@ More detail: [`Data_and_Models/README.md`](Data_and_Models/README.md),
 - [`scripts/Standards_inspection/`](scripts/Standards_inspection/README.md) needs the 3GPP
   knowledge-graph files in `data/3GPP_KG/`, which are not committed, and uses Windows-style
   paths. The project does not need these scripts at runtime.
-- The repository has no `LICENSE` file; see [License](#license).
 
 ## Team
 
@@ -387,6 +386,5 @@ cluster. The TelecomTS dataset is by Feng et al.,
 
 ## License
 
-Academic coursework for Queen's University (CISC 898, Group 15). No open-source license is granted;
-contact the authors before reusing the code. The TelecomTS and TeleQnA datasets are subject to their
+Distributed under the [MIT License](LICENSE). The TelecomTS and TeleQnA datasets are subject to their
 own licenses on Hugging Face.
