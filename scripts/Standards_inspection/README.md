@@ -1,6 +1,6 @@
 # Standards inspection
 
-This folder contains the scripts used to inspect the 3GPP / O-RAN knowledge graph and identify which standards entities are relevant to the 5G fault types in KPI-RAG. The workflow turns raw graph data into filtered evidence for fault explanations and citations.
+This folder contains the scripts used to inspect the 3GPP / O-RAN knowledge graph and identify which standards entities are relevant to the 5G fault types in KPI-RAG. The workflow turns raw graph data into search candidates, ranks them by relevance, and validates the resulting evidence before it is used by the explanation layer.
 
 The work is centered on the files under `data/3GPP_KG/`, especially:
 
@@ -90,13 +90,13 @@ This helps sanity-check the raw standards corpus before graph searches begin.
 A practical run order is:
 
 ```bash
-python scripts/Standards_inspection/extract_gsma_entities.py
-python scripts/Standards_inspection/search_fault_coverage.py
-python scripts/Standards_inspection/rank_fault_candidates.py
-python scripts/Standards_inspection/targeted_fault_search.py
-python scripts/Standards_inspection/semantic_fault_search.py
-python scripts/Standards_inspection/validate_fault_graph.py
-python scripts/Standards_inspection/inspect_fault_evidence.py
+uv run python scripts/Standards_inspection/extract_gsma_entities.py
+uv run python scripts/Standards_inspection/search_fault_coverage.py
+uv run python scripts/Standards_inspection/rank_fault_candidates.py
+uv run python scripts/Standards_inspection/targeted_fault_search.py
+uv run python scripts/Standards_inspection/semantic_fault_search.py
+uv run python scripts/Standards_inspection/validate_fault_graph.py
+uv run python scripts/Standards_inspection/inspect_fault_evidence.py
 ```
 
 ## Inputs and limitations
@@ -105,5 +105,5 @@ python scripts/Standards_inspection/inspect_fault_evidence.py
 - The two full standards knowledge graphs are too large to upload to this repository and are therefore hosted externally on Hugging Face:
   - Telecom-KG-Rel19: https://huggingface.co/datasets/GSMA/telecom-kg-rel19
   - O-RAN Specification Knowledge Graph: https://huggingface.co/datasets/GSMA/oran_spec_knowledge_graph
-- The scripts hard-code Windows-style paths (for example `data\\3GPP_KG\\gsma_entities.csv`), so they run as written on Windows only. Edit the path constants at the top of each script to run them on other platforms.
+- The scripts resolve the repo root from `__file__` and construct `data/3GPP_KG/...` paths relative to the repository, so they work consistently on Windows, macOS, and Linux without editing path constants.
 - The outputs of this workflow are already summarised in `data/alignment_table.json`; the project does not need these scripts at runtime.
