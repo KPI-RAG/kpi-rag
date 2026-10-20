@@ -1,5 +1,5 @@
 # final  |  2026-10-16 13:46 UTC  |  python 3.12.13 on jupyter-farida-gaber44
-Model 1 variant: adopted | Model 2: Farida's recipe + trend | reject class: False | reject tau: None
+Model 1 variant: adopted | Model 2: the synthetic-data model + trend | reject class: False | reject tau: None
 Model 1 trained on 4675 rows (64 features) and saved
 Model 2 trained on 5185 rows (496 features; classes 11) and saved
 confidence: raw Model 1 probability (calibration rejected in step 12a) | idle-link flag: True
