@@ -4,7 +4,7 @@
 [![uv](https://img.shields.io/badge/packaging-uv-purple.svg)](https://docs.astral.sh/uv/)
 [![CatBoost](https://img.shields.io/badge/ML-CatBoost%20%2B%20TreeSHAP-yellow.svg)](https://catboost.ai/)
 [![ChromaDB](https://img.shields.io/badge/vector%20store-ChromaDB-orange.svg)](https://www.trychroma.com/)
-[![Streamlit](https://img.shields.io/badge/dashboard-Streamlit-red.svg)](https://streamlit.io/)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://kpi-rag-group15.streamlit.app/)
 [![Tests](https://img.shields.io/badge/tests-207%20passed%20%7C%203%20skipped-brightgreen.svg)](#testing)
 
 KPI-RAG detects faults in 5G radio access network (RAN) telemetry and explains each one: the root
@@ -163,6 +163,11 @@ indexing. The index holds the 935 anomalous training windows only.
 ## Usage
 
 ### Dashboard
+
+> [!TIP]
+> **Live Demo:** Try the deployed dashboard at [**kpi-rag-group15.streamlit.app**](https://kpi-rag-group15.streamlit.app/).
+
+To run the dashboard locally:
 
 ```bash
 uv run streamlit run dashboard/app.py --server.fileWatcherType none
