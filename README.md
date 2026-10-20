@@ -143,7 +143,7 @@ evaluation scripts run without the raw dataset.
 Add `--system-certs` to `uv` commands and run LLM scripts with the operating system's trust store:
 
 ```bash
-uv run --system-certs --with truststore python -c "import truststore; truststore.inject_into_ssl(); import runpy, sys; sys.argv=['scripts/run_eval_track_c.py', '--output', 'data/processed/my_run']; runpy.run_path(sys.argv[0], run_name='__main__')"
+uv run --system-certs --with truststore python -c "import truststore; truststore.inject_into_ssl(); import runpy, sys; sys.argv=['scripts/run_eval_track_c.py', '--output', 'data/processed/my_run'...]
 ```
 </details>
 
@@ -331,6 +331,7 @@ All settings live in [`configs/config.yaml`](configs/config.yaml); API keys come
 │   ├── rca_loader.py            #   per-window RCA evidence for the prompt
 │   ├── build_rca_evidence.py    #   builds the RCA evidence file
 │   ├── generate_alignment_table.py
+│   ├── rca_utils.py             #   KPI evidence assessment and RCA utilities
 │   ├── llm_explainer.py         #   prompts, LLM backends, retries, citation validation
 │   ├── evaluator.py             #   Track B and C metrics
 │   └── ml_model.py, utils.py, config_loader.py, COLORS.py
